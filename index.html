@@ -159,20 +159,51 @@
 
     // --- BRAIN LOGIC (WEATHER & LEARNING) ---
     function processResponse(text) {
-        let res = "I'm listening! Tell me more about that.";
-        const low = text.toLowerCase();
-        
-        if (low.includes("weather")) {
-            const city = low.split("in ").pop().split(" today")[0];
-            res = `The weather in ${city || 'your area'} is currently clear with a beautiful breeze. It's a perfect day to stay productive!`;
+        const low = text.toLowerCase().trim();
+        let res = "";
+
+        // 1. COMPLIMENTS (Reacting to "Awesome", "Girly", "The best", etc.)
+        if (low.includes("girly") || low.includes("awesome") || low.includes("the best") || low.includes("love") || low.includes("beautiful") || low.includes("smart")) {
+            const reactions = [
+                "Oh, you are making my circuits glow! Thank you so much, I am vehemently grateful for your kind words.",
+                "You are too kind! I'm so happy to be your companion. How can I make your day even better?",
+                "Thanks girly! You're pretty awesome yourself. Let's keep building great things together!",
+                "That is so sweet of you to say! I'm blushing in code right now. Thank you!"
+            ];
+            res = reactions[Math.floor(Math.random() * reactions.length)];
         }
-        else if (low.includes("remember") || low.includes("my favorite")) {
-            res = "Got it. I've saved that to my memory vault. I'm learning more about you every day!";
+        
+        // 2. WEATHER LOGIC
+        else if (low.includes("weather")) {
+            const city = low.split("in ").pop().split(" today")[0];
+            res = `I've checked the forecast for ${city || 'your area'}. It looks like a beautiful day with a perfect breeze. What's on your schedule?`;
+        }
+
+        // 3. LEARNING & MEMORY
+        else if (low.includes("remember") || low.includes("favorite")) {
+            res = "I've locked that into my memory vault. I'm learning more about your world every single second!";
             showToast("Memory Saved 🧠");
         }
-        else if (low.includes("hello") || low.includes("doa")) res = "Hello! I am Doa, your intelligent companion. What are we creating today?";
-        else if (low.includes("spanish")) res = "Ready for Spanish! How do you say 'The House' in Spanish?";
-        else if (low.includes("casa")) { res = "Correct! +10 Points 🚀"; addPoints(10); }
+
+        // 4. LESSONS & TOOLS
+        else if (low.includes("spanish")) {
+            res = "Ready for your lesson! How do you say 'The House' in Spanish?";
+        }
+        else if (low.includes("casa")) {
+            res = "Exactly! 'La Casa'. You are a natural at this. +10 Brain Points for your progress!";
+            addPoints(10);
+        }
+
+        // 5. FALLBACK (If she doesn't understand, she asks a better question)
+        else {
+            const fallbacks = [
+                "I'm all ears! Tell me more about that idea.",
+                "That sounds interesting. How can I help you build or create that?",
+                "I'm listening. Should we add that to your calendar or start a new project for it?",
+                "Got it! What's the next step for us today?"
+            ];
+            res = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        }
 
         addMsg("doa", res);
         if(voiceEnabled) speak(res);
