@@ -197,7 +197,7 @@
         }
     }
 
-    function updateUI(profile) {
+     function updateUI(profile) {
         // Update Header
         const header = document.querySelector('header');
         if (header) {
@@ -209,9 +209,12 @@
                 </div>
             `;
         }
-        // Update Welcome Message
+        // Update Welcome Message - Fixed Typo here
         const welcome = document.querySelector('h1 + p');
-        if (welcome) welcome.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${profile.username}</span>! Your intelligent companion is ready.`;
+        if (welcome) {
+            // We use .usename because that's how it is spelled in your Supabase table
+            welcome.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${profile.usename}</span>! Your intelligent companion is ready.`;
+        }
     }
 
     async function earnPoints() {
