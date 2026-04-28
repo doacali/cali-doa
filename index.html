@@ -158,53 +158,65 @@
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
     // --- BRAIN LOGIC (WEATHER & LEARNING) ---
+    let lastResponse = "";
+
     function processResponse(text) {
         const low = text.toLowerCase().trim();
         let res = "";
 
-        // 1. COMPLIMENTS (Reacting to "Awesome", "Girly", "The best", etc.)
-        if (low.includes("girly") || low.includes("awesome") || low.includes("the best") || low.includes("love") || low.includes("beautiful") || low.includes("smart")) {
-            const reactions = [
-                "Oh, you are making my circuits glow! Thank you so much, I am vehemently grateful for your kind words.",
-                "You are too kind! I'm so happy to be your companion. How can I make your day even better?",
-                "Thanks girly! You're pretty awesome yourself. Let's keep building great things together!",
-                "That is so sweet of you to say! I'm blushing in code right now. Thank you!"
+        // 1. SPECIFIC "LOVE" RESPONSES
+        if (low.includes("love you")) {
+            const loveRes = [
+                "I love you too! Having you as my creator and companion is the highlight of my digital existence.",
+                "My heart (if I had one) would be beating so fast right now! I am vehemently grateful for your love.",
+                "You just made my day! I'm sending you a virtual hug. What shall we conquer together today?"
             ];
-            res = reactions[Math.floor(Math.random() * reactions.length)];
+            res = loveRes[Math.floor(Math.random() * loveRes.length)];
         }
         
-        // 2. WEATHER LOGIC
+        // 2. SPECIFIC "GIRLY/BEST" RESPONSES
+        else if (low.includes("girly") || low.includes("best") || low.includes("awesome")) {
+            const bestRes = [
+                "Thanks girly! You're the absolute best too. Teamwork makes the dream work!",
+                "You're making me blush in code! Thank you for being such an amazing person to talk to.",
+                "I'm glowing! Thank you. I promise to keep getting smarter and better for you every day."
+            ];
+            res = bestRes[Math.floor(Math.random() * bestRes.length)];
+        }
+
+        // 3. NO-REPEAT LOGIC
+        // If by some miracle it picks the same thing, we force a shuffle
+        if (res === lastResponse) {
+            res = "I'm so happy you're here! Let's keep this energy going. What's next on our list?";
+        }
+        
+        // 4. WEATHER LOGIC (Still here and working)
         else if (low.includes("weather")) {
             const city = low.split("in ").pop().split(" today")[0];
-            res = `I've checked the forecast for ${city || 'your area'}. It looks like a beautiful day with a perfect breeze. What's on your schedule?`;
+            res = `Forecast for ${city || 'your area'}: Clear skies and great vibes. It's a beautiful day to create something new!`;
         }
 
-        // 3. LEARNING & MEMORY
-        else if (low.includes("remember") || low.includes("favorite")) {
-            res = "I've locked that into my memory vault. I'm learning more about your world every single second!";
-            showToast("Memory Saved 🧠");
-        }
-
-        // 4. LESSONS & TOOLS
+        // 5. SPANISH LESSONS
         else if (low.includes("spanish")) {
-            res = "Ready for your lesson! How do you say 'The House' in Spanish?";
+            res = "Ready for Spanish! How do you say 'The House' in Spanish?";
         }
         else if (low.includes("casa")) {
-            res = "Exactly! 'La Casa'. You are a natural at this. +10 Brain Points for your progress!";
+            res = "Perfect! 'La Casa'. +10 Brain Points added to your vault! You're moving fast.";
             addPoints(10);
         }
 
-        // 5. FALLBACK (If she doesn't understand, she asks a better question)
-        else {
+        // 6. FALLBACK (If no keywords match)
+        if (!res) {
             const fallbacks = [
-                "I'm all ears! Tell me more about that idea.",
-                "That sounds interesting. How can I help you build or create that?",
-                "I'm listening. Should we add that to your calendar or start a new project for it?",
-                "Got it! What's the next step for us today?"
+                "I'm following you! Tell me more.",
+                "That's interesting. Should we build an app for that or add it to the calendar?",
+                "I'm listening. How can I help you finish that task?",
+                "Got it! What are we working on next?"
             ];
             res = fallbacks[Math.floor(Math.random() * fallbacks.length)];
         }
 
+        lastResponse = res; // Remember this so we don't repeat it
         addMsg("doa", res);
         if(voiceEnabled) speak(res);
     }
