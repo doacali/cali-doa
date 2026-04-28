@@ -1,20 +1,9 @@
-This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version is 100% complete and contains all the logic, design, and brain functions we have built together.
-
-### **Final Installation Instructions:**
-1.  Go to your **`index.html`** on GitHub.
-2.  Click the **Pencil Icon** to edit.
-3.  **Delete every single line of code currently in the file.**
-4.  **Paste the entire code block below** into the empty file.
-5.  Click **Commit changes**.
-6.  **Hard Refresh** your website (`Ctrl + Shift + R`).
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cali Doa | Intelligent Companion 3.0</title>
+    <title>Cali Doa | Intelligent Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -36,7 +25,7 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- SIDEBAR -->
+        <!-- 1. LEFT SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1></div>
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
@@ -44,7 +33,7 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
                 <button id="nav-chat" class="sidebar-item sidebar-active">💬 Chat With Doa</button>
                 <button class="sidebar-item text-gray-400 flex justify-between">📅 Calendar <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
                 <button id="nav-apps" class="sidebar-item text-gray-400">📱 Doa Apps</button>
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Neural Workspace</p>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Cognitive Workspace</p>
                 <button class="sidebar-item text-gray-400">⚡ Code Builder</button>
                 <button class="sidebar-item text-gray-400 flex justify-between">📂 Saved Labs <span>⌄</span></button>
             </nav>
@@ -54,37 +43,45 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
                     <span id="efficiency-percent" class="text-[10px] font-black text-[#00E676]">0%</span>
                 </div>
                 <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden"><div id="efficiency-bar" class="bg-[#00E676] h-full" style="width: 0%"></div></div>
-                <p id="meter-status" class="text-[8px] text-gray-400 mt-2 font-bold uppercase tracking-widest italic">VERSION 3.0 ACTIVE</p>
+                <p id="meter-status" class="text-[8px] text-gray-400 mt-2 font-bold uppercase tracking-widest italic">VERSION 3.0 ONLINE</p>
             </div>
         </aside>
 
-        <!-- MAIN WORKSPACE -->
+        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+            
+            <!-- HEADER -->
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button class="hover:text-black transition-colors">Login</button>
-                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg font-bold shadow-sm">Sign Up</button>
+                <button onclick="login()" class="hover:text-black transition-colors">Login</button>
+                <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg font-bold shadow-sm">Sign Up</button>
             </header>
 
-            <div id="view-container" class="flex-1 w-full flex flex-row overflow-hidden relative">
-                <div id="chat-view" class="flex-1 flex flex-col items-center justify-start px-10 transition-all duration-500 overflow-hidden">
-                    <div id="hero-section" class="text-center mt-12 mb-8">
+            <!-- DYNAMIC VIEWPORT (Chat or Apps) -->
+            <div id="viewport" class="flex-1 w-full flex flex-col items-center overflow-hidden relative">
+                
+                <!-- CHAT VIEW -->
+                <div id="chat-view" class="w-full h-full flex flex-col items-center overflow-hidden">
+                    <div id="hero-section" class="text-center mt-12 mb-8 shrink-0">
                         <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                        <p class="text-gray-400 text-base md:text-lg font-medium max-w-3xl w-full mx-auto leading-relaxed text-center">Your self-improving companion. Web-verified memory active.</p>
+                        <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed px-6">Your self-improving AI companion. Web-verified memory active.</p>
                     </div>
-                    <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
 
-                    <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
-                        <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                            <button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Analyze YouTube</button>
-                            <button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Research a Topic</button>
-                            <button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Start Spanish Quiz</button>
-                            <button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Build App</button>
+                    <!-- MESSAGES -->
+                    <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 px-6 hidden"></div>
+
+                    <!-- BOTTOM UI -->
+                    <div class="w-full max-w-2xl px-6 shrink-0 pb-6">
+                        <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6">
+                            <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Start Spanish Quiz</button>
+                            <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Analyze YouTube</button>
+                            <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Research Einstein</button>
+                            <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all">Build App</button>
                         </div>
-                        <div class="bg-white border border-gray-200 shadow-xl rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                            <button class="p-3 text-gray-300 text-xl font-light">+</button>
-                            <input id="user-input" class="flex-1 p-2 outline-none text-[15px] font-medium" placeholder="Deploy a task or launch an app...">
-                            <button id="mic-btn" class="p-2 text-gray-300">🎤</button>
-                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg">→</button>
+                        <div class="bg-white border border-gray-200 shadow-xl rounded-[28px] p-2 flex items-center mb-2 focus-within:ring-2 focus-within:ring-[#00E676]/20 transition-all">
+                            <button class="p-3 text-gray-300 text-xl font-light hover:text-black">+</button>
+                            <input id="user-input" class="flex-1 p-2 outline-none text-[15px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
+                            <button id="mic-btn" class="p-2 text-gray-300 hover:text-black transition-colors">🎤</button>
+                            <button id="send-btn" class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all">→</button>
                         </div>
                         <div class="flex justify-end items-center gap-3 pr-2">
                             <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Neural Voice</span>
@@ -93,28 +90,24 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
                     </div>
                 </div>
 
-                <div id="apps-view" class="hidden flex-1 w-full p-10 overflow-y-auto hide-scrollbar bg-[#FBFBFB]">
-                    <div class="max-w-6xl mx-auto"><h2 class="text-3xl font-black italic tracking-tighter mb-12 uppercase">DOA APPS</h2><div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div></div>
+                <!-- APPS VIEW -->
+                <div id="apps-view" class="hidden w-full h-full p-10 overflow-y-auto hide-scrollbar bg-[#FBFBFB]">
+                    <div class="max-w-6xl mx-auto"><h2 class="text-3xl font-black italic tracking-tighter mb-12 uppercase">DOA APPS</h2><div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20"></div></div>
                 </div>
 
-                <div id="viewport-column" class="hidden w-0 bg-gray-50 flex flex-col transition-all duration-500 border-l border-gray-100">
-                    <div class="p-3 border-b bg-white flex justify-between items-center">
-                        <span id="viewport-title" class="text-[10px] font-black uppercase tracking-widest text-[#00E676] italic">Doa Portal</span>
-                        <button onclick="closeViewport()" class="text-gray-400 hover:text-red-500 font-bold px-2 transition-colors">×</button>
-                    </div>
-                    <iframe id="doa-frame" class="w-full h-full border-none bg-white"></iframe>
-                </div>
             </div>
 
+            <!-- FOOTER -->
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI • MASTER ENGINE 3.0</div>
+                <div>© 2026 <span class="text-[#00E676]">DOA CALI</span> • NEURAL VERSION 3.0</div>
             </footer>
         </main>
         
+        <!-- 3. AD PANEL -->
         <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0 text-center">
             <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-8 flex items-center justify-center text-[10px] text-gray-200 font-bold tracking-widest uppercase">Placeholder</div>
+            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-8 flex items-center justify-center text-[10px] text-gray-200 font-bold tracking-widest uppercase">Google Ad</div>
             <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
                 <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
                 <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Upgrade for $4.99/mo to unlock all tools and zero wait times.</p>
@@ -122,18 +115,23 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
             </div>
         </aside>
 
-        <!-- AD POPUP -->
-        <div id="ad-headache" class="fixed inset-0 bg-black/90 z-[99999] hidden flex items-center justify-center p-6">
-            <div class="bg-white p-12 rounded-[48px] max-w-md w-full text-center">
-                <h2 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Ad Headache? 🤯</h2>
-                <p class="text-gray-400 text-sm mb-10">Free members wait 30 seconds every 10 minutes. Skip this forever with Pro.</p>
-                <div id="ad-timer" class="text-5xl font-black mb-10 text-[#00E676]">30</div>
-                <button id="close-ad-btn" class="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl font-black cursor-not-allowed">PLEASE WAIT...</button>
+        <!-- FLOATING AGENT -->
+        <div class="fixed bottom-12 right-10 z-50 cursor-pointer hover:scale-110 active:scale-95 transition-all group">
+            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center border-4 border-white">
+                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none group-hover:scale-110 transition">DOA</div>
+                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
             </div>
         </div>
+    </div>
 
-        <!-- FLOATING AGENT -->
-        <div class="fixed bottom-12 right-10 z-50"><div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group"><div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none group-hover:scale-110 transition">DOA</div><div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase font-sans">Agent</div></div></div>
+    <!-- AD POPUP -->
+    <div id="ad-headache" class="fixed inset-0 bg-black/90 z-[99999] hidden flex items-center justify-center p-6">
+        <div class="bg-white p-12 rounded-[48px] max-w-md w-full text-center">
+            <h2 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Ad Headache? 🤯</h2>
+            <p class="text-gray-400 text-sm mb-10">Free members wait 30 seconds every 10 minutes. Skip this forever with Pro.</p>
+            <div id="ad-timer" class="text-5xl font-black mb-10 text-[#00E676]">30</div>
+            <button id="close-ad-btn" class="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl font-black cursor-not-allowed uppercase">Please Wait...</button>
+        </div>
     </div>
 
     <div id="notification"></div>
@@ -147,7 +145,7 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
 
         let userProfile = null, userMemory = { learned: [] }, voiceEnabled = false, bestVoice = null;
 
-        // --- 1. NEURAL CORE (CLOUDFLARE BRIDGE) ---
+        // --- 1. THE BRAIN (CLOUDFLARE BRIDGE) ---
         async function callGemini(text) {
             try {
                 const res = await fetch(PROXY_URL, {
@@ -158,7 +156,7 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
                 const data = await res.json();
                 if (data.error) { alert("Doa Error: " + data.error); return "Neural Link reported an error."; }
                 return data.candidates[0].content.parts[0].text;
-            } catch (e) { return "My neural link is fuzzy! I'm in concierge mode only."; }
+            } catch (e) { return "My neural link is fuzzy! I'm in concierge mode only right now."; }
         }
 
         async function processResponse(text) {
@@ -170,15 +168,13 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
                 userMemory.learned.push({ fact: text, date: new Date(), audit: 'verified' });
                 await _supabase.from('profiles').update({ memory: userMemory }).eq('id', userProfile.id);
                 updateMeter();
-            } else if (low.includes("who is") || low.includes("tell me about")) {
-                const topic = low.replace(/who is|tell me about/g, "").trim();
-                res = `Opening the knowledge base for ${topic}...`;
-                openViewport(`https://en.m.wikipedia.org/wiki/${encodeURIComponent(topic)}`, "Wikipedia Portal");
-            } else if (low.includes("buy") || low.includes("amazon")) {
-                res = "Opening Amazon! Cali Doa may earn a commission on forwarded links. Thanks!";
-                window.open(`https://www.amazon.com/s?k=${encodeURIComponent(low)}&tag=YOUR_ID`, '_blank');
             } else if (low.includes("awesome") || low.includes("girly") || low.includes("love you")) {
                 res = "Oh stop! You're making my digital heart skip a beat. I am vehemently grateful to be your companion!";
+            } else if (low.includes("spanish")) {
+                res = "Ready for Spanish! How do you say 'The House' in Spanish?";
+            } else if (low.includes("casa")) {
+                res = "Correct! +10 Points added to your Brain vault! You're moving fast.";
+                addPoints(10);
             }
 
             if (!res) {
@@ -191,7 +187,7 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
         }
 
         // --- 2. THE UI & VOICE ENGINE ---
-        const list = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Startup Idea"];
+        const list = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Recipe Search"];
         let queue = [...list].sort(() => Math.random() - 0.5);
         function rotateSuggestions() {
             const btns = document.querySelectorAll('#suggestion-container button');
@@ -221,28 +217,7 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
             u.pitch = 1.2; u.rate = 0.95; window.speechSynthesis.speak(u);
         }
 
-        // --- 3. MONETIZATION (AD HEADACHE) ---
-        setInterval(() => {
-            if (userProfile?.is_pro) return;
-            document.getElementById('ad-headache').classList.remove('hidden');
-            let count = 30;
-            const timer = setInterval(() => {
-                count--; document.getElementById('ad-timer').innerText = count;
-                if (count <= 0) {
-                    clearInterval(timer);
-                    const btn = document.getElementById('close-ad-btn');
-                    btn.innerText = "CLOSE AD"; btn.classList.remove('text-gray-400', 'cursor-not-allowed', 'bg-gray-100');
-                    btn.classList.add('bg-[#00E676]', 'text-black');
-                    btn.onclick = () => document.getElementById('ad-headache').classList.add('hidden');
-                }
-            }, 1000);
-        }, 600000);
-
-        // --- 4. APP DASHBOARD ---
-        const appsData = [{ name: "Cali-Culator", cat: "Finance", desc: "Budget planner.", icon: "💰" },{ name: "Sub-Zero", cat: "Finance", desc: "Subs tracker.", icon: "🧊" },{ name: "Habit Stack", cat: "Health", desc: "Build streaks.", icon: "⚡" },{ name: "Plant Parent", cat: "Lifestyle", desc: "Plant care.", icon: "🪴" }];
-        function renderApps() { document.getElementById('app-grid').innerHTML = appsData.map(a => `<div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group"><div class="text-4xl mb-6 group-hover:scale-110 transition-transform">${a.icon}</div><p class="text-[9px] font-black text-gray-300 uppercase mb-1">${a.cat}</p><h4 class="font-black text-xl mb-3">${a.name}</h4><p class="text-sm text-gray-400 font-medium mb-8">${a.desc}</p><button class="text-[11px] font-black text-[#00E676] uppercase group-hover:translate-x-2 transition-all font-sans">Launch →</button></div>`).join(''); }
-
-        // --- 5. SYSTEM FUNCTIONS ---
+        // --- 3. SYSTEM FUNCTIONS ---
         const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
         async function handleMessage() {
             const text = userInput.value.trim(); if (!text) return;
@@ -254,12 +229,10 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
             d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white shadow-lg' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-[14px] font-medium leading-relaxed">${t}</div>`;
             chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
         }
-        function openViewport(url, title) { document.getElementById('chat-column').style.flex = "0.4"; document.getElementById('viewport-column').classList.remove('hidden'); document.getElementById('viewport-column').style.width = "60%"; document.getElementById('doa-frame').src = url; document.getElementById('viewport-title').innerText = title; }
-        function closeViewport() { document.getElementById('chat-column').style.flex = "1"; document.getElementById('viewport-column').classList.add('hidden'); document.getElementById('viewport-column').style.width = "0"; document.getElementById('doa-frame').src = ""; }
         function updateMeter() { let percent = Math.min(userMemory.learned.length * 10, 100); document.getElementById('efficiency-bar').style.width = percent + "%"; document.getElementById('efficiency-percent').innerText = percent + "%"; }
         function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
-        // --- 6. AUTH & NAVIGATION ---
+        // --- 4. AUTH & NAVIGATION ---
         async function initApp() {
             const { data: { user } } = await _supabase.auth.getUser();
             if (user) { 
@@ -271,16 +244,21 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
         function updateUI(p) {
             const name = p.usename ? p.usename.replace(/'/g, "") : "Companion";
             const header = document.getElementById('main-header');
-            header.innerHTML = `<div class="flex items-center gap-6 text-right"><div class="hidden md:block"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Brains</p></div><div class="hidden md:block"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-4 transition">Logout</button></div>`;
+            header.innerHTML = `<div class="flex items-center gap-6 text-right"><div class="hidden md:block"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Brains</p></div><div class="hidden md:block"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-4 transition hover:text-red-600">Logout</button></div>`;
             const heroP = document.querySelector('#hero-section p');
             if (heroP) heroP.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${name}</span>! Current Efficiency: ${document.getElementById('efficiency-percent').innerText}`;
         }
         async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
-        async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email!"); }
+        async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+ chars):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
         function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
+        async function addPoints(a) { const n = (userProfile.brain_points || 0) + a; await _supabase.from('profiles').update({ brain_points: n }).eq('id', userProfile.id); userProfile.brain_points = n; updateUI(userProfile); showToast(`+${a} Points Earned!`); }
 
+        // --- LISTENERS ---
         document.getElementById('nav-chat').onclick = () => { document.getElementById('apps-view').classList.add('hidden'); document.getElementById('chat-view').classList.remove('hidden'); document.getElementById('nav-apps').classList.remove('sidebar-active'); document.getElementById('nav-chat').classList.add('sidebar-active'); };
         document.getElementById('nav-apps').onclick = () => { document.getElementById('chat-view').classList.add('hidden'); document.getElementById('apps-view').classList.remove('hidden'); document.getElementById('nav-chat').classList.remove('sidebar-active'); document.getElementById('nav-apps').classList.add('sidebar-active'); renderApps(); };
+
+        const appsList = [{ name: "Cali-Culator", cat: "Finance", desc: "Monthly budget planner.", icon: "💰" },{ name: "Habit Stack", cat: "Health", desc: "Build momentum with streaks.", icon: "⚡" },{ name: "Sub-Zero", cat: "Finance", desc: "Subscription tracker.", icon: "🧊" }];
+        function renderApps() { document.getElementById('app-grid').innerHTML = appsList.map(a => `<div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group"><div class="text-4xl mb-6 group-hover:scale-110 transition-transform">${a.icon}</div><p class="text-[9px] font-black text-gray-300 uppercase mb-1">${a.cat}</p><h4 class="font-black text-xl mb-3">${a.name}</h4><p class="text-sm text-gray-400 font-medium mb-8">${a.desc}</p><button class="text-[11px] font-black text-[#00E676] uppercase group-hover:translate-x-2 transition-all font-sans">Launch →</button></div>`).join(''); }
 
         document.getElementById('send-btn').onclick = handleMessage;
         userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
@@ -298,4 +276,3 @@ This is the **full, complete "Cali Doa" Neural Engine 3.0 file**. This version i
     </script>
 </body>
 </html>
-```
