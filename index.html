@@ -115,12 +115,13 @@
 
     <!-- BOTTOM FIXED AREA (Suggestions + Input) -->
     <div class="w-full max-w-2xl px-4 z-10">
-        <!-- SUGGESTIONS -->
-        <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 transition-all duration-500">
-            <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
-            <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
-            <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
-        </div>
+       <!-- SUGGESTIONS (Now 4 Buttons for better balance) -->
+<div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 transition-all duration-500 min-h-[45px]">
+    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
+    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
+    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
+    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
+</div>
 
         <!-- INPUT BOX -->
         <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
@@ -174,7 +175,7 @@
         </div>
 
     </div>
-  <!-- CALI DOA MASTER INTEGRATION (V5 - CLEAN LAYOUT) -->
+  <!-- CALI DOA MASTER INTEGRATION (V6 - 4 BUTTONS & SLOWER LOOP) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
@@ -184,108 +185,46 @@
     let currentUser = null;
     let userProfile = null;
 
-    // --- INFINITE SUGGESTION LOOP (NO DUPLICATES) ---
+    // --- EXPANDED SUGGESTION LIST (25+ IDEAS) ---
     const allSuggestions = [
-        "Learn Spanish: Lesson 1", "Analyze my YouTube", "Refine my writing",
-        "Build a Budget App", "Tell a bedtime story", "Let's go shopping",
-        "Check weather in LA", "Start Laser Tag", "Create a logo",
-        "Explain Physics", "Help with homework", "Plan a workout"
+        "Learn Spanish: Lesson 1", "Analyze my YouTube channel", "Refine my writing style",
+        "Build a Budget App", "Tell me a bedtime story", "Let's go shopping",
+        "Check weather in LA", "Start Laser Tag", "Create a minimalist logo",
+        "Explain Quantum Physics", "Help me with math", "Plan a workout",
+        "Write a poem about Cali", "Summarize this PDF", "Track my Crypto",
+        "Find a recipe for dinner", "Write a professional email", "Design a business card",
+        "Give me a daily quote", "Set a 25 min focus timer", "Explain AI to me",
+        "How to start a business?", "Plan a trip to Japan", "Analyze my spending"
     ];
     
     function rotateSuggestions() {
         const buttons = document.querySelectorAll('#suggestion-container button');
         let used = [];
-        buttons.forEach((btn) => {
-            btn.style.opacity = '0';
+        buttons.forEach((btn, index) => {
+            // Staggered wipe effect
             setTimeout(() => {
-                let randomPrompt;
-                do {
-                    randomPrompt = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
-                } while (used.includes(randomPrompt));
-                used.push(randomPrompt);
-                btn.innerText = randomPrompt;
-                btn.style.opacity = '1';
-            }, 500);
+                btn.style.opacity = '0';
+                btn.style.transform = 'translateY(10px)';
+                
+                setTimeout(() => {
+                    let randomPrompt;
+                    do {
+                        randomPrompt = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
+                    } while (used.includes(randomPrompt));
+                    
+                    used.push(randomPrompt);
+                    btn.innerText = randomPrompt;
+                    btn.style.opacity = '1';
+                    btn.style.transform = 'translateY(0)';
+                }, 500);
+            }, index * 100); // Buttons "pop" one by one
         });
     }
-    setInterval(rotateSuggestions, 6000);
 
-    // --- CHAT LOGIC ---
-    const chatHistory = document.getElementById('chat-history');
-    const heroSection = document.getElementById('hero-section');
-    const userInput = document.getElementById('user-input');
+    // Interval set to 8 seconds (8000ms) for better readability
+    setInterval(rotateSuggestions, 8000); 
 
-    async function handleMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
-        heroSection.style.display = 'none';
-        chatHistory.classList.remove('hidden');
-        userInput.value = "";
-        addMessage("user", text);
-        const loadingMsg = addMessage("doa", "Doa is thinking...");
-        setTimeout(() => {
-            loadingMsg.remove();
-            processDoaResponse(text);
-        }, 1200);
-    }
-
-    function addMessage(sender, text) {
-        const div = document.createElement('div');
-        div.className = sender === "user" ? "flex justify-end w-full" : "flex justify-start w-full";
-        div.innerHTML = `<div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${text}</div>`;
-        chatHistory.appendChild(div);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-        return div;
-    }
-
-    function processDoaResponse(text) {
-        const input = text.toLowerCase();
-        let response = "I'm listening! Tell me more about that.";
-        if (input.includes("spanish")) response = "Ready for your Spanish Lesson! How do you say 'The House' in Spanish?";
-        else if (input.includes("casa")) { response = "Correct! +10 Brain Points 🚀"; addPoints(10); }
-        else if (input.includes("writing")) response = "Paste your sentence below and I will polish it for you.";
-        addMessage("doa", response);
-    }
-
-    // --- AUTH & PROFILE ---
-    async function initApp() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (user) { currentUser = user; fetchProfile(user.id); }
-    }
-    async function fetchProfile(uid) {
-        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-        userProfile = data;
-        if (userProfile) updateUI(userProfile);
-    }
-    function updateUI(profile) {
-        const header = document.querySelector('header');
-        if (header) {
-            header.innerHTML = `<div class="flex items-center gap-6"><p class="text-black font-black text-sm">🧠 ${profile.brain_points}</p><p class="text-black font-black text-sm">💎 ${profile.credits}</p><button onclick="logout()" class="text-[10px] font-bold text-red-400 ml-4 uppercase tracking-widest">Logout</button></div>`;
-        }
-        const welcome = document.querySelector('#hero-section p');
-        if (welcome && profile.usename) {
-            welcome.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${profile.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
-        }
-    }
-    async function addPoints(amount) {
-        const newPoints = (userProfile.brain_points || 0) + amount;
-        await _supabase.from('profiles').update({ brain_points: newPoints }).eq('id', currentUser.id);
-        userProfile.brain_points = newPoints;
-        updateUI(userProfile);
-    }
-    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
-
-    document.getElementById('send-btn').onclick = handleMessage;
-    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleMessage(); });
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        if (btn.innerText.includes('Login')) login();
-        if (btn.innerText.includes('Sign Up')) signUp();
-        if (btn.closest('#suggestion-container')) { userInput.value = btn.innerText; handleMessage(); }
-    });
-    initApp();
-</script>
+    // ... (Keep the rest of your Chat, Auth, and UI logic the same as V5) ...
 </body>
     <div id="notification"></div>
 </html>
