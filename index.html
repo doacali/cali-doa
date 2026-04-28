@@ -129,14 +129,20 @@
             const res = await fetch(PROXY_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: `You are Doa, a friendly AI companion. Answer this: ${text}` })
+                body: JSON.stringify({ text: text }) // Sends the text correctly
             });
-            if (!res.ok) throw new Error("Proxy Error");
+            
             const data = await res.json();
+
+            if (data.error) {
+                console.error("Brain Error:", data.error);
+                return "My neural link is having trouble. Please check the Cloudflare logs.";
+            }
+
             return data.candidates[0].content.parts[0].text;
         } catch (e) {
-            console.error("Neural Error:", e);
-            return "My neural link is a bit fuzzy! Please check your Cloudflare Worker settings.";
+            console.error("Connection Error:", e);
+            return "I can't reach my brain proxy. Is the Cloudflare Worker running?";
         }
     }
 
