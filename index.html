@@ -1,315 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cali Doa | Intelligent Companion</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doa Cali AI</title>
 
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            margin: 0;
+        :root {
+            --bg: #0f0f0f;
+            --panel: #171717;
+            --panel-soft: #202020;
+            --text: #f5f3ef;
+            --muted: #a7a29a;
+            --line: rgba(255, 255, 255, 0.08);
+            --accent: #c9a84c;
+            --user: #f5f3ef;
+            --doa: #1f1f1f;
+            --radius: 22px;
         }
 
-        .hide-scrollbar::-webkit-scrollbar {
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top, rgba(201, 168, 76, 0.12), transparent 35%),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .chat-shell {
+            width: min(920px, 100%);
+            height: min(760px, calc(100vh - 48px));
+            background: rgba(23, 23, 23, 0.92);
+            border: 1px solid var(--line);
+            border-radius: 30px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(18px);
+        }
+
+        .chat-header {
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background:
+                linear-gradient(145deg, rgba(201, 168, 76, 0.92), rgba(245, 243, 239, 0.35)),
+                #c9a84c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111;
+            font-family: Georgia, serif;
+            font-size: 22px;
+            font-weight: 600;
+            box-shadow: 0 12px 30px rgba(201, 168, 76, 0.18);
+        }
+
+        .brand-title {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 23px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .brand-subtitle {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--accent);
+            border: 1px solid rgba(201, 168, 76, 0.24);
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: rgba(201, 168, 76, 0.06);
+            white-space: nowrap;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 78%;
+            padding: 14px 16px;
+            border-radius: 20px;
+            line-height: 1.55;
+            font-size: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message.doa {
+            align-self: flex-start;
+            background: var(--doa);
+            border: 1px solid var(--line);
+            color: var(--text);
+            border-bottom-left-radius: 7px;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--user);
+            color: #111;
+            border-bottom-right-radius: 7px;
+        }
+
+        .typing {
+            align-self: flex-start;
+            background: var(--doa);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            padding: 14px 16px;
+            border-radius: 20px;
+            border-bottom-left-radius: 7px;
+            font-size: 14px;
             display: none;
         }
 
-        .sidebar-item {
-            transition: all 0.2s ease;
-            border-radius: 12px;
+        .typing.show {
+            display: block;
+        }
+
+        .input-area {
+            border-top: 1px solid var(--line);
+            padding: 18px;
+            background: rgba(15, 15, 15, 0.45);
+        }
+
+        .input-wrap {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: var(--panel-soft);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 10px 10px 10px 16px;
+        }
+
+        textarea {
+            flex: 1;
+            min-height: 48px;
+            max-height: 150px;
+            resize: none;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            line-height: 1.45;
+            padding: 12px 0;
+        }
+
+        textarea::placeholder {
+            color: #77716a;
+        }
+
+        button {
+            border: none;
+            outline: none;
             cursor: pointer;
+            border-radius: 18px;
+            padding: 13px 18px;
+            background: var(--accent);
+            color: #111;
+            font-weight: 700;
+            transition: transform 0.15s ease, opacity 0.15s ease;
         }
 
-        .sidebar-item:hover {
-            background-color: #f3f4f6;
-            color: #121212;
+        button:hover {
+            transform: translateY(-1px);
         }
 
-        .sidebar-active {
-            background: #121212;
-            color: white;
-            border-radius: 12px;
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .hero-heading {
-            font-size: clamp(2.2rem, 5vw, 3.8rem);
-            line-height: 1.05;
-            letter-spacing: -0.05em;
-            font-weight: 800;
-        }
-
-        .btn-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-
-        #notification {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #121212;
-            color: #00E676;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 13px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 9999;
-            transition: all 0.3s ease;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #notification.show {
-            opacity: 1;
-            bottom: 40px;
-        }
-
-        .chat-bubble {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+        @media (max-width: 640px) {
+            body {
+                padding: 0;
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .typing-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #888;
-            margin: 0 2px;
-            animation: bounce 1.2s infinite;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes bounce {
-            0%, 60%, 100% {
-                transform: translateY(0);
+            .chat-shell {
+                height: 100vh;
+                border-radius: 0;
             }
 
-            30% {
-                transform: translateY(-6px);
+            .chat-header {
+                padding: 18px;
+            }
+
+            .status {
+                display: none;
+            }
+
+            .messages {
+                padding: 18px;
+            }
+
+            .message {
+                max-width: 90%;
             }
         }
     </style>
 </head>
 
-<body class="bg-[#FBFBFB] text-gray-900">
-
-    <div class="flex h-screen w-screen overflow-hidden">
-
-        <!-- SIDEBAR -->
-        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
-            <div class="p-6">
-                <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">
-                    DOA CALI
-                </h1>
-            </div>
-
-            <div class="px-4 mb-4">
-                <input
-                    class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest"
-                    placeholder="SEARCH..."
-                >
-            </div>
-
-            <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">
-                    Main
-                </p>
-
-                <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">
-                    💬 <span class="text-sm font-bold">Chat With Doa</span>
-                </button>
-
-                <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">
-                    📅 <span class="text-sm font-semibold">Calendar</span>
-                    <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span>
-                </button>
-
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
-                    📱 <span class="text-sm font-semibold">Doa Apps</span>
-                </button>
-
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">
-                    Workspace
-                </p>
-
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
-                    ⚡ <span class="text-sm font-semibold">Code...</span>
-                </button>
-
-                <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">
-                    📂 <span class="text-sm font-semibold">Saved Tabs</span>
-                    <span>⌄</span>
-                </button>
-            </nav>
-
-            <div class="p-6 border-t border-gray-50">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">
-                    Recent Chats
-                </p>
-
-                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
-            </div>
-        </aside>
-
-        <!-- MAIN WORKSPACE -->
-        <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-
-            <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button class="hover:text-black transition-colors">Login</button>
-                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
-            </header>
-
-            <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-
-                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
-                    <h1 class="hero-heading mb-4">
-                        What can <span class="text-[#00E676]">Doa</span> <br> do for you?
-                    </h1>
-
-                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">
-                        Your intelligent companion for thinking, building, and creating.
-                    </p>
-                </div>
-
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
-
-                <!-- BOTTOM UI -->
-                <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
-
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
-                    </div>
-
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
-
-                        <input
-                            id="user-input"
-                            class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400"
-                            placeholder="Ask Doa anything..."
-                        >
-
-                        <div class="flex items-center gap-3 pr-2">
-                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
-
-                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">
-                                →
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end items-center gap-3 pr-2">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">
-                            Live Voice
-                        </span>
-
-                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
-                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
-                        </div>
-                    </div>
+<body>
+    <main class="chat-shell">
+        <header class="chat-header">
+            <div class="brand">
+                <div class="avatar">D</div>
+                <div>
+                    <h1 class="brand-title">Doa Cali</h1>
+                    <p class="brand-subtitle">Ask anything. I’ll answer directly.</p>
                 </div>
             </div>
+            <div class="status">Live AI</div>
+        </header>
 
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
-                <div class="flex gap-8">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Affiliate</a>
-                </div>
+        <section id="messages" class="messages">
+            <div class="message doa">Hi, I’m here. What can I help you with?</div>
+            <div id="typing" class="typing">Doa is thinking...</div>
+        </section>
 
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-        </main>
-
-        <!-- RIGHT SIDEBAR -->
-        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">
-                    Ad Space
-                </p>
-
-                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
+        <section class="input-area">
+            <div class="input-wrap">
+                <textarea
+                    id="userInput"
+                    placeholder="Message Doa..."
+                    rows="1"
+                ></textarea>
+                <button id="sendBtn" type="button">Send</button>
             </div>
-
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-
-                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">
-                    Unlock Expert Lessons and skip wait times.
-                </p>
-
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">
-                    Go Pro
-                </button>
-            </div>
-        </aside>
-
-        <!-- FLOATING AGENT BUTTON -->
-        <div class="fixed bottom-12 right-10 z-50">
-            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
-                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="notification"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        </section>
+    </main>
 
     <script>
-        // ============================================================
-        // CONFIG
-        // ============================================================
-
-        const WORKER_URL = "https://doa-brain-proxy.111222lov3.workers.dev";
-
-        const SUPABASE_URL = "https://dfsmqnwnqnkbpoeeqkvv.supabase.co";
-
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo";
-
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let currentUser = null;
-        let userProfile = null;
-        let voiceEnabled = false;
-        let conversationHistory = [];
-
-        // ============================================================
-        // DOA BEHAVIOR PROMPT
-        // ============================================================
+        const WORKER_URL = "PASTE_YOUR_CLOUDFLARE_WORKER_URL_HERE";
 
         const DOA_SYSTEM_PROMPT = `
 You are Doa, the AI companion inside the Doa Cali website.
@@ -334,10 +298,13 @@ If the user asks for analysis, analyze directly.
 If the user asks for a rewrite, rewrite directly.
 If the user asks a question, answer clearly.
 
+When live search, news, weather, YouTube, finance, or place data is provided, use it naturally.
+If live data is not available, answer with general knowledge and say only when something truly needs current verification.
+
 Tone:
 - confident
-- feminine
 - calm
+- feminine
 - clear
 - smart
 - direct
@@ -355,93 +322,39 @@ If the user gives vague instructions, make the best useful assumption and answer
 Only ask a follow-up question when the request is impossible to answer without one.
 `;
 
-        // ============================================================
-        // SUGGESTION ENGINE
-        // ============================================================
+        const messagesEl = document.getElementById("messages");
+        const typingEl = document.getElementById("typing");
+        const inputEl = document.getElementById("userInput");
+        const sendBtn = document.getElementById("sendBtn");
 
-        const list = [
-            "Learn Spanish",
-            "Analyze YouTube",
-            "Refine writing",
-            "Build App",
-            "Tell a Story",
-            "Go Shopping",
-            "Check Weather",
-            "Laser Tag",
-            "Track Crypto",
-            "Plan Trip",
-            "Math Help",
-            "Startup Idea",
-            "Write Email",
-            "Recipe Search",
-            "Workout Plan"
-        ];
+        let conversationHistory = [];
 
-        let queue = [...list].sort(() => Math.random() - 0.5);
+        sendBtn.addEventListener("click", handleSend);
 
-        function rotate() {
-            const btns = document.querySelectorAll("#suggestion-container button");
-
-            btns.forEach((btn, i) => {
-                setTimeout(() => {
-                    btn.style.opacity = "0";
-
-                    setTimeout(() => {
-                        if (queue.length < 1) {
-                            queue = [...list].sort(() => Math.random() - 0.5);
-                        }
-
-                        btn.innerText = queue.shift();
-                        btn.style.opacity = "1";
-                    }, 400);
-                }, i * 150);
-            });
-        }
-
-        setInterval(rotate, 8000);
-
-        // ============================================================
-        // HUMAN VOICE ENGINE
-        // ============================================================
-
-        function speak(text) {
-            window.speechSynthesis.cancel();
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            const voices = window.speechSynthesis.getVoices();
-
-            const preferredVoice = voices.find(voice =>
-                (voice.name.includes("Google") && voice.name.includes("Female")) ||
-                voice.name.includes("Samantha") ||
-                voice.name.includes("Victoria") ||
-                voice.name.includes("Microsoft Zira")
-            );
-
-            if (preferredVoice) {
-                utterance.voice = preferredVoice;
+        inputEl.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                handleSend();
             }
+        });
 
-            utterance.pitch = 1.2;
-            utterance.rate = 0.92;
+        inputEl.addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height = Math.min(this.scrollHeight, 150) + "px";
+        });
 
-            window.speechSynthesis.speak(utterance);
+        async function handleSend() {
+            const text = inputEl.value.trim();
+
+            if (!text) return;
+
+            addMsg("user", text);
+
+            inputEl.value = "";
+            inputEl.style.height = "auto";
+
+            await processResponse(text);
         }
-
-        window.speechSynthesis.onvoiceschanged = () => {
-            window.speechSynthesis.getVoices();
-        };
-
-        // ============================================================
-        // CHAT ELEMENTS
-        // ============================================================
-
-        const chatHistory = document.getElementById("chat-history");
-        const hero = document.getElementById("hero-section");
-        const userInput = document.getElementById("user-input");
-
-        // ============================================================
-        // GEMINI API VIA CLOUDFLARE WORKER
-        // ============================================================
 
         async function processResponse(text) {
             conversationHistory.push({
@@ -458,47 +371,37 @@ Only ask a follow-up question when the request is impossible to answer without o
                 });
 
                 addMsg("doa", localReply);
-
-                if (voiceEnabled) {
-                    speak(localReply);
-                }
-
                 return;
             }
 
+            showTyping(true);
+            setSending(false);
+
             try {
-                const res = await fetch(WORKER_URL, {
+                const response = await fetch(WORKER_URL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        systemInstruction: DOA_SYSTEM_PROMPT,
-                        message: `
-User request:
-${text}
-
-Answer directly.
-Do not explain what you are going to do.
-Do not say you can help.
-Do the task now.
-`,
-                        history: conversationHistory.slice(-10)
+                        message: text,
+                        history: conversationHistory.slice(-12),
+                        systemInstruction: DOA_SYSTEM_PROMPT
                     })
                 });
 
-                if (!res.ok) {
-                    throw new Error(`Worker error: ${res.status}`);
+                if (!response.ok) {
+                    throw new Error(`Worker error: ${response.status}`);
                 }
 
-                const data = await res.json();
+                const data = await response.json();
 
                 console.log("Worker response:", data);
 
-                let reply = extractGeminiReply(data);
+                let reply = extractWorkerReply(data);
 
                 if (!reply) {
-                    reply = "I’m here. What can I help you with?";
+                    reply = "I’m having trouble generating a response right now. Try again.";
                 }
 
                 reply = cleanDoaReply(reply);
@@ -510,388 +413,108 @@ Do the task now.
 
                 addMsg("doa", reply);
 
-                if (voiceEnabled) {
-                    speak(reply);
-                }
-
-                if (userProfile && conversationHistory.length % 5 === 0) {
-                    addPoints(5);
-                }
-
-            } catch (err) {
-                console.error("Gemini error:", err);
+            } catch (error) {
+                console.error("Chat error:", error);
 
                 addMsg(
                     "doa",
                     "I’m having trouble connecting right now. Try again in a moment."
                 );
+
+            } finally {
+                showTyping(false);
+                setSending(true);
             }
         }
 
         function getLocalDoaReply(text) {
-            const message = text.trim().toLowerCase();
+            const normalized = text
+                .toLowerCase()
+                .trim()
+                .replace(/[.!?]+$/g, "")
+                .replace(/\s+/g, " ");
 
             const greetings = [
                 "hi",
                 "hello",
                 "hey",
+                "heyy",
                 "yo",
-                "sup",
                 "good morning",
                 "good afternoon",
                 "good evening"
             ];
 
-            if (greetings.includes(message)) {
+            if (greetings.includes(normalized)) {
                 return "Hi, I’m here. What can I help you with?";
             }
 
-            if (
-                message === "how are you" ||
-                message === "how are you?" ||
-                message === "how are u" ||
-                message === "how are u?"
-            ) {
+            const howAreYou = [
+                "how are you",
+                "how are you doing",
+                "how r u",
+                "how you doing",
+                "are you good"
+            ];
+
+            if (howAreYou.includes(normalized)) {
                 return "I’m good. What can I help you with?";
-            }
-
-            return null;
-        }
-
-        function extractGeminiReply(data) {
-            if (!data) return "";
-
-            if (typeof data.reply === "string") return data.reply.trim();
-            if (typeof data.text === "string") return data.text.trim();
-            if (typeof data.response === "string") return data.response.trim();
-            if (typeof data.message === "string") return data.message.trim();
-            if (typeof data.output === "string") return data.output.trim();
-
-            if (
-                data.candidates &&
-                data.candidates[0] &&
-                data.candidates[0].content &&
-                data.candidates[0].content.parts
-            ) {
-                return data.candidates[0].content.parts
-                    .map(part => part.text || "")
-                    .join("")
-                    .trim();
-            }
-
-            if (
-                data.response &&
-                data.response.candidates &&
-                data.response.candidates[0] &&
-                data.response.candidates[0].content &&
-                data.response.candidates[0].content.parts
-            ) {
-                return data.response.candidates[0].content.parts
-                    .map(part => part.text || "")
-                    .join("")
-                    .trim();
             }
 
             return "";
         }
 
-        // ============================================================
-        // CLEAN BAD AI OPENERS
-        // ============================================================
+        function extractWorkerReply(data) {
+            if (!data) return "";
+
+            if (typeof data.reply === "string") {
+                return data.reply.trim();
+            }
+
+            if (typeof data.text === "string") {
+                return data.text.trim();
+            }
+
+            if (typeof data.message === "string") {
+                return data.message.trim();
+            }
+
+            return "";
+        }
 
         function cleanDoaReply(reply) {
-            let cleaned = reply.trim();
-
-            const bannedPatterns = [
-                /^sure[,.!—\-\s]+/i,
-                /^absolutely[,.!—\-\s]+/i,
-                /^of course[,.!—\-\s]+/i,
-                /^i can help with that[,.!—\-\s]*/i,
-                /^i can definitely help with that[,.!—\-\s]*/i,
-                /^here'?s what i'?ll do[,.!—\-\s]*/i,
-                /^here is what i'?ll do[,.!—\-\s]*/i,
-                /^here'?s what i will do[,.!—\-\s]*/i,
-                /^i'?ll start by[,.!—\-\s]*/i,
-                /^i would start by[,.!—\-\s]*/i,
-                /^let me explain[,.!—\-\s]*/i,
-                /^as an ai[,.!—\-\s]*/i,
-                /^i can provide[,.!—\-\s]*/i,
-                /^i can create[,.!—\-\s]*/i,
-                /^i can write[,.!—\-\s]*/i,
-                /^i can analyze[,.!—\-\s]*/i
-            ];
-
-            bannedPatterns.forEach(pattern => {
-                cleaned = cleaned.replace(pattern, "").trim();
-            });
-
-            cleaned = cleaned
-                .replace(/^[:—\-–,\s]+/, "")
-                .replace(/^here('|’)s\s+/i, "")
+            return String(reply || "")
+                .replace(/^Sure[,.]?\s*/i, "")
+                .replace(/^Of course[,.]?\s*/i, "")
+                .replace(/^Absolutely[,.]?\s*/i, "")
+                .replace(/^I can help with that[,.]?\s*/i, "")
+                .replace(/^Here'?s what I(?:'|’)ll do[:.]?\s*/i, "")
                 .trim();
-
-            return cleaned || reply;
         }
 
-        // ============================================================
-        // CORE CHAT LOGIC
-        // ============================================================
+        function addMsg(role, text) {
+            const msg = document.createElement("div");
+            msg.className = `message ${role}`;
+            msg.textContent = text;
 
-        async function handleMessage() {
-            const text = userInput.value.trim();
-
-            if (!text) return;
-
-            hero.style.display = "none";
-            chatHistory.classList.remove("hidden");
-            userInput.value = "";
-
-            addMsg("user", text);
-
-            const loadBubble = addTypingIndicator();
-
-            try {
-                await processResponse(text);
-            } finally {
-                loadBubble.remove();
-            }
+            messagesEl.insertBefore(msg, typingEl);
+            scrollToBottom();
         }
 
-        function addMsg(sender, text) {
-            const wrapper = document.createElement("div");
-
-            wrapper.className = sender === "user"
-                ? "flex justify-end w-full chat-bubble"
-                : "flex justify-start w-full chat-bubble";
-
-            const bubble = document.createElement("div");
-
-            bubble.className = sender === "user"
-                ? "bg-black text-white p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm whitespace-pre-wrap"
-                : "bg-gray-100 text-black p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm whitespace-pre-wrap";
-
-            bubble.textContent = text;
-
-            wrapper.appendChild(bubble);
-            chatHistory.appendChild(wrapper);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            return wrapper;
+        function showTyping(show) {
+            typingEl.classList.toggle("show", show);
+            scrollToBottom();
         }
 
-        function addTypingIndicator() {
-            const wrapper = document.createElement("div");
-
-            wrapper.className = "flex justify-start w-full chat-bubble";
-
-            wrapper.innerHTML = `
-                <div class="bg-gray-100 text-black p-4 rounded-3xl max-w-[80px] shadow-sm flex items-center gap-1">
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
-                </div>
-            `;
-
-            chatHistory.appendChild(wrapper);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            return wrapper;
+        function setSending(canSend) {
+            sendBtn.disabled = !canSend;
         }
 
-        // ============================================================
-        // AUTH
-        // ============================================================
-
-        async function initApp() {
-            const {
-                data: { user }
-            } = await _supabase.auth.getUser();
-
-            if (user) {
-                currentUser = user;
-                await fetchProfile(user.id);
-            }
-        }
-
-        async function fetchProfile(uid) {
-            const { data } = await _supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", uid)
-                .single();
-
-            userProfile = data;
-
-            if (userProfile) {
-                updateUI(data);
-            }
-        }
-
-        function updateUI(profile) {
-            document.getElementById("main-header").innerHTML = `
-                <div class="flex items-center gap-6">
-                    <div class="text-right">
-                        <p class="text-black font-black text-sm">🧠 ${profile.brain_points || 0}</p>
-                        <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p>
-                    </div>
-
-                    <div class="text-right">
-                        <p class="text-black font-black text-sm">💎 ${profile.credits || 0}</p>
-                        <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p>
-                    </div>
-
-                    <button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">
-                        Logout
-                    </button>
-                </div>
-            `;
-
-            const username = profile.usename || profile.username || "there";
-
-            document.querySelector("#hero-section p").innerHTML = `
-                Welcome back, <span class="text-[#00E676] font-bold">${String(username).replace(/'/g, "")}</span>! Your companion is ready.
-            `;
-        }
-
-        async function addPoints(amount) {
-            if (!currentUser || !userProfile) return;
-
-            const newPoints = (userProfile.brain_points || 0) + amount;
-
-            await _supabase
-                .from("profiles")
-                .update({
-                    brain_points: newPoints
-                })
-                .eq("id", currentUser.id);
-
-            userProfile.brain_points = newPoints;
-
-            updateUI(userProfile);
-            showToast(`+${amount} Points Earned!`);
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById("notification");
-
-            toast.innerText = message;
-            toast.classList.add("show");
-
-            setTimeout(() => {
-                toast.classList.remove("show");
-            }, 3000);
-        }
-
-        async function login() {
-            const email = prompt("Email:");
-            const password = prompt("Password:");
-
-            if (!email || !password) return;
-
-            const { error } = await _supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (error) {
-                alert(error.message);
-            } else {
-                window.location.reload();
-            }
-        }
-
-        async function signUp() {
-            const email = prompt("Email:");
-            const password = prompt("Password (6+):");
-
-            if (!email || !password) return;
-
-            const { error } = await _supabase.auth.signUp({
-                email,
-                password
-            });
-
-            alert(error ? error.message : "Check email for link!");
-        }
-
-        function logout() {
-            _supabase.auth.signOut().then(() => {
-                window.location.reload();
+        function scrollToBottom() {
+            requestAnimationFrame(() => {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
             });
         }
-
-        // ============================================================
-        // EVENTS
-        // ============================================================
-
-        document.getElementById("send-btn").onclick = handleMessage;
-
-        userInput.onkeypress = event => {
-            if (event.key === "Enter") {
-                handleMessage();
-            }
-        };
-
-        document.getElementById("voice-switch").onclick = () => {
-            voiceEnabled = !voiceEnabled;
-
-            document.getElementById("voice-knob").style.left = voiceEnabled ? "16px" : "2px";
-            document.getElementById("voice-switch").style.backgroundColor = voiceEnabled ? "#00E676" : "#f3f4f6";
-
-            if (voiceEnabled) {
-                speak("Voice mode activated. I’m ready.");
-            }
-        };
-
-        // ============================================================
-        // MIC
-        // ============================================================
-
-        let recognition = null;
-
-        if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-
-            recognition.onresult = event => {
-                userInput.value = event.results[0][0].transcript;
-                handleMessage();
-            };
-
-            recognition.onend = () => {
-                document.getElementById("mic-btn").style.color = "";
-            };
-        }
-
-        document.getElementById("mic-btn").onclick = () => {
-            if (!recognition) {
-                alert("Voice input is not supported in this browser.");
-                return;
-            }
-
-            recognition.start();
-            document.getElementById("mic-btn").style.color = "#00E676";
-        };
-
-        document.addEventListener("click", event => {
-            const button = event.target.closest("button");
-
-            if (!button) return;
-
-            if (button.innerText.includes("Login")) {
-                login();
-            }
-
-            if (button.innerText.includes("Sign Up")) {
-                signUp();
-            }
-
-            if (button.closest("#suggestion-container")) {
-                userInput.value = button.innerText;
-                handleMessage();
-            }
-        });
-
-        initApp();
     </script>
 </body>
 </html>
