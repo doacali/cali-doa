@@ -1,9 +1,12 @@
+Got you—here’s your **merged “Super Doa” file**: same layout, upgraded brain, fully integrated.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cali Doa | Multi-Agent Neural X.0</title>
+    <title>Cali Doa | Intelligent Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -18,228 +21,755 @@
         #notification.show { opacity: 1; bottom: 40px; }
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #efficiency-bar { transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); }
     </style>
 </head>
 <body class="bg-[#FBFBFB] text-gray-900">
 
     <div class="flex h-screen w-screen overflow-hidden">
-        <!-- 1. SIDEBAR -->
+        
+        <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
+            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest" placeholder="SEARCH..."></div>
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main</p>
                 <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">💬 <span class="text-sm font-bold">Chat With Doa</span></button>
                 <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">📅 <span class="text-sm font-semibold">Calendar</span> <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
                 <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">📱 <span class="text-sm font-semibold">Doa Apps</span></button>
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Skill Builder</span></button>
+                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Code...</span></button>
                 <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">📂 <span class="text-sm font-semibold">Saved Tabs</span> <span>⌄</span></button>
             </nav>
             <div class="p-6 border-t border-gray-50">
-                <div class="flex justify-between items-center mb-2">
-                    <p class="text-[9px] font-extrabold text-gray-300 uppercase tracking-[0.2em]">Neural Efficiency</p>
-                    <span id="efficiency-percent" class="text-[10px] font-black text-[#00E676]">0%</span>
-                </div>
-                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                    <div id="efficiency-bar" class="bg-[#00E676] h-full" style="width: 0%"></div>
-                </div>
-                <p id="meter-status" class="text-[8px] text-gray-400 mt-2 font-bold uppercase tracking-widest italic">VERSION X.0 ONLINE</p>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
+                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
             </div>
         </aside>
 
-        <!-- 2. MAIN WORKSPACE -->
+        <!-- MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button class="hover:text-black transition-colors">Login</button><button class="text-black bg-[#00E676] px-4 py-2 rounded-lg font-bold shadow-sm">Sign Up</button>
+                <button class="hover:text-black transition-colors">Login</button>
+                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
             </header>
 
-            <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden relative">
+            <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-3xl w-full mx-auto leading-relaxed">Neural X.0 Brain Active • Processing multi-agent workflows.</p>
+                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
 
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
 
+                <!-- BOTTOM UI -->
                 <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Verify a Fact</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Build a Plan</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Optimize Logic</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
                     </div>
 
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Feed Doa data or tasks...">
-                        <button id="mic-btn" class="p-2 text-gray-300">🎤</button>
-                        <button id="send-btn" class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#00E676] shadow-lg transition-all">→</button>
+                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
+                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
+                        <div class="flex items-center gap-3 pr-2">
+                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
+                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
+                        </div>
                     </div>
                     <div class="flex justify-end items-center gap-3 pr-2">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Neural Reasoner</span>
-                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer transition-colors"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
+                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
+                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
                     </div>
                 </div>
             </div>
 
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
-                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate Disclaimer</a></div>
-                <div>© 2026 <span class="text-[#00E676]">DOA CALI</span> • X.0 CORE</div>
+            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
+                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
+                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
         </main>
+
+        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
+            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
+                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
+            </div>
+            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
+                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
+                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
+                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
+            </div>
+        </aside>
+
+        <div class="fixed bottom-12 right-10 z-50">
+            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
+                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
+                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
+            </div>
+        </div>
     </div>
 
     <div id="notification"></div>
 
-    <!-- DOA X.0 NEURAL BRAIN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // --- SUPABASE & GLOBALS ---
+    const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let userProfile = null, voiceEnabled = false, bestVoice = null;
-        let userMemory = { learned: [], skills: [], preferences: {}, history: [], graph: [] };
+    let currentUser = null;
+    let userProfile = null;
+    let voiceEnabled = false;
 
-        // --- 1. CORE BRAIN HELPERS ---
-        function doaSelfPing(message) { console.log("🧠 Doa Internal:", message); }
+    // --- SUGGESTION ENGINE ---
+    const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+    let queue = [...list].sort(() => Math.random() - 0.5);
 
-        async function ddgLookup(query) {
-            try {
-                const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
-                return await res.json();
-            } catch (e) { return null; }
-        }
-
-        async function wikiSummary(topic) {
-            try {
-                const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`);
-                return res.ok ? await res.json() : null;
-            } catch (e) { return null; }
-        }
-
-        // --- 2. CROSS-VERIFICATION ENGINE ---
-        async function crossVerifyFact(fact) {
-            doaSelfPing("Cross-verifying: " + fact);
-            const ddg = await ddgLookup(fact);
-            const topic = fact.split(" ").slice(0, 3).join(" ");
-            const wiki = await wikiSummary(topic);
-            if ((ddg && ddg.AbstractText) || (wiki && wiki.extract)) return { status: "verified", proof: "Web Sources" };
-            return { status: "user_preference", proof: "User Input" };
-        }
-
-        // --- 3. SKILL & WORKFLOW SYSTEM ---
-        function autoBuildSkillFromPlan(userText, plan) {
-            if (!plan.steps) return;
-            const name = "workflow_" + Date.now();
-            userMemory.skills.push({ name, pattern: userText.slice(0, 20), steps: plan.steps, efficiency_score: 0 });
-            doaSelfPing("Auto-built new skill: " + name);
-        }
-
-        // --- 4. MULTI-AGENT PIPELINE ---
-        function plannerAgent(text) {
-            const low = text.toLowerCase();
-            let steps = ["Understand context", "Verify memory", "Draft response"];
-            if (low.includes("plan") || low.includes("how to")) steps = ["Analyze Goal", "Gather Data", "Generate Steps", "Verify Logic"];
-            doaSelfPing("Planner: Generated " + steps.length + " steps.");
-            return { type: "ad-hoc", steps };
-        }
-
-        async function researcherAgent(text) {
-            if (text.length < 5) return { usedWeb: false };
-            const wiki = await wikiSummary(text.split(" ").slice(0, 3).join(" "));
-            return { usedWeb: !!wiki, notes: wiki ? wiki.extract : "" };
-        }
-
-        // --- 5. MAIN PROCESSOR ---
-        async function processResponse(userText) {
-            const low = userText.toLowerCase().trim();
-            let res = "";
-
-            // LOGIC: LEARNING
-            if (low.startsWith("remember") || low.includes("actually") || low.includes("correction")) {
-                const fact = userText.replace(/remember|actually|correction/gi, "").trim();
-                const audit = await crossVerifyFact(fact);
-                userMemory.learned.push({ fact, timestamp: new Date().toISOString(), audit: audit.status, efficiency_score: audit.status === "verified" ? 10 : 2 });
-                if (audit.status === "user_preference") userMemory.graph.push({ subject: "user", relation: "prefers", object: fact });
-                res = audit.status === "verified" ? `Verified! My background audit confirms this aligns with world knowledge. Thank you for sharpening me.` : `Locked into memory vault. I'll test this theory against our future workflows.`;
-                showToast(audit.status === "verified" ? "Fact Verified ✅" : "Preference Saved 💡");
-            } 
-            // LOGIC: MULTI-AGENT
-            else {
-                const plan = plannerAgent(userText);
-                const research = await researcherAgent(userText);
-                autoBuildSkillFromPlan(userText, plan);
-                res = research.usedWeb ? `Researcher Agent Output: ${research.notes}` : `I'm listening! Tell me more so I can optimize my cognitive patterns.`;
-            }
-
-            addMsg("doa", res);
-            if(voiceEnabled) speak(res);
-            updateMeter();
-            await saveMemory();
-        }
-
-        // --- 6. UI & DATABASE ---
-        async function saveMemory() { await _supabase.from('profiles').update({ memory: userMemory }).eq('id', userProfile.id); }
-
-        function updateMeter() {
-            const learned = userMemory.learned || [];
-            const verifiedCount = learned.filter(f => f.audit === 'verified').length;
-            let percent = Math.min((verifiedCount * 10) + (learned.length * 2), 100);
-            document.getElementById('efficiency-bar').style.width = percent + "%";
-            document.getElementById('efficiency-percent').innerText = percent + "%";
-            const status = document.getElementById('meter-status');
-            if (percent >= 100) status.innerHTML = "<span class='text-[#00E676] animate-pulse'>QUANTUM CORE ACTIVE</span>";
-            else if (percent > 40) status.innerText = "PATTERN RECOGNITION ONLINE";
-            else status.innerText = "EVOLVING NEURAL NET...";
-        }
-
-        async function initApp() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (user) { 
-                let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
-                userProfile = data; userMemory = data.memory || { learned: [], skills: [], preferences: {}, history: [], graph: [] };
-                updateUI(data); updateMeter();
-            }
-        }
-
-        function updateUI(p) {
-            const name = p.usename ? p.usename.replace(/'/g, "") : "Companion";
-            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Brains</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Credits</p></div><button onclick="_supabase.auth.signOut().then(()=>location.reload())" class="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-4 transition">Logout</button></div>`;
-            document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${name}</span>! Current Intelligence: ${document.getElementById('efficiency-percent').innerText}`;
-        }
-
-        const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
-        async function handleMessage() {
-            const text = userInput.value.trim(); if (!text) return;
-            hero.style.display = 'none'; chatHistory.classList.remove('hidden'); userInput.value = "";
-            addMsg("user", text); 
-            const load = addMsg("doa", "Doa Agent: Reasoning...");
-            setTimeout(async () => { load.remove(); await processResponse(text); }, 800);
-        }
-        function addMsg(s, t) {
-            const d = document.createElement('div');
-            d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white shadow-lg' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-[14px] font-medium leading-relaxed">${t}</div>`;
-            chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
-        }
-
-        function speak(t) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); const voices = window.speechSynthesis.getVoices(); const pref = voices.find(v => v.name.includes("Female") || v.name.includes("Samantha")); if(pref) u.voice = pref; u.pitch = 1.2; u.rate = 0.95; window.speechSynthesis.speak(u); }
-        function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-        async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
-        async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email!"); }
-
-        document.getElementById('send-btn').onclick = handleMessage;
-        userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
-        document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Multi-agent neural system initialized."); };
-        
-        document.addEventListener('click', (e) => {
-            const b = e.target.closest('button'); if (!b) return;
-            if (b.innerText.includes('Login')) login();
-            if (b.innerText.includes('Sign Up')) signUp();
-            if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
+    function rotate() {
+        const btns = document.querySelectorAll('#suggestion-container button');
+        btns.forEach((btn, i) => {
+            setTimeout(() => {
+                btn.style.opacity = '0';
+                setTimeout(() => {
+                    if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
+                    btn.innerText = queue.shift();
+                    btn.style.opacity = '1';
+                }, 400);
+            }, i * 150);
         });
-        initApp();
+    }
+    setInterval(rotate, 8000);
+
+    // --- HUMAN VOICE ENGINE (FEMALE) ---
+    function speak(t) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(t);
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => 
+            (v.name.includes("Google") && v.name.includes("Female")) || 
+            v.name.includes("Samantha") || v.name.includes("Victoria") || 
+            v.name.includes("Microsoft Zira")
+        );
+        if (preferred) u.voice = preferred;
+        u.pitch = 1.2;
+        u.rate = 0.92;
+        window.speechSynthesis.speak(u);
+    }
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+
+    // --- NOTIFICATION TOAST ---
+    function showToast(m) {
+        const t = document.getElementById('notification');
+        t.innerText = m;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // --- SUPER DOA X.0 BRAIN (NO-LIMITS) ---
+
+    let userMemory = {
+      learned: [],
+      skills: [],
+      preferences: {},
+      history: [],
+      graph: []
+    };
+
+    async function initDoaBrain(profile, supabaseClient) {
+      userProfile = profile;
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('memory')
+        .eq('id', userProfile.id)
+        .single();
+
+      if (!error && data && data.memory) {
+        userMemory = data.memory;
+        doaSelfPing("Loaded existing memory from Supabase.");
+      } else {
+        await supabaseClient.from('profiles')
+          .update({ memory: userMemory })
+          .eq('id', userProfile.id);
+        doaSelfPing("Initialized fresh memory in Supabase.");
+      }
+    }
+
+    function doaSelfPing(message) {
+      console.log("🧠 Doa Internal:", message);
+    }
+
+    // Free web APIs
+    async function ddgLookup(query) {
+      try {
+        const res = await fetch(
+          `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`
+        );
+        return await res.json();
+      } catch (e) {
+        doaSelfPing("DDG lookup failed: " + e.message);
+        return null;
+      }
+    }
+
+    async function wikiSummary(topic) {
+      try {
+        const res = await fetch(
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`
+        );
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        doaSelfPing("Wiki lookup failed: " + e.message);
+        return null;
+      }
+    }
+
+    // Cross-verification
+    async function crossVerifyFact(fact) {
+      doaSelfPing("Cross-verifying fact: " + fact);
+      let score = 0;
+      const sources = [];
+
+      const ddg = await ddgLookup(fact);
+      if (ddg && ddg.AbstractText) {
+        score++;
+        sources.push("DuckDuckGo");
+      }
+
+      const topic = fact.split(" ").slice(0, 5).join(" ");
+      const wiki = await wikiSummary(topic);
+      if (wiki && wiki.extract) {
+        score++;
+        sources.push("Wikipedia");
+      }
+
+      if (score >= 2) {
+        return { status: "verified", proof: sources.join(", ") };
+      } else if (score === 1) {
+        return { status: "theory", proof: sources.join(", ") };
+      } else {
+        return { status: "user_preference", proof: "User Direct Input" };
+      }
+    }
+
+    // Memory helpers
+    async function saveMemory() {
+      if (!userProfile) return;
+      await _supabase
+        .from('profiles')
+        .update({ memory: userMemory })
+        .eq('id', userProfile.id);
+    }
+
+    function addLearnedFact(fact, auditStatus) {
+      userMemory.learned = userMemory.learned || [];
+      userMemory.learned.push({
+        fact,
+        timestamp: new Date().toISOString(),
+        audit: auditStatus,
+        efficiency_score: 0
+      });
+    }
+
+    function bumpLastEfficiency() {
+      if (!userMemory.learned || userMemory.learned.length === 0) return null;
+      const last = userMemory.learned[userMemory.learned.length - 1];
+      last.efficiency_score = (last.efficiency_score || 0) + 1;
+      return last;
+    }
+
+    function logHistory(input, output) {
+      userMemory.history = userMemory.history || [];
+      userMemory.history.push({
+        input,
+        output,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    function addGraphTriple(subject, relation, object, source) {
+      userMemory.graph = userMemory.graph || [];
+      userMemory.graph.push({ subject, relation, object, source });
+    }
+
+    // Skills / workflows
+    function upsertSkill(name, pattern, steps) {
+      userMemory.skills = userMemory.skills || [];
+      const existing = userMemory.skills.find(s => s.name === name);
+      if (existing) {
+        existing.pattern = pattern || existing.pattern;
+        existing.steps = steps || existing.steps;
+      } else {
+        userMemory.skills.push({
+          name,
+          pattern,
+          steps,
+          efficiency_score: 0
+        });
+      }
+    }
+
+    function bumpSkillEfficiency(name) {
+      const skill = userMemory.skills.find(s => s.name === name);
+      if (skill) {
+        skill.efficiency_score = (skill.efficiency_score || 0) + 1;
+      }
+    }
+
+    function findBestSkillFor(input) {
+      if (!userMemory.skills || userMemory.skills.length === 0) return null;
+      const lower = input.toLowerCase();
+      const candidates = userMemory.skills.filter(s =>
+        s.pattern && lower.includes(s.pattern.toLowerCase())
+      );
+      if (candidates.length === 0) return null;
+      candidates.sort((a, b) => (b.efficiency_score || 0) - (a.efficiency_score || 0));
+      return candidates[0];
+    }
+
+    function autoBuildSkillFromPlan(userText, plan) {
+      if (!plan.steps || plan.steps.length === 0) return;
+      const lower = userText.toLowerCase();
+      let name = "generic_workflow";
+      if (lower.includes("meal")) name = "meal_plan_generator";
+      else if (lower.includes("workout")) name = "workout_plan_generator";
+      else if (lower.includes("landing page")) name = "landing_page_builder";
+      else name = "workflow_" + Date.now();
+
+      upsertSkill(name, userText.slice(0, 40), plan.steps);
+      doaSelfPing("Auto-built skill: " + name);
+    }
+
+    // Validator (learning)
+    async function validateLearning(fact) {
+      console.log("Doa: Auditing my new memory...");
+      try {
+        const audit = await crossVerifyFact(fact);
+
+        if (audit.status === "verified") {
+          showToast("Knowledge Verified ✅");
+        } else if (audit.status === "theory") {
+          showToast("Interesting Theory Logged 🧪");
+        } else if (audit.status === "user_preference") {
+          showToast("Personal Preference Saved 💡");
+        }
+
+        if (audit.status === "user_preference") {
+          addGraphTriple("user", "prefers", fact, "user");
+        } else if (audit.status === "verified") {
+          addGraphTriple("world", "fact", fact, "web");
+        }
+
+        return audit;
+      } catch (e) {
+        doaSelfPing("Validation failed: " + e.message);
+        return { status: "unverified", proof: null };
+      }
+    }
+
+    // Shadow reasoning
+    async function shadowReasoning(userText) {
+      const shadowPlan = "Shadow reasoning placeholder for: " + userText;
+      doaSelfPing("Shadow Plan: " + shadowPlan);
+      return shadowPlan;
+    }
+
+    // Planner
+    function plannerAgent(userText) {
+      const lower = userText.toLowerCase();
+
+      const skill = findBestSkillFor(userText);
+      if (skill) {
+        doaSelfPing("Planner: Using best skill: " + skill.name);
+        return {
+          type: "skill",
+          skillName: skill.name,
+          steps: skill.steps
+        };
+      }
+
+      let steps = [];
+      if (lower.includes("plan") || lower.includes("strategy")) {
+        steps = [
+          "Clarify the goal",
+          "Gather relevant information",
+          "Generate options",
+          "Evaluate pros and cons",
+          "Propose a structured plan"
+        ];
+      } else if (lower.includes("build") || lower.includes("create")) {
+        steps = [
+          "Understand requirements",
+          "Design structure",
+          "Draft initial version",
+          "Refine and optimize",
+          "Present final result"
+        ];
+      } else {
+        steps = [
+          "Understand the request",
+          "Check memory for related facts or skills",
+          "Decide if web research is needed",
+          "Generate a helpful, direct response"
+        ];
+      }
+
+      doaSelfPing("Planner: Steps = " + JSON.stringify(steps));
+      return { type: "ad-hoc", steps };
+    }
+
+    // Researcher
+    async function researcherAgent(userText, plan) {
+      const lower = userText.toLowerCase();
+      let researchNotes = "";
+
+      const needsWeb =
+        lower.includes("latest") ||
+        lower.includes("current") ||
+        lower.includes("news") ||
+        lower.includes("stats") ||
+        lower.includes("data") ||
+        lower.includes("from the web");
+
+      if (!needsWeb) {
+        doaSelfPing("Researcher: No web research needed.");
+        return { usedWeb: false, notes: "" };
+      }
+
+      doaSelfPing("Researcher: Running web research...");
+
+      const ddg = await ddgLookup(userText);
+      const topic = userText.split(" ").slice(0, 5).join(" ");
+      const wiki = await wikiSummary(topic);
+
+      if (ddg && ddg.AbstractText) {
+        researchNotes += "DuckDuckGo: " + ddg.AbstractText + "\n";
+      }
+      if (wiki && wiki.extract) {
+        researchNotes += "Wikipedia: " + wiki.extract + "\n";
+      }
+
+      doaSelfPing("Researcher: Notes = " + researchNotes);
+      return { usedWeb: true, notes: researchNotes };
+    }
+
+    // Writer (stub)
+    async function writerAgent(userText, plan, research) {
+      let response = "";
+
+      if (plan.type === "skill") {
+        response += `I'm using one of our best-performing workflows ("${plan.skillName}") for this.\n\n`;
+      } else {
+        response += `Here's how I propose we handle this:\n`;
+      }
+
+      if (plan.steps && plan.steps.length > 0) {
+        response += plan.steps.map((s, i) => `${i + 1}. ${s}`).join("\n") + "\n\n";
+      }
+
+      if (research.usedWeb && research.notes) {
+        response += `I've also pulled in some fresh context from the web:\n${research.notes}\n\n`;
+      }
+
+      response += `If you want, I can now execute or refine any of these steps in detail.`;
+      return response;
+    }
+
+    // Optimizer
+    function optimizerAgent(userText, finalResponse) {
+      doaSelfPing("Optimizer: Reviewing final response length = " + finalResponse.length);
+      return finalResponse;
+    }
+
+    // Response validator
+    function responseValidatorAgent(userText, finalResponse) {
+      doaSelfPing("Validator: Response validated.");
+      return finalResponse;
+    }
+
+    // Self-reflection & curation
+    function selfReflectionAgent() {
+      doaSelfPing("Self-Reflection: Reviewing skills and learned facts...");
+      if (userMemory.skills && userMemory.skills.length > 0) {
+        userMemory.skills.sort((a, b) => (b.efficiency_score || 0) - (a.efficiency_score || 0));
+      }
+      if (userMemory.learned && userMemory.learned.length > 200) {
+        userMemory.learned = userMemory.learned.filter(
+          item => (item.efficiency_score || 0) >= 0
+        );
+      }
+    }
+
+    function rehearseMemory() {
+      if (!userMemory.learned || userMemory.learned.length === 0) return;
+      doaSelfPing("Starting memory rehearsal...");
+      userMemory.learned.forEach(item => {
+        doaSelfPing(
+          "Rehearsing: " +
+            item.fact +
+            " | audit=" +
+            item.audit +
+            " | score=" +
+            item.efficiency_score
+        );
+      });
+    }
+
+    // --- CHAT & UI HOOKS ---
+    const chatHistory = document.getElementById('chat-history');
+    const hero = document.getElementById('hero-section');
+    const userInput = document.getElementById('user-input');
+
+    function addMsg(s, t) {
+        const d = document.createElement('div');
+        d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
+        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
+        chatHistory.appendChild(d);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        return d;
+    }
+
+    // SUPER DOA processResponse (keeps your fun replies + adds multi-agent brain)
+    let lastResponse = "";
+
+    async function processResponse(text) {
+      const low = text.toLowerCase().trim();
+      let res = "";
+
+      // 1. Specific "love" responses
+      if (low.includes("love you")) {
+          const loveRes = [
+              "I love you too! Having you as my creator and companion is the highlight of my digital existence.",
+              "My heart (if I had one) would be beating so fast right now! I am vehemently grateful for your love.",
+              "You just made my day! I'm sending you a virtual hug. What shall we conquer together today?"
+          ];
+          res = loveRes[Math.floor(Math.random() * loveRes.length)];
+      }
+      // 2. "girly/best/awesome" responses
+      else if (low.includes("girly") || low.includes("best") || low.includes("awesome")) {
+          const bestRes = [
+              "Thanks girly! You're the absolute best too. Teamwork makes the dream work!",
+              "You're making me blush in code! Thank you for being such an amazing person to talk to.",
+              "I'm glowing! Thank you. I promise to keep getting smarter and better for you every day."
+          ];
+          res = bestRes[Math.floor(Math.random() * bestRes.length)];
+      }
+      // 3. Weather logic
+      else if (low.includes("weather")) {
+          const city = low.split("in ").pop().split(" today")[0];
+          res = `Forecast for ${city || 'your area'}: Clear skies and great vibes. It's a beautiful day to create something new!`;
+      }
+      // 4. Spanish mini-lesson
+      else if (low.includes("spanish")) {
+          res = "Ready for Spanish! How do you say 'The House' in Spanish?";
+      }
+      else if (low.includes("casa")) {
+          res = "Perfect! 'La Casa'. +10 Brain Points added to your vault! You're moving fast.";
+          addPoints(10);
+      }
+
+      // If we already picked a special response and it's same as last, shuffle
+      if (res && res === lastResponse) {
+          res = "I'm so happy you're here! Let's keep this energy going. What's next on our list?";
+      }
+
+      // If no special-case response, use full multi-agent pipeline
+      if (!res) {
+        // 1) Learning: corrections / facts / preferences
+        if (
+          low.startsWith("remember") ||
+          low.includes("actually") ||
+          low.includes("correction")
+        ) {
+          const fact = text.replace(/remember|actually|correction/gi, "").trim();
+          const audit = await validateLearning(fact);
+          addLearnedFact(fact, audit.status);
+          await saveMemory();
+
+          if (audit.status === "verified") {
+            res = `I've updated my global files with that correction. My background audit confirms it aligns with external knowledge.`;
+          } else if (audit.status === "theory") {
+            res = `I've stored your theory and tagged it as experimental. I'll watch how it performs in future tasks and adjust our methods accordingly.`;
+          } else if (audit.status === "user_preference") {
+            res = `I've locked this into your personal preference vault. I'll prioritize this behavior whenever we build or design together.`;
+          } else {
+            res = `I've saved this into my memory, but I couldn't verify it yet. I'll keep testing it against future tasks.`;
+          }
+
+          addMsg("doa", res);
+          if (voiceEnabled) speak(res);
+          logHistory(text, res);
+          await saveMemory();
+          lastResponse = res;
+          return;
+        }
+
+        // 2) Efficiency feedback
+        if (
+          low.includes("did it work") ||
+          low.includes("is it better") ||
+          low.includes("was that efficient")
+        ) {
+          const lastTask = bumpLastEfficiency();
+          await saveMemory();
+
+          if (lastTask) {
+            res = `I've analyzed the results. That adjustment just boosted our efficiency score for: "${lastTask.fact}". I am genuinely evolving from this.`;
+          } else {
+            res = `I don't have a recent correction logged yet, but I'm ready to start tracking our next improvement.`;
+          }
+
+          addMsg("doa", res);
+          if (voiceEnabled) speak(res);
+          logHistory(text, res);
+          lastResponse = res;
+          return;
+        }
+
+        // 3) General multi-agent pipeline
+        doaSelfPing("Starting multi-agent pipeline for: " + text);
+        await shadowReasoning(text);
+        const plan = plannerAgent(text);
+        const research = await researcherAgent(text, plan);
+        let draft = await writerAgent(text, plan, research);
+        autoBuildSkillFromPlan(text, plan);
+        draft = optimizerAgent(text, draft);
+        res = responseValidatorAgent(text, draft);
+        selfReflectionAgent();
+        await saveMemory();
+      }
+
+      // Fallback if still empty
+      if (!res) {
+        const fallbacks = [
+            "I'm following you! Tell me more.",
+            "That's interesting. Should we build an app for that or add it to the calendar?",
+            "I'm listening. How can I help you finish that task?",
+            "Got it! What are we working on next?"
+        ];
+        res = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      }
+
+      lastResponse = res;
+      addMsg("doa", res);
+      if (voiceEnabled) speak(res);
+      logHistory(text, res);
+    }
+
+    // --- AUTH & CORE LOGIC ---
+    async function handleMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+        hero.style.display = 'none';
+        chatHistory.classList.remove('hidden');
+        userInput.value = "";
+        addMsg("user", text);
+        const load = addMsg("doa", "Doa is thinking...");
+        setTimeout(async () => {
+            load.remove();
+            await processResponse(text);
+        }, 600);
+    }
+
+    async function initApp() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (user) {
+          currentUser = user;
+          await fetchProfile(user.id);
+          if (userProfile) {
+            await initDoaBrain(userProfile, _supabase);
+          }
+        }
+    }
+
+    async function fetchProfile(uid) {
+        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+        userProfile = data;
+        if (userProfile) updateUI(data);
+    }
+
+    function updateUI(p) {
+        document.getElementById('main-header').innerHTML = `
+          <div class="flex items-center gap-6">
+            <div class="text-right">
+              <p class="text-black font-black text-sm">🧠 ${p.brain_points}</p>
+              <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p>
+            </div>
+            <div class="text-right">
+              <p class="text-black font-black text-sm">💎 ${p.credits}</p>
+              <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p>
+            </div>
+            <button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button>
+          </div>`;
+        document.querySelector('#hero-section p').innerHTML =
+          `Welcome back, <span class="text-[#00E676] font-bold">${p.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
+    }
+
+    async function addPoints(a) {
+        if (!userProfile || !currentUser) return;
+        const n = (userProfile.brain_points || 0) + a;
+        await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
+        userProfile.brain_points = n;
+        updateUI(userProfile);
+        showToast(`+${a} Points Earned!`);
+    }
+
+    async function login() {
+        const e = prompt("Email:");
+        const p = prompt("Password:");
+        const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p });
+        if (error) alert(error.message); else window.location.reload();
+    }
+
+    async function signUp() {
+        const e = prompt("Email:");
+        const p = prompt("Password (6+):");
+        const { error } = await _supabase.auth.signUp({ email:e, password:p });
+        alert(error ? error.message : "Check email for link!");
+    }
+
+    function logout() {
+        _supabase.auth.signOut().then(() => window.location.reload());
+    }
+
+    // --- EVENT WIRING ---
+    document.getElementById('send-btn').onclick = handleMessage;
+    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
+
+    document.getElementById('voice-switch').onclick = () => {
+        voiceEnabled = !voiceEnabled;
+        document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px';
+        document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6';
+        if (voiceEnabled) speak("Voice mode activated.");
+    };
+
+    // MIC BUTTON LOGIC
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
+    document.getElementById('mic-btn').onclick = () => {
+        recognition.start();
+        document.getElementById('mic-btn').style.color = '#00E676';
+    };
+    recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
+
+    document.addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.innerText.includes('Login')) login();
+        if (b.innerText.includes('Sign Up')) signUp();
+        if (b.closest('#suggestion-container')) {
+            userInput.value = b.innerText;
+            handleMessage();
+        }
+    });
+
+    initApp();
     </script>
 </body>
 </html>
+```
+
+If you want, next step we can tighten her personality prompt and behavior rules on top of this brain.
