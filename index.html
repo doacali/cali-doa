@@ -148,5 +148,59 @@
         </div>
 
     </div>
+    <!-- SUPABASE INTEGRATION -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // 1. Connection Config
+        const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo'; // <--- PASTE IT HERE
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 2. Sign Up Function
+        async function handleSignUp() {
+            const email = prompt("Enter your email for Cali Doa:");
+            if (!email) return;
+            const password = prompt("Create a password (min 6 characters):");
+            if (!password) return;
+
+            const { data, error } = await _supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert("Doa error: " + error.message);
+            } else {
+                alert("Success! Welcome to the world of Doa. Please check your email to confirm your account.");
+            }
+        }
+
+        // 3. Login Function
+        async function handleLogin() {
+            const email = prompt("Email:");
+            const password = prompt("Password:");
+            
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert("Login failed: " + error.message);
+            } else {
+                alert("Welcome back! Doa has missed you.");
+                window.location.reload(); // Refresh to show logged-in state
+            }
+        }
+
+        // 4. Attach to your UI Buttons
+        window.onload = () => {
+            document.querySelectorAll('button').forEach(btn => {
+                const text = btn.innerText.toLowerCase();
+                if (text.includes('sign up')) btn.onclick = handleSignUp;
+                if (text.includes('login')) btn.onclick = handleLogin;
+            });
+        };
+    </script>
 </body>
 </html>
