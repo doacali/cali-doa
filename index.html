@@ -302,19 +302,32 @@
 
     // --- NEW: THE AI BRAIN FUNCTION ---
     async function callGemini(text) {
-        try {
-            const res = await fetch(PROXY_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: `You are Doa, a friendly, high-energy AI companion. Be concise. User says: ${text}` })
-            });
-            const data = await res.json();
-            return data.candidates[0].content.parts[0].text;
-        } catch (e) {
-            console.error(e);
-            return "My neural link is a bit fuzzy! Let's try again in a sec.";
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: `You are Doa, a friendly AI companion. Answer this concisely: ${text}` })
+        });
+
+        if (!res.ok) {
+            const errData = await res.json();
+            console.error("Cloudflare Error:", errData);
+            return "My neural link is having trouble connecting to my proxy. Please check your Cloudflare settings!";
         }
+
+        const data = await res.json();
+        
+        // This line checks if Gemini actually returned a message
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            return "I thought of an answer, but it was in a format I don't recognize yet!";
+        }
+    } catch (e) {
+        console.error("Fetch Error:", e);
+        return "I'm having trouble reaching my brain through the internet. Let's try again in a moment!";
     }
+}
 
     let currentUser = null, userProfile = null, voiceEnabled = false;
 
