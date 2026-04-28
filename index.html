@@ -5,39 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cali Doa | Intelligent Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-   <style>
-    body { font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .sidebar-item { transition: all 0.2s ease; border-radius: 12px; }
-    .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-    .sidebar-active { background: #121212; color: white; border-radius: 12px; }
-    .hero-heading { font-size: clamp(2rem, 4.5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.04em; }
-    .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    <!-- NEW PREMIUM FONT: PLUS JAKARTA SANS -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; }
+        .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
+        .sidebar-active { background: #121212; color: white; border-radius: 12px; }
+        /* LIFTED HEADING STYLE */
+        .hero-heading { font-size: clamp(2.5rem, 5vw, 3.8rem); line-height: 1.1; letter-spacing: -0.05em; font-weight: 800; }
+        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
 
-    /* --- NEW NOTIFICATION STYLE --- */
-    #notification {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #121212;
-        color: #00E676;
-        padding: 12px 24px;
-        border-radius: 50px;
-        font-weight: bold;
-        font-size: 13px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        z-index: 9999;
-        transition: all 0.3s ease;
-        opacity: 0;
-        pointer-events: none;
-    }
-    #notification.show {
-        opacity: 1;
-        bottom: 40px;
-    }
-</style>
+        #notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #121212;
+            color: #00E676;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 9999;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #notification.show { opacity: 1; bottom: 40px; }
+    </style>
 </head>
 <body class="bg-[#FBFBFB] text-gray-900">
 
@@ -97,45 +95,45 @@
             </header>
 
             <!-- CENTER HERO (Flex-1 allows it to take remaining space) -->
-           <!-- CENTER CONTENT AREA -->
-<div class="flex-1 flex flex-col items-center justify-between py-6 px-10 overflow-hidden relative">
+          <!-- CENTER CONTENT AREA -->
+<div class="flex-1 flex flex-col items-center justify-start pt-24 px-10 overflow-hidden relative bg-white">
     
-    <!-- HERO HEADER -->
-    <div id="hero-section" class="text-center transition-all duration-500 mt-10">
-        <h1 class="hero-heading font-black mb-2 tracking-tighter">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-        <p class="text-gray-400 text-base md:text-lg font-medium max-w-3xl w-full mx-auto leading-relaxed">
+    <!-- LIFTED HERO HEADER -->
+    <div id="hero-section" class="text-center transition-all duration-700 mb-12">
+        <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
+        <p class="text-gray-400 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
             Your intelligent companion for thinking, building, and creating.
         </p>
     </div>
 
-    <!-- CHAT HISTORY (Appears when chatting) -->
+    <!-- CHAT HISTORY -->
     <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden">
         <!-- Messages will appear here -->
     </div>
 
-    <!-- BOTTOM FIXED AREA (Suggestions + Input) -->
-    <div class="w-full max-w-2xl px-4 z-10">
-       <!-- SUGGESTIONS (Now 4 Buttons for better balance) -->
-<div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 transition-all duration-500">
-    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
-    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
-    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
-    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
-</div>
+    <!-- BOTTOM FIXED AREA -->
+    <div class="w-full max-w-2xl px-4 z-10 pb-8">
+        <!-- SUGGESTIONS -->
+        <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 transition-all duration-500">
+            <button class="px-5 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
+            <button class="px-5 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
+            <button class="px-5 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
+            <button class="px-5 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
+        </div>
 
         <!-- INPUT BOX -->
-        <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
+        <div class="bg-white border border-gray-200 shadow-[0_30px_60px_rgba(0,0,0,0.08)] rounded-[28px] p-2.5 flex items-center mb-2 focus-within:border-[#00E676] transition-all">
             <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
-            <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-300" placeholder="Message Doa...">
+            <input id="user-input" class="flex-1 p-2 outline-none text-[15px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
             <div class="flex items-center gap-3 pr-2">
                 <button class="text-gray-300 hover:text-black transition-colors">🎤</button>
-                <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
+                <button id="send-btn" class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
             </div>
         </div>
         
-        <div class="flex justify-end items-center gap-3 pr-2 mb-2">
+        <div class="flex justify-end items-center gap-3 pr-2">
             <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-            <div class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm"></div></div>
+            <div class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div class="absolute left-1 top-1 w-2 h-2 bg-white rounded-full shadow-sm"></div></div>
         </div>
     </div>
 </div>
