@@ -264,6 +264,25 @@
         window.location.reload();
     }
 
+    // --- WRITING REFINER LOGIC ---
+    async function startWritingRefiner() {
+        if (!userProfile) return alert("Please Login to use Doa tools!");
+        
+        const userInput = prompt("Doa: Paste the sentence you want me to refine:");
+        
+        if (userInput && userInput.length > 5) {
+            // Simulated refinement logic
+            const refined = "DOA REFINEMENT: \"" + userInput.charAt(0).toUpperCase() + userInput.slice(1) + "...\" (Enhanced for professional impact).";
+            
+            alert(refined);
+            showToast("Writing Refined! +10 Brain Points ✍️");
+            addPoints(10);
+        } else if (userInput) {
+            alert("Doa: Please provide a longer sentence for me to analyze!");
+        }
+    }
+
+    // --- UPDATED CLICK HANDLER ---
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('button');
         if (!btn) return;
@@ -271,9 +290,14 @@
         
         if (txt.includes('login')) login();
         if (txt.includes('sign up')) signUp();
+        
+        // Buttons that now work:
         if (txt.includes('spanish')) startSpanishQuiz();
-        if (txt.includes('writing style') || txt.includes('budget')) {
-            showToast("Coming soon! Try the Spanish Quiz.");
+        if (txt.includes('writing style')) startWritingRefiner();
+        
+        // Placeholder for the rest
+        if (txt.includes('budget')) {
+            showToast("App Builder coming soon! Try the Writing Refiner.");
         }
     });
 
