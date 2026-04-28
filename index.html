@@ -6,15 +6,38 @@
     <title>Cali Doa | Intelligent Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; }
-        .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212; color: white; border-radius: 12px; }
-        .hero-heading { font-size: clamp(2rem, 4.5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.04em; }
-        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    </style>
+   <style>
+    body { font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .sidebar-item { transition: all 0.2s ease; border-radius: 12px; }
+    .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
+    .sidebar-active { background: #121212; color: white; border-radius: 12px; }
+    .hero-heading { font-size: clamp(2rem, 4.5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.04em; }
+    .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+
+    /* --- NEW NOTIFICATION STYLE --- */
+    #notification {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #121212;
+        color: #00E676;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 13px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        z-index: 9999;
+        transition: all 0.3s ease;
+        opacity: 0;
+        pointer-events: none;
+    }
+    #notification.show {
+        opacity: 1;
+        bottom: 40px;
+    }
+</style>
 </head>
 <body class="bg-[#FBFBFB] text-gray-900">
 
@@ -192,19 +215,25 @@
     }
 
     async function earnPoints() {
-        if (!userProfile) return alert("Please Login to earn points!");
-        
-        const newPoints = userProfile.brain_points + 10;
-        const { error } = await _supabase.from('profiles').update({ brain_points: newPoints }).eq('id', currentUser.id);
+    if (!userProfile) return; // Silent fail if not logged in
+    
+    const newPoints = userProfile.brain_points + 10;
+    const { error } = await _supabase.from('profiles').update({ brain_points: newPoints }).eq('id', currentUser.id);
 
-        if (!error) {
-            userProfile.brain_points = newPoints;
-            updateUI(userProfile);
-            alert("Doa: +10 Brain Points earned! Great job!");
-        } else {
-            alert("Error saving points: " + error.message);
-        }
+    if (!error) {
+        userProfile.brain_points = newPoints;
+        updateUI(userProfile);
+        
+        // SMOOTH NOTIFICATION
+        const toast = document.getElementById('notification');
+        toast.innerText = "Doa: +10 Brain Points Earned! 🚀";
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000); // Disappears automatically after 2 seconds
     }
+}
 
     // SMART CLICK HANDLER
     document.addEventListener('click', (e) => {
@@ -237,4 +266,5 @@
     initApp();
 </script>
 </body>
+    <div id="notification"></div>
 </html>
