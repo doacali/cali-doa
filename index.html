@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cali Doa | Master Brain 3.0</title>
+    <title>Cali Doa | Neural Engine 3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -24,6 +24,7 @@
 <body class="bg-[#FBFBFB] text-gray-900">
 
     <div class="flex h-screen w-screen overflow-hidden">
+        
         <!-- 1. SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1></div>
@@ -32,11 +33,10 @@
                 <button id="nav-chat" class="sidebar-item sidebar-active shadow-lg">💬 Chat With Doa</button>
                 <button class="sidebar-item text-gray-400 flex justify-between">📅 Calendar <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
                 <button id="nav-apps" class="sidebar-item text-gray-400">📱 Doa Apps</button>
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Neural Workspace</p>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Cognitive Workspace</p>
                 <button class="sidebar-item text-gray-400">⚡ Code Builder</button>
                 <button class="sidebar-item text-gray-400 flex justify-between">📂 Saved Labs <span>⌄</span></button>
             </nav>
-            <!-- EFFICIENCY METER -->
             <div class="p-6 border-t border-gray-50">
                 <div class="flex justify-between items-center mb-2">
                     <p class="text-[9px] font-extrabold text-gray-300 uppercase tracking-[0.2em]">Neural Efficiency</p>
@@ -50,15 +50,16 @@
         <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button class="hover:text-black transition-colors">Login</button><button class="text-black bg-[#00E676] px-4 py-2 rounded-lg font-bold">Sign Up</button>
+                <button class="hover:text-black">Login</button><button class="text-black bg-[#00E676] px-4 py-2 rounded-lg font-bold shadow-sm">Sign Up</button>
             </header>
 
-            <div class="flex-1 w-full flex flex-row overflow-hidden relative">
-                <!-- CHAT COLUMN -->
-                <div id="chat-column" class="flex-1 flex flex-col items-center justify-start px-10 transition-all duration-500 overflow-hidden">
+            <div id="view-container" class="flex-1 w-full flex flex-row overflow-hidden relative">
+                
+                <!-- CHAT VIEW -->
+                <div id="chat-view" class="flex-1 flex flex-col items-center justify-start px-10 transition-all duration-500 overflow-hidden">
                     <div id="hero-section" class="text-center mt-12 mb-8">
                         <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                        <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Neural 3.0 Logic: Web-verified, Multi-agent learning active.</p>
+                        <p class="text-gray-400 text-base md:text-lg font-medium max-w-3xl w-full mx-auto leading-relaxed">Secure Neural Proxy active. Your intelligent world is ready.</p>
                     </div>
                     <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
 
@@ -72,16 +73,22 @@
                         </div>
                         <div class="bg-white border border-gray-200 shadow-xl rounded-[28px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
                             <button class="p-3 text-gray-300 text-xl font-light hover:text-black">+</button>
-                            <input id="user-input" class="flex-1 p-2 outline-none text-[15px] font-medium" placeholder="Feed Doa data or tasks...">
+                            <input id="user-input" class="flex-1 p-2 outline-none text-[15px] font-medium" placeholder="Deploy a task or launch an app...">
                             <button id="mic-btn" class="p-2 text-gray-300 hover:text-black">🎤</button>
-                            <button id="send-btn" class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg">→</button>
+                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg">→</button>
                         </div>
                         <div class="flex justify-end items-center gap-3 pr-2">
-                            <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Shadow Reasoning</span>
+                            <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Neural Voice</span>
                             <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
                         </div>
                     </div>
                 </div>
+
+                <!-- APPS VIEW (Hidden) -->
+                <div id="apps-view" class="hidden flex-1 w-full p-10 overflow-y-auto hide-scrollbar bg-[#FBFBFB]">
+                    <div class="max-w-6xl mx-auto"><h2 class="text-3xl font-black italic tracking-tighter mb-12 uppercase">DOA APPS</h2><div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div></div>
+                </div>
+
                 <!-- PORTAL VIEWPORT -->
                 <div id="viewport-column" class="hidden w-0 bg-gray-50 flex flex-col transition-all duration-500 border-l border-gray-100">
                     <div class="p-3 border-b bg-white flex justify-between items-center">
@@ -92,14 +99,9 @@
                 </div>
             </div>
 
-            <!-- APPS VIEW (Hidden) -->
-            <div id="apps-view" class="hidden flex-1 w-full p-10 overflow-y-auto hide-scrollbar bg-[#FBFBFB]">
-                <div class="max-w-6xl mx-auto"><h2 class="text-3xl font-black italic tracking-tighter mb-12 uppercase">DOA APPS</h2><div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div></div>
-            </div>
-
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI • NEURAL ENGINE 3.0</div>
+                <div>© 2026 DOA CALI • MASTER ENGINE 3.0</div>
             </footer>
         </main>
         
@@ -109,12 +111,12 @@
             <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-8"></div>
             <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
                 <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black shadow-lg uppercase">Go Pro - $4.99</button>
+                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black shadow-lg uppercase transition-all">Go Pro - $4.99</button>
             </div>
         </aside>
 
         <!-- FLOATING AGENT -->
-        <div class="fixed bottom-12 right-10 z-50"><div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group"><div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none group-hover:scale-110 transition">DOA</div><div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div></div></div>
+        <div class="fixed bottom-12 right-10 z-50"><div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 transition group"><div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div><div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div></div></div>
     </div>
 
     <div id="notification"></div>
@@ -128,44 +130,39 @@
 
         let userProfile = null, userMemory = { learned: [] }, voiceEnabled = false, bestVoice = null;
 
-        // --- 1. THE BRAIN (CONCIERGE + CLOUDFLARE) ---
-               async function callGemini(text) {
+        // --- 1. THE BRAIN (CLOUDFLARE BRIDGE) ---
+        async function callGemini(text) {
             try {
                 const res = await fetch(PROXY_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ text: text })
                 });
-                
                 const data = await res.json();
-
                 if (data.error) {
-                    // This will tell us if it's an "API Key Invalid" or "Quota Exceeded" error
-                    alert("Doa Brain Error: " + data.error);
+                    alert("Worker Error: " + data.error);
                     return "My neural link reported an error: " + data.error;
                 }
-
                 return data.candidates[0].content.parts[0].text;
-            } catch (e) {
-                return "I can't reach my brain proxy. Check your internet or Cloudflare URL.";
-            }
+            } catch (e) { return "I can't reach my brain proxy. Check your internet or Cloudflare URL."; }
         }
 
-            // Keyword Tasks: Learning
+        async function processResponse(text) {
+            const low = text.toLowerCase().trim();
+            let res = "";
+
             if (low.startsWith("remember") || low.includes("actually")) {
                 const fact = text.replace(/remember|actually/gi, "").trim();
                 res = "Locked in! I've audited that correction and saved it to my memory vault.";
                 userMemory.learned.push({ fact, date: new Date(), audit: 'verified' });
                 await _supabase.from('profiles').update({ memory: userMemory }).eq('id', userProfile.id);
                 updateMeter();
-            }
-            // Keyword Tasks: Research (Wikipedia Portal)
-            else if (low.includes("who is") || low.includes("what is") || low.includes("tell me about")) {
+            } else if (low.includes("who is") || low.includes("what is") || low.includes("tell me about")) {
                 const topic = low.replace(/who is|what is|tell me about/g, "").trim();
                 res = `Opening the knowledge base for ${topic}...`;
                 openViewport(`https://en.m.wikipedia.org/wiki/${encodeURIComponent(topic)}`, "Wikipedia Portal");
             }
-            // Real AI Fallback
+
             if (!res) {
                 const load = addMsg("doa", "Doa Agent: Reasoning...");
                 res = await callGemini(text);
@@ -180,6 +177,7 @@
         let queue = [...list].sort(() => Math.random() - 0.5);
         function rotate() {
             const btns = document.querySelectorAll('#suggestion-container button');
+            if (btns.length === 0) return;
             btns.forEach((btn, i) => {
                 setTimeout(() => {
                     btn.style.opacity = '0';
@@ -196,8 +194,10 @@
         function updateMeter() {
             const count = userMemory.learned.length;
             let percent = Math.min(count * 10, 100);
-            document.getElementById('efficiency-bar').style.width = percent + "%";
-            document.getElementById('efficiency-percent').innerText = percent + "%";
+            const bar = document.getElementById('efficiency-bar');
+            if (bar) bar.style.width = percent + "%";
+            const pText = document.getElementById('efficiency-percent');
+            if (pText) pText.innerText = percent + "%";
         }
 
         function speak(t) {
@@ -236,8 +236,12 @@
         }
         function updateUI(p) {
             const name = p.usename ? p.usename.replace(/'/g, "") : "Companion";
-            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6 text-right"><div class="hidden md:block"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Brains</p></div><div class="hidden md:block"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="_supabase.auth.signOut().then(()=>location.reload())" class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Logout</button></div>`;
-            document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${name}</span>! Current Efficiency: ${document.getElementById('efficiency-percent').innerText}`;
+            const header = document.getElementById('main-header');
+            if (header) {
+                header.innerHTML = `<div class="flex items-center gap-6 text-right"><div class="hidden md:block"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Brains</p></div><div class="hidden md:block"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="_supabase.auth.signOut().then(()=>location.reload())" class="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-4 transition">Logout</button></div>`;
+            }
+            const heroP = document.querySelector('#hero-section p');
+            if (heroP) heroP.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${name}</span>! Current Efficiency: ${document.getElementById('efficiency-percent').innerText}`;
         }
         async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
         async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+ chars):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
@@ -250,13 +254,17 @@
 
         document.getElementById('send-btn').onclick = handleMessage;
         userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
-        document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Shadow reasoning engine active."); };
+        const voiceSwitch = document.getElementById('voice-switch');
+        if (voiceSwitch) {
+            voiceSwitch.onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Neural voice activated."); };
+        }
 
         document.addEventListener('click', (e) => {
             const b = e.target.closest('button'); if (!b) return;
-            if (b.innerText.includes('Login')) login();
-            if (b.innerText.includes('Sign Up')) signUp();
-            if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
+            const t = b.innerText;
+            if (t.includes('Login')) login();
+            else if (t.includes('Sign Up')) signUp();
+            else if (b.closest('#suggestion-container')) { userInput.value = t; handleMessage(); }
         });
 
         initApp();
