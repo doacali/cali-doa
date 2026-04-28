@@ -43,50 +43,53 @@
             </div>
         </aside>
 
-        <!-- MAIN WORKSPACE -->
-        <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-            <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button class="hover:text-black transition-colors">Login</button>
-                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
-            </header>
+        <!-- REFINED MAIN WORKSPACE WITH APP DASHBOARD -->
+<main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+    
+    <!-- HEADER -->
+    <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
+        <button class="hover:text-black">Login</button>
+        <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg font-bold shadow-sm">Sign Up</button>
+    </header>
 
-            <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
-                    <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
-                </div>
-
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
-
-                <!-- BOTTOM UI -->
-                <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
-                    </div>
-
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
-                        <div class="flex items-center gap-3 pr-2">
-                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
-                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
-                        </div>
-                    </div>
-                    <div class="flex justify-end items-center gap-3 pr-2">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
-                    </div>
-                </div>
+    <!-- 1. THE CHAT VIEW (Default) -->
+    <div id="chat-view" class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden relative">
+        <div id="hero-section" class="text-center mt-12 mb-8">
+            <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
+            <p class="text-gray-400 text-base md:text-lg font-medium max-w-3xl w-full mx-auto">Neural Engine 3.0 Active. Apps and Labs online.</p>
+        </div>
+        <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
+        <div class="w-full max-w-2xl px-4 shrink-0 pb-8">
+            <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
+                <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Start Spanish Quiz</button>
+                <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Launch Cali-Culator</button>
             </div>
+            <div class="bg-white border border-gray-200 shadow-xl rounded-[28px] p-2 flex items-center mb-3">
+                <button class="p-3 text-gray-300 text-xl font-light">+</button>
+                <input id="user-input" class="flex-1 p-2 outline-none text-[15px] font-medium" placeholder="Message Doa or launch an app...">
+                <button id="send-btn" class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg">→</button>
+            </div>
+        </div>
+    </div>
 
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
-                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-        </main>
+    <!-- 2. THE APPS DASHBOARD VIEW (Hidden by Default) -->
+    <div id="apps-view" class="hidden flex-1 w-full p-10 overflow-y-auto hide-scrollbar bg-[#FBFBFB]">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-black italic tracking-tighter mb-2">DOA APP ECOSYSTEM</h2>
+            <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] mb-12">24 Specialized Neural Tools</p>
+            
+            <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- App cards will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
+        <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+        <div>© 2026 DOA CALI • APP ECOSYSTEM V1.0</div>
+    </footer>
+</main>
 
         <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
             <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
