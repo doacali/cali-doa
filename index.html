@@ -116,7 +116,7 @@
     <!-- BOTTOM FIXED AREA (Suggestions + Input) -->
     <div class="w-full max-w-2xl px-4 z-10">
        <!-- SUGGESTIONS (Now 4 Buttons for better balance) -->
-<div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 transition-all duration-500 min-h-[45px]">
+<div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 transition-all duration-500">
     <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
     <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
     <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
@@ -175,7 +175,7 @@
         </div>
 
     </div>
-  <!-- CALI DOA MASTER INTEGRATION (V6 - 4 BUTTONS & SLOWER LOOP) -->
+  <!-- CALI DOA MASTER INTEGRATION (V6 - FULL & STABLE) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
@@ -201,30 +201,116 @@
         const buttons = document.querySelectorAll('#suggestion-container button');
         let used = [];
         buttons.forEach((btn, index) => {
-            // Staggered wipe effect
             setTimeout(() => {
                 btn.style.opacity = '0';
                 btn.style.transform = 'translateY(10px)';
-                
                 setTimeout(() => {
                     let randomPrompt;
                     do {
                         randomPrompt = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
                     } while (used.includes(randomPrompt));
-                    
                     used.push(randomPrompt);
                     btn.innerText = randomPrompt;
                     btn.style.opacity = '1';
                     btn.style.transform = 'translateY(0)';
                 }, 500);
-            }, index * 100); // Buttons "pop" one by one
+            }, index * 100);
         });
     }
-
-    // Interval set to 8 seconds (8000ms) for better readability
     setInterval(rotateSuggestions, 8000); 
 
-    // ... (Keep the rest of your Chat, Auth, and UI logic the same as V5) ...
+    // --- CHAT LOGIC ---
+    const chatHistory = document.getElementById('chat-history');
+    const heroSection = document.getElementById('hero-section');
+    const userInput = document.getElementById('user-input');
+
+    async function handleMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+        heroSection.style.display = 'none';
+        chatHistory.classList.remove('hidden');
+        userInput.value = "";
+        addMessage("user", text);
+        const loadingMsg = addMessage("doa", "Doa is thinking...");
+        setTimeout(() => {
+            loadingMsg.remove();
+            processDoaResponse(text);
+        }, 1200);
+    }
+
+    function addMessage(sender, text) {
+        const div = document.createElement('div');
+        div.className = sender === "user" ? "flex justify-end w-full" : "flex justify-start w-full";
+        div.innerHTML = `<div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${text}</div>`;
+        chatHistory.appendChild(div);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        return div;
+    }
+
+    function processDoaResponse(text) {
+        const input = text.toLowerCase();
+        let response = "I'm listening! Tell me more about that.";
+        if (input.includes("spanish")) response = "Ready for your Spanish Lesson! How do you say 'The House' in Spanish?";
+        else if (input.includes("casa")) { response = "Correct! +10 Brain Points 🚀"; addPoints(10); }
+        else if (input.includes("writing")) response = "Paste your sentence below and I will polish it for you.";
+        addMessage("doa", response);
+    }
+
+    // --- AUTH & PROFILE ---
+    async function initApp() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (user) { currentUser = user; fetchProfile(user.id); }
+    }
+    async function fetchProfile(uid) {
+        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+        userProfile = data;
+        if (userProfile) updateUI(userProfile);
+    }
+    function updateUI(profile) {
+        const header = document.querySelector('header');
+        if (header) {
+            header.innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${profile.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Brain Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${profile.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 ml-4 uppercase tracking-widest hover:text-red-600 transition">Logout</button></div>`;
+        }
+        const welcome = document.querySelector('#hero-section p');
+        if (welcome && profile.usename) {
+            welcome.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${profile.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
+        }
+    }
+    async function addPoints(amount) {
+        const newPoints = (userProfile.brain_points || 0) + amount;
+        await _supabase.from('profiles').update({ brain_points: newPoints }).eq('id', currentUser.id);
+        userProfile.brain_points = newPoints;
+        updateUI(userProfile);
+    }
+
+    async function login() {
+        const email = prompt("Email:");
+        const password = prompt("Password:");
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message); else window.location.reload();
+    }
+
+    async function signUp() {
+        const email = prompt("Email:");
+        const password = prompt("Password (6+ chars):");
+        const { error } = await _supabase.auth.signUp({ email, password });
+        if (error) alert(error.message); else alert("Check email for link!");
+    }
+
+    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
+
+    document.getElementById('send-btn').onclick = handleMessage;
+    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleMessage(); });
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        if (btn.innerText.includes('Login')) login();
+        if (btn.innerText.includes('Sign Up')) signUp();
+        if (btn.closest('#suggestion-container')) { userInput.value = btn.innerText; handleMessage(); }
+    });
+    initApp();
+</script>
+
+<div id="notification"></div>
 </body>
-    <div id="notification"></div>
 </html>
