@@ -190,11 +190,14 @@
 
         // --- LEVEL 2: REAL AI BRAIN (CLOUDFLARE + GEMINI) ---
         // If none of the local commands matched, we ask the AI
-        if (!res) {
-            const loadingMsg = addMsg("doa", "Doa is thinking deeply...");
-            res = await callGemini(text); // This calls your Cloudflare Proxy
-            loadingMsg.remove();
+          if (!res) {
+        const loadingMsg = addMsg("doa", "Doa is thinking deeply...");
+        try {
+            res = await callGemini(text); 
+        } finally {
+            loadingMsg.remove(); // This ensures the message ALWAYS disappears
         }
+    }
 
         // Final output: Show the message and speak it
         addMsg("doa", res);
