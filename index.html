@@ -97,43 +97,45 @@
             </header>
 
             <!-- CENTER HERO (Flex-1 allows it to take remaining space) -->
-            <section class="flex-1 flex flex-col items-center justify-center px-6 text-center min-h-0">
-                <div class="max-w-4xl w-full mb-8">
-                    <h1 class="hero-heading font-black mb-4">
-                        What can <span class="text-[#00E676]">Doa</span> <br> do for you?
-                    </h1>
-                   <p class="text-gray-400 text-base md:text-lg font-medium max-w-3xl w-full mx-auto leading-relaxed">
-                        Your intelligent companion for thinking, building, and creating.
-                    </p>
-                </div>
+            <!-- CENTER CONTENT AREA -->
+<div class="flex-1 flex flex-col items-center justify-start pt-10 px-10 overflow-hidden relative">
+    
+    <!-- HERO HEADER (Moves up when chatting) -->
+    <div id="hero-section" class="text-center transition-all duration-500 mt-20">
+        <h1 class="hero-heading font-black mb-4 tracking-tighter">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
+        <p class="text-gray-400 text-lg md:text-xl font-medium max-w-3xl w-full mx-auto leading-relaxed">
+            Your intelligent companion for thinking, building, and creating.
+        </p>
+    </div>
 
-                <!-- SUGGESTIONS -->
-                <div class="flex flex-wrap justify-center gap-3 mb-10">
-                    <button class="px-5 py-3 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Refine my writing style</button>
-                    <button class="px-5 py-3 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish Expert</button>
-                    <button class="px-5 py-3 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build a Budget App</button>
-                </div>
+    <!-- CHAT HISTORY (Appears when chatting) -->
+    <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-10 hidden">
+        <!-- Messages will appear here -->
+    </div>
 
-                <!-- INPUT AREA -->
-                <div class="w-full max-w-2xl px-4">
-                    <div class="bg-white border border-gray-200 shadow-[0_15px_40px_rgba(0,0,0,0.05)] rounded-[24px] p-2 flex items-center mb-3 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
-                        <input class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-300" placeholder="Message Doa...">
-                        <div class="flex items-center gap-3 pr-2">
-                            <button class="text-gray-300 hover:text-black transition-colors">🎤</button>
-                            <button class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
-                        </div>
-                    </div>
-                    
-                    <!-- LIVE VOICE ALIGNMENT -->
-                    <div class="flex justify-end items-center gap-3 pr-2">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                        <div class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer group">
-                            <div class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- SUGGESTIONS (The Infinite Loop) -->
+    <div id="suggestion-container" class="flex flex-wrap justify-center gap-3 mb-10 transition-all duration-500">
+        <button class="px-5 py-3 bg-white border border-gray-100 rounded-full text-[12px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze my YouTube</button>
+        <button class="px-5 py-3 bg-white border border-gray-100 rounded-full text-[12px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
+        <button class="px-5 py-3 bg-white border border-gray-100 rounded-full text-[12px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build a Budget App</button>
+    </div>
+
+    <!-- INPUT BOX -->
+    <div class="w-full max-w-2xl px-4 pb-10">
+        <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-3">
+            <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
+            <input id="user-input" class="flex-1 p-3 outline-none text-[15px] font-medium placeholder-gray-300" placeholder="Message Doa...">
+            <div class="flex items-center gap-3 pr-2">
+                <button class="text-gray-300 hover:text-black transition-colors">🎤</button>
+                <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
+            </div>
+        </div>
+        <div class="flex justify-end items-center gap-3 pr-2">
+            <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
+            <div class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm"></div></div>
+        </div>
+    </div>
+</div>
 
             <!-- FOOTER (Shrink-0 forces it to stay at the bottom) -->
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-bold text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
@@ -171,7 +173,7 @@
         </div>
 
     </div>
-   <!-- CALI DOA MASTER INTEGRATION (V3 - STABLE & QUIZ READY) -->
+  <!-- CALI DOA MASTER INTEGRATION (V4 - LIVE CHAT & LOOPS) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
@@ -181,123 +183,126 @@
     let currentUser = null;
     let userProfile = null;
 
+    // --- INFINITE SUGGESTION LOOP ---
+    const allSuggestions = [
+        "Learn Spanish: Lesson 1", "Analyze my YouTube channel", "Refine my writing style",
+        "Build a Budget App", "Tell me a bedtime story", "Let's go shopping",
+        "Check weather in LA", "Start Laser Tag", "Create a minimalist logo",
+        "Explain Quantum Physics", "Help me with homework", "Plan a workout"
+    ];
+    
+    function rotateSuggestions() {
+        const buttons = document.querySelectorAll('#suggestion-container button');
+        buttons.forEach((btn, i) => {
+            btn.style.opacity = '0';
+            setTimeout(() => {
+                const randomPrompt = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
+                btn.innerText = randomPrompt;
+                btn.style.opacity = '1';
+            }, 500);
+        });
+    }
+    setInterval(rotateSuggestions, 6000); // Wipes and changes every 6 seconds
+
+    // --- CHAT LOGIC ---
+    const chatHistory = document.getElementById('chat-history');
+    const heroSection = document.getElementById('hero-section');
+    const userInput = document.getElementById('user-input');
+
+    async function handleMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        // UI Changes: Hide hero, show chat
+        heroSection.style.display = 'none';
+        chatHistory.classList.remove('hidden');
+        userInput.value = "";
+
+        addMessage("user", text);
+        
+        // Simulating "Thinking"
+        const loadingMsg = addMessage("doa", "Doa is thinking...");
+        
+        setTimeout(() => {
+            loadingMsg.remove();
+            processDoaResponse(text);
+        }, 1500);
+    }
+
+    function addMessage(sender, text) {
+        const div = document.createElement('div');
+        div.className = sender === "user" ? "flex justify-end" : "flex justify-start";
+        div.innerHTML = `
+            <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">
+                ${text}
+            </div>
+        `;
+        chatHistory.appendChild(div);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        return div;
+    }
+
+    function processDoaResponse(text) {
+        const input = text.toLowerCase();
+        let response = "I'm listening! Tell me more about that.";
+
+        if (input.includes("spanish")) {
+            response = "Ready for your Spanish Lesson! How do you say 'The House' in Spanish?";
+        } else if (input.includes("casa")) {
+            response = "Correct! +10 Brain Points 🚀";
+            addPoints(10);
+        } else if (input.includes("writing") || input.includes("refine")) {
+            response = "I'm ready to refine your writing. Paste the sentence below!";
+        } else if (input.includes("hello") || input.includes("doa")) {
+            response = "Hello! I am your intelligent companion. What are we building today?";
+        }
+
+        addMessage("doa", response);
+    }
+
+    // --- AUTH & POINTS (SAME AS BEFORE) ---
     async function initApp() {
         const { data: { user } } = await _supabase.auth.getUser();
-        if (user) {
-            currentUser = user;
-            await fetchProfile(user.id);
-        }
+        if (user) { currentUser = user; fetchProfile(user.id); }
     }
 
     async function fetchProfile(uid) {
-        try {
-            let { data, error } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-            if (error && error.code === 'PGRST116') {
-                const { data: newProf } = await _supabase.from('profiles').insert([{ id: uid }]).select().single();
-                userProfile = newProf;
-            } else {
-                userProfile = data;
-            }
-            if (userProfile) updateUI(userProfile);
-        } catch (e) { console.error("Profile Load Error", e); }
+        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+        userProfile = data;
+        if (userProfile) updateUI(userProfile);
     }
 
     function updateUI(profile) {
         const header = document.querySelector('header');
         if (header) {
-            header.innerHTML = `
-                <div class="flex items-center gap-6">
-                    <div class="text-right"><p class="text-black font-black text-sm">🧠 ${profile.brain_points}</p><p class="text-[8px] text-gray-400 uppercase font-bold">Brain Points</p></div>
-                    <div class="text-right"><p class="text-black font-black text-sm">💎 ${profile.credits}</p><p class="text-[8px] text-gray-400 uppercase font-bold">Credits</p></div>
-                    <button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 ml-4 uppercase tracking-widest">Logout</button>
-                </div>
-            `;
+            header.innerHTML = `<div class="flex items-center gap-6"><p class="text-black font-black text-sm">🧠 ${profile.brain_points}</p><p class="text-black font-black text-sm">💎 ${profile.credits}</p><button onclick="logout()" class="text-[10px] font-bold text-red-400 ml-4 uppercase tracking-widest">Logout</button></div>`;
         }
-        const welcome = document.querySelector('h1 + p');
+        const welcome = document.querySelector('#hero-section p');
         if (welcome && profile.usename) {
-            const cleanName = profile.usename.replace(/'/g, "");
-            welcome.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${cleanName}</span>! Your intelligent companion is ready.`;
-        }
-    }
-
-    // --- SPANISH QUIZ LOGIC ---
-    async function startSpanishQuiz() {
-        if (!userProfile) return alert("Please Login to start learning!");
-        
-        const answer = prompt("Doa: How do you say 'The House' in Spanish?");
-        
-        if (answer && answer.toLowerCase().trim() === "la casa") {
-            showToast("Correct! +10 Brain Points 🚀");
-            addPoints(10);
-        } else if (answer) {
-            alert("Doa: Not quite! 'The House' is 'La Casa'. Keep practicing!");
+            welcome.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${profile.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
         }
     }
 
     async function addPoints(amount) {
         const newPoints = userProfile.brain_points + amount;
-        const { error } = await _supabase.from('profiles').update({ brain_points: newPoints }).eq('id', currentUser.id);
-        if (!error) {
-            userProfile.brain_points = newPoints;
-            updateUI(userProfile);
-        }
+        await _supabase.from('profiles').update({ brain_points: newPoints }).eq('id', currentUser.id);
+        userProfile.brain_points = newPoints;
+        updateUI(userProfile);
     }
 
-    function showToast(msg) {
-        const toast = document.getElementById('notification');
-        if (toast) {
-            toast.innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-    }
+    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
 
-    async function login() {
-        const email = prompt("Email:");
-        const password = prompt("Password:");
-        const { error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else window.location.reload();
-    }
-
-    async function logout() {
-        await _supabase.auth.signOut();
-        window.location.reload();
-    }
-
-    // --- WRITING REFINER LOGIC ---
-    async function startWritingRefiner() {
-        if (!userProfile) return alert("Please Login to use Doa tools!");
-        
-        const userInput = prompt("Doa: Paste the sentence you want me to refine:");
-        
-        if (userInput && userInput.length > 5) {
-            // Simulated refinement logic
-            const refined = "DOA REFINEMENT: \"" + userInput.charAt(0).toUpperCase() + userInput.slice(1) + "...\" (Enhanced for professional impact).";
-            
-            alert(refined);
-            showToast("Writing Refined! +10 Brain Points ✍️");
-            addPoints(10);
-        } else if (userInput) {
-            alert("Doa: Please provide a longer sentence for me to analyze!");
-        }
-    }
-
-    // --- UPDATED CLICK HANDLER ---
+    // EVENT LISTENERS
+    document.getElementById('send-btn').onclick = handleMessage;
+    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleMessage(); });
+    
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('button');
-        if (!btn) return;
-        const txt = btn.innerText.toLowerCase();
-        
-        if (txt.includes('login')) login();
-        if (txt.includes('sign up')) signUp();
-        
-        // Buttons that now work:
-        if (txt.includes('spanish')) startSpanishQuiz();
-        if (txt.includes('writing style')) startWritingRefiner();
-        
-        // Placeholder for the rest
-        if (txt.includes('budget')) {
-            showToast("App Builder coming soon! Try the Writing Refiner.");
+        if (btn && btn.innerText.includes('Login')) login();
+        if (btn && btn.innerText.includes('Sign Up')) signUp();
+        if (btn && btn.parentElement.id === 'suggestion-container') {
+            userInput.value = btn.innerText;
+            handleMessage();
         }
     });
 
