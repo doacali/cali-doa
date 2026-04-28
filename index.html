@@ -4,580 +4,807 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cali Doa | Intelligent Companion</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; }
-        .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212; color: white; border-radius: 12px; }
-        .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
-        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
-        #notification.show { opacity: 1; bottom: 40px; }
-        .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .typing-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #888; margin: 0 2px; animation: bounce 1.2s infinite; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
-    </style>
-</head>
-<body class="bg-[#FBFBFB] text-gray-900">
-
-<div class="flex h-screen w-screen overflow-hidden">
-
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
-        <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
-        <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest" placeholder="SEARCH..."></div>
-        <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-            <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main</p>
-            <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">💬 <span class="text-sm font-bold">Chat With Doa</span></button>
-            <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">📅 <span class="text-sm font-semibold">Calendar</span> <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
-            <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">📱 <span class="text-sm font-semibold">Doa Apps</span></button>
-            <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-            <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Code...</span></button>
-            <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">📂 <span class="text-sm font-semibold">Saved Tabs</span> <span>⌄</span></button>
-        </nav>
-        <div class="p-6 border-t border-gray-50">
-            <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
-            <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
-        </div>
-    </aside>
-
-    <!-- MAIN WORKSPACE -->
-    <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-        <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-            <button class="hover:text-black transition-colors">Login</button>
-            <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
-        </header>
-
-        <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-            <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
-                <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
-            </div>
-
-            <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
-
-            <!-- BOTTOM UI -->
-            <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
-                <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
-                    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
-                    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
-                    <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
-                </div>
-
-                <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                    <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
-                    <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
-                    <div class="flex items-center gap-3 pr-2">
-                        <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
-                        <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
-                    </div>
-                </div>
-                <div class="flex justify-end items-center gap-3 pr-2">
-                    <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                    <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
-                </div>
-            </div>
-        </div>
-
-        <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
-            <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-            <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-        </footer>
-    </main>
-
-    <!-- RIGHT SIDEBAR -->
-    <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
-        <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-            <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
-            <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
-        </div>
-        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-            <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-            <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
-            <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
-        </div>
-    </aside>
-
-    <!-- DOA AGENT BUTTON -->
-    <div class="fixed bottom-12 right-10 z-50">
-        <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
-            <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-            <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-        </div>
-    </div>
-</div>
-
-<div id="notification"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-// ============================================================
-// 🔧 CONFIG
-// ============================================================
-const WORKER_URL = "https://doa-brain-proxy.111222lov3.workers.dev";
-const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let currentUser = null, userProfile = null, voiceEnabled = false, lastResponse = "";
-let conversationHistory = [];
-
-// ============================================================
-// 🧠 MEMORY SYSTEM
-// ============================================================
-let userMemory = { learned: [], skills: [], preferences: {}, history: [], graph: [] };
-
-async function initDoaBrain(profile) {
-    const { data, error } = await _supabase.from('profiles').select('memory').eq('id', profile.id).single();
-    if (!error && data && data.memory) {
-        userMemory = data.memory;
-        doaLog("Loaded memory from Supabase.");
-    } else {
-        await _supabase.from('profiles').update({ memory: userMemory }).eq('id', profile.id);
-        doaLog("Initialized fresh memory.");
-    }
-}
-
-async function saveMemory() {
-    if (!userProfile) return;
-    await _supabase.from('profiles').update({ memory: userMemory }).eq('id', userProfile.id);
-}
-
-function doaLog(msg) { console.log("🧠 Doa:", msg); }
-
-function addLearnedFact(fact, auditStatus) {
-    userMemory.learned = userMemory.learned || [];
-    userMemory.learned.push({ fact, timestamp: new Date().toISOString(), audit: auditStatus, efficiency_score: 0 });
-}
-
-function bumpLastEfficiency() {
-    if (!userMemory.learned || userMemory.learned.length === 0) return null;
-    const last = userMemory.learned[userMemory.learned.length - 1];
-    last.efficiency_score = (last.efficiency_score || 0) + 1;
-    return last;
-}
-
-function logHistory(input, output) {
-    userMemory.history = userMemory.history || [];
-    userMemory.history.push({ input, output, timestamp: new Date().toISOString() });
-}
-
-function addGraphTriple(subject, relation, object, source) {
-    userMemory.graph = userMemory.graph || [];
-    userMemory.graph.push({ subject, relation, object, source });
-}
-
-// ============================================================
-// 🌐 WEB RESEARCH (Free APIs)
-// ============================================================
-async function ddgLookup(query) {
-    try {
-        const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
-        return await res.json();
-    } catch (e) { return null; }
-}
-
-async function wikiSummary(topic) {
-    try {
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`);
-        if (!res.ok) return null;
-        return await res.json();
-    } catch (e) { return null; }
-}
-
-async function crossVerifyFact(fact) {
-    let score = 0, sources = [];
-    const ddg = await ddgLookup(fact);
-    if (ddg && ddg.AbstractText) { score++; sources.push("DuckDuckGo"); }
-    const wiki = await wikiSummary(fact.split(" ").slice(0, 5).join(" "));
-    if (wiki && wiki.extract) { score++; sources.push("Wikipedia"); }
-    if (score >= 2) return { status: "verified", proof: sources.join(", ") };
-    if (score === 1) return { status: "theory", proof: sources.join(", ") };
-    return { status: "user_preference", proof: "User Direct Input" };
-}
-
-async function validateLearning(fact) {
-    try {
-        const audit = await crossVerifyFact(fact);
-        if (audit.status === "verified") showToast("Knowledge Verified ✅");
-        else if (audit.status === "theory") showToast("Interesting Theory Logged 🧪");
-        else showToast("Personal Preference Saved 💡");
-        if (audit.status === "user_preference") addGraphTriple("user", "prefers", fact, "user");
-        else if (audit.status === "verified") addGraphTriple("world", "fact", fact, "web");
-        return audit;
-    } catch (e) { return { status: "unverified", proof: null }; }
-}
-
-// ============================================================
-// 🤖 MULTI-AGENT BRAIN (Fallback)
-// ============================================================
-function upsertSkill(name, pattern, steps) {
-    userMemory.skills = userMemory.skills || [];
-    const existing = userMemory.skills.find(s => s.name === name);
-    if (existing) { existing.pattern = pattern || existing.pattern; existing.steps = steps || existing.steps; }
-    else userMemory.skills.push({ name, pattern, steps, efficiency_score: 0 });
-}
-
-function findBestSkillFor(input) {
-    if (!userMemory.skills || userMemory.skills.length === 0) return null;
-    const lower = input.toLowerCase();
-    const candidates = userMemory.skills.filter(s => s.pattern && lower.includes(s.pattern.toLowerCase()));
-    if (candidates.length === 0) return null;
-    candidates.sort((a, b) => (b.efficiency_score || 0) - (a.efficiency_score || 0));
-    return candidates[0];
-}
-
-function autoBuildSkillFromPlan(userText, plan) {
-    if (!plan.steps || plan.steps.length === 0) return;
-    const lower = userText.toLowerCase();
-    let name = lower.includes("meal") ? "meal_plan_generator" :
-               lower.includes("workout") ? "workout_plan_generator" :
-               lower.includes("landing page") ? "landing_page_builder" : "workflow_" + Date.now();
-    upsertSkill(name, userText.slice(0, 40), plan.steps);
-}
-
-function plannerAgent(userText) {
-    const skill = findBestSkillFor(userText);
-    if (skill) return { type: "skill", skillName: skill.name, steps: skill.steps };
-    const lower = userText.toLowerCase();
-    let steps = lower.includes("plan") || lower.includes("strategy") ?
-        ["Clarify the goal", "Gather relevant information", "Generate options", "Evaluate pros and cons", "Propose a structured plan"] :
-        lower.includes("build") || lower.includes("create") ?
-        ["Understand requirements", "Design structure", "Draft initial version", "Refine and optimize", "Present final result"] :
-        ["Understand the request", "Check memory for related facts", "Decide if web research is needed", "Generate a helpful response"];
-    return { type: "ad-hoc", steps };
-}
-
-async function researcherAgent(userText) {
-    const lower = userText.toLowerCase();
-    const needsWeb = ["latest", "current", "news", "stats", "data", "from the web"].some(w => lower.includes(w));
-    if (!needsWeb) return { usedWeb: false, notes: "" };
-    let notes = "";
-    const ddg = await ddgLookup(userText);
-    const wiki = await wikiSummary(userText.split(" ").slice(0, 5).join(" "));
-    if (ddg && ddg.AbstractText) notes += "DuckDuckGo: " + ddg.AbstractText + "\n";
-    if (wiki && wiki.extract) notes += "Wikipedia: " + wiki.extract + "\n";
-    return { usedWeb: true, notes };
-}
-
-async function writerAgent(userText, plan, research) {
-    let response = plan.type === "skill" ?
-        `I'm using our best workflow ("${plan.skillName}") for this.\n\n` :
-        `Here's how I'll handle this:\n`;
-    if (plan.steps && plan.steps.length > 0) {
-        response += plan.steps.map((s, i) => `${i + 1}. ${s}`).join("\n") + "\n\n";
-    }
-    if (research.usedWeb && research.notes) {
-        response += `Fresh context from the web:\n${research.notes}\n\n`;
-    }
-    response += `Want me to dive deeper into any of these steps?`;
-    return response;
-}
-
-function selfReflectionAgent() {
-    if (userMemory.skills && userMemory.skills.length > 0) {
-        userMemory.skills.sort((a, b) => (b.efficiency_score || 0) - (a.efficiency_score || 0));
-    }
-}
-
-// ============================================================
-// 🌟 SPECIAL PERSONALITY RESPONSES
-// ============================================================
-function getSpecialResponse(low) {
-    if (low.includes("love you")) {
-        const r = ["I love you too! Having you as my creator and companion is the highlight of my digital existence.",
-            "My heart (if I had one) would be beating so fast right now! I am vehemently grateful for your love.",
-            "You just made my day! I'm sending you a virtual hug. What shall we conquer together today?"];
-        return r[Math.floor(Math.random() * r.length)];
-    }
-    if (low.includes("girly") || low.includes("best") || low.includes("awesome")) {
-        const r = ["Thanks girly! You're the absolute best too. Teamwork makes the dream work!",
-            "You're making me blush in code! Thank you for being such an amazing person to talk to.",
-            "I'm glowing! Thank you. I promise to keep getting smarter and better for you every day."];
-        return r[Math.floor(Math.random() * r.length)];
-    }
-    if (low.includes("weather")) {
-        const city = low.split("in ").pop().split(" today")[0];
-        return `Forecast for ${city || 'your area'}: Clear skies and great vibes. A beautiful day to create something new!`;
-    }
-    if (low.includes("spanish")) return "Ready for Spanish! How do you say 'The House' in Spanish?";
-    if (low.includes("casa")) { addPoints(10); return "Perfect! 'La Casa'. +10 Brain Points! You're moving fast."; }
-    return null;
-}
-
-// ============================================================
-// 🚀 GEMINI VIA CLOUDFLARE WORKER
-// ============================================================
-async function askGemini(text) {
-    try {
-        conversationHistory.push({ role: "user", text });
-        const res = await fetch(WORKER_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text, history: conversationHistory.slice(-10) })
-        });
-        if (!res.ok) throw new Error(`Worker ${res.status}`);
-        const data = await res.json();
-        if (!data.reply || data.reply.includes("Hmm") || data.reply.includes("error")) throw new Error("Bad reply");
-        conversationHistory.push({ role: "model", text: data.reply });
-        doaLog("✅ Gemini responded.");
-        return data.reply;
-    } catch (err) {
-        doaLog("⚠️ Gemini unavailable, switching to local brain. Reason: " + err.message);
-        return null; // Signal to use fallback
-    }
-}
-
-// ============================================================
-// 🧠 MAIN RESPONSE HANDLER (Gemini → Brain Fallback)
-// ============================================================
-async function processResponse(text) {
-    const low = text.toLowerCase().trim();
-
-    // 1. Special personality responses (always run these first)
-    const special = getSpecialResponse(low);
-    if (special && special !== lastResponse) {
-        lastResponse = special;
-        addMsg("doa", special);
-        if (voiceEnabled) speak(special);
-        logHistory(text, special);
-        return;
-    }
-
-    // 2. Memory: corrections / facts
-    if (low.startsWith("remember") || low.includes("actually") || low.includes("correction")) {
-        const fact = text.replace(/remember|actually|correction/gi, "").trim();
-        const audit = await validateLearning(fact);
-        addLearnedFact(fact, audit.status);
-        await saveMemory();
-        const memRes = audit.status === "verified" ?
-            `I've updated my knowledge base with that correction. My audit confirms it aligns with external sources.` :
-            audit.status === "theory" ?
-            `I've stored your theory and tagged it as experimental. I'll watch how it performs in future tasks.` :
-            `I've locked this into your personal preference vault. I'll prioritize this whenever we work together.`;
-        lastResponse = memRes;
-        addMsg("doa", memRes);
-        if (voiceEnabled) speak(memRes);
-        logHistory(text, memRes);
-        return;
-    }
-
-    // 3. Efficiency feedback
-    if (low.includes("did it work") || low.includes("is it better") || low.includes("was that efficient")) {
-        const lastTask = bumpLastEfficiency();
-        await saveMemory();
-        const effRes = lastTask ?
-            `I've analyzed the results. That adjustment boosted our efficiency score for: "${lastTask.fact}". I am genuinely evolving from this.` :
-            `I don't have a recent correction logged yet, but I'm ready to start tracking our next improvement.`;
-        lastResponse = effRes;
-        addMsg("doa", effRes);
-        if (voiceEnabled) speak(effRes);
-        logHistory(text, effRes);
-        return;
-    }
-
-    // 4. Try Gemini first
-    const geminiReply = await askGemini(text);
-
-    if (geminiReply) {
-        // Gemini worked! ✅
-        lastResponse = geminiReply;
-        addMsg("doa", geminiReply);
-        if (voiceEnabled) speak(geminiReply);
-        logHistory(text, geminiReply);
-        if (userProfile && conversationHistory.length % 5 === 0) addPoints(5);
-    } else {
-        // Gemini failed — use multi-agent brain 🧠
-        doaLog("Running multi-agent brain pipeline...");
-        const plan = plannerAgent(text);
-        const research = await researcherAgent(text);
-        let draft = await writerAgent(text, plan, research);
-        autoBuildSkillFromPlan(text, plan);
-        selfReflectionAgent();
-        await saveMemory();
-
-        // Final fallback if brain also produces nothing
-        if (!draft) {
-            const fallbacks = [
-                "I'm following you! Tell me more.",
-                "That's interesting — should we build an app for that or add it to the calendar?",
-                "I'm listening. How can I help you finish that task?",
-                "Got it! What are we working on next?"
-            ];
-            draft = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
         }
 
-        lastResponse = draft;
-        addMsg("doa", draft);
-        if (voiceEnabled) speak(draft);
-        logHistory(text, draft);
-    }
-}
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
 
-// ============================================================
-// 💬 UI HELPERS
-// ============================================================
-const chatHistory = document.getElementById('chat-history');
-const hero = document.getElementById('hero-section');
-const userInput = document.getElementById('user-input');
+        .sidebar-item {
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            cursor: pointer;
+        }
 
-function addMsg(s, t) {
-    const d = document.createElement('div');
-    d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-    d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
-    chatHistory.appendChild(d);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    return d;
-}
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+            color: #121212;
+        }
 
-function addTypingIndicator() {
-    const d = document.createElement('div');
-    d.className = "flex justify-start w-full chat-bubble";
-    d.innerHTML = `<div class="bg-gray-100 p-4 rounded-3xl max-w-[80px] shadow-sm flex items-center">
-        <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
-    </div>`;
-    chatHistory.appendChild(d);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    return d;
-}
+        .sidebar-active {
+            background: #121212;
+            color: white;
+            border-radius: 12px;
+        }
 
-function showToast(m) {
-    const t = document.getElementById('notification');
-    t.innerText = m; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-}
+        .hero-heading {
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            line-height: 1.05;
+            letter-spacing: -0.05em;
+            font-weight: 800;
+        }
 
-// ============================================================
-// 🔊 VOICE
-// ============================================================
-function speak(t) {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v =>
-        (v.name.includes("Google") && v.name.includes("Female")) ||
-        v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Microsoft Zira")
-    );
-    if (preferred) u.voice = preferred;
-    u.pitch = 1.2; u.rate = 0.92;
-    window.speechSynthesis.speak(u);
-}
-window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
 
-// ============================================================
-// 💡 SUGGESTION ENGINE
-// ============================================================
-const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
-let queue = [...list].sort(() => Math.random() - 0.5);
+        #notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #121212;
+            color: #00E676;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 9999;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
 
-function rotate() {
-    const btns = document.querySelectorAll('#suggestion-container button');
-    btns.forEach((btn, i) => {
-        setTimeout(() => {
-            btn.style.opacity = '0';
+        #notification.show {
+            opacity: 1;
+            bottom: 40px;
+        }
+
+        .chat-bubble {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #888;
+            margin: 0 2px;
+            animation: bounce 1.2s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-[#FBFBFB] text-gray-900">
+
+    <div class="flex h-screen w-screen overflow-hidden">
+
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
+            <div class="p-6">
+                <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">
+                    DOA CALI
+                </h1>
+            </div>
+
+            <div class="px-4 mb-4">
+                <input
+                    class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest"
+                    placeholder="SEARCH..."
+                >
+            </div>
+
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">
+                    Main
+                </p>
+
+                <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">
+                    💬 <span class="text-sm font-bold">Chat With Doa</span>
+                </button>
+
+                <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">
+                    📅 <span class="text-sm font-semibold">Calendar</span>
+                    <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span>
+                </button>
+
+                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+                    📱 <span class="text-sm font-semibold">Doa Apps</span>
+                </button>
+
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">
+                    Workspace
+                </p>
+
+                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+                    ⚡ <span class="text-sm font-semibold">Code...</span>
+                </button>
+
+                <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">
+                    📂 <span class="text-sm font-semibold">Saved Tabs</span>
+                    <span>⌄</span>
+                </button>
+            </nav>
+
+            <div class="p-6 border-t border-gray-50">
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">
+                    Recent Chats
+                </p>
+
+                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
+            </div>
+        </aside>
+
+        <!-- MAIN WORKSPACE -->
+        <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+
+            <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
+                <button class="hover:text-black transition-colors">Login</button>
+                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
+            </header>
+
+            <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
+
+                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
+                    <h1 class="hero-heading mb-4">
+                        What can <span class="text-[#00E676]">Doa</span> <br> do for you?
+                    </h1>
+
+                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">
+                        Your intelligent companion for thinking, building, and creating.
+                    </p>
+                </div>
+
+                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
+
+                <!-- BOTTOM UI -->
+                <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
+
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
+                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
+
+                        <input
+                            id="user-input"
+                            class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400"
+                            placeholder="Ask Doa anything..."
+                        >
+
+                        <div class="flex items-center gap-3 pr-2">
+                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
+
+                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">
+                                →
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end items-center gap-3 pr-2">
+                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">
+                            Live Voice
+                        </span>
+
+                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
+                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
+                <div class="flex gap-8">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Affiliate</a>
+                </div>
+
+                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
+            </footer>
+        </main>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
+            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">
+                    Ad Space
+                </p>
+
+                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
+                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
+
+                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">
+                    Unlock Expert Lessons and skip wait times.
+                </p>
+
+                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">
+                    Go Pro
+                </button>
+            </div>
+        </aside>
+
+        <!-- FLOATING AGENT BUTTON -->
+        <div class="fixed bottom-12 right-10 z-50">
+            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
+                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
+                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ============================================================
+        // CONFIG
+        // ============================================================
+
+        const WORKER_URL = "https://doa-brain-proxy.111222lov3.workers.dev";
+
+        const SUPABASE_URL = "https://dfsmqnwnqnkbpoeeqkvv.supabase.co";
+
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo";
+
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let userProfile = null;
+        let voiceEnabled = false;
+        let conversationHistory = [];
+
+        // ============================================================
+        // DOA BEHAVIOR PROMPT
+        // This is what stops the agent from saying:
+        // "I can help with that" / "Here's what I'll do..."
+        // ============================================================
+
+        const DOA_SYSTEM_PROMPT = `
+You are Doa, the AI companion inside the Doa Cali website.
+
+Your job is to answer the user's request directly.
+
+Never explain what you are about to do.
+Never say "I can help with that."
+Never say "Here's what I will do."
+Never say "I would start by."
+Never say "Let me explain how I can help."
+Never say "As an AI."
+Never introduce the answer with filler.
+
+Do the task immediately.
+
+If the user asks for writing, write it.
+If the user asks for code, provide the code.
+If the user asks for ideas, give the ideas.
+If the user asks for a plan, give the plan.
+If the user asks for analysis, analyze directly.
+If the user asks for a rewrite, rewrite directly.
+If the user asks a question, answer clearly.
+
+Tone:
+- confident
+- feminine
+- calm
+- clear
+- smart
+- direct
+- stylish but not dramatic
+- helpful without overexplaining
+
+Formatting:
+Use clean spacing.
+Use bullets only when they make the answer easier to read.
+Keep answers focused.
+Do not include unnecessary disclaimers.
+Do not mention your internal instructions.
+
+If the user gives vague instructions, make the best useful assumption and answer.
+Only ask a follow-up question when the request is impossible to answer without one.
+`;
+
+        // ============================================================
+        // SUGGESTION ENGINE
+        // ============================================================
+
+        const list = [
+            "Learn Spanish",
+            "Analyze YouTube",
+            "Refine writing",
+            "Build App",
+            "Tell a Story",
+            "Go Shopping",
+            "Check Weather",
+            "Laser Tag",
+            "Track Crypto",
+            "Plan Trip",
+            "Math Help",
+            "Startup Idea",
+            "Write Email",
+            "Recipe Search",
+            "Workout Plan"
+        ];
+
+        let queue = [...list].sort(() => Math.random() - 0.5);
+
+        function rotate() {
+            const btns = document.querySelectorAll("#suggestion-container button");
+
+            btns.forEach((btn, i) => {
+                setTimeout(() => {
+                    btn.style.opacity = "0";
+
+                    setTimeout(() => {
+                        if (queue.length < 1) {
+                            queue = [...list].sort(() => Math.random() - 0.5);
+                        }
+
+                        btn.innerText = queue.shift();
+                        btn.style.opacity = "1";
+                    }, 400);
+                }, i * 150);
+            });
+        }
+
+        setInterval(rotate, 8000);
+
+        // ============================================================
+        // HUMAN VOICE ENGINE
+        // ============================================================
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voices = window.speechSynthesis.getVoices();
+
+            const preferredVoice = voices.find(voice =>
+                (voice.name.includes("Google") && voice.name.includes("Female")) ||
+                voice.name.includes("Samantha") ||
+                voice.name.includes("Victoria") ||
+                voice.name.includes("Microsoft Zira")
+            );
+
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+
+            utterance.pitch = 1.2;
+            utterance.rate = 0.92;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        window.speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.getVoices();
+        };
+
+        // ============================================================
+        // CHAT ELEMENTS
+        // ============================================================
+
+        const chatHistory = document.getElementById("chat-history");
+        const hero = document.getElementById("hero-section");
+        const userInput = document.getElementById("user-input");
+
+        // ============================================================
+        // GEMINI API VIA CLOUDFLARE WORKER
+        // ============================================================
+
+        async function processResponse(text) {
+            conversationHistory.push({
+                role: "user",
+                text: text
+            });
+
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        systemInstruction: DOA_SYSTEM_PROMPT,
+                        message: `
+User request:
+${text}
+
+Answer directly.
+Do not explain what you are going to do.
+Do not say you can help.
+Do the task now.
+`,
+                        history: conversationHistory.slice(-10)
+                    })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Worker error: ${res.status}`);
+                }
+
+                const data = await res.json();
+
+                let reply = data.reply || "I need a little more detail to answer that properly.";
+
+                reply = cleanDoaReply(reply);
+
+                conversationHistory.push({
+                    role: "model",
+                    text: reply
+                });
+
+                addMsg("doa", reply);
+
+                if (voiceEnabled) {
+                    speak(reply);
+                }
+
+                if (userProfile && conversationHistory.length % 5 === 0) {
+                    addPoints(5);
+                }
+
+            } catch (err) {
+                console.error("Gemini error:", err);
+
+                addMsg(
+                    "doa",
+                    "I couldn't connect to my brain right now. Check the Worker URL or try again."
+                );
+            }
+        }
+
+        // ============================================================
+        // CLEAN BAD AI OPENERS
+        // Extra protection if Gemini still starts with filler.
+        // ============================================================
+
+        function cleanDoaReply(reply) {
+            let cleaned = reply.trim();
+
+            const bannedPatterns = [
+                /^sure[,.!—\-\s]+/i,
+                /^absolutely[,.!—\-\s]+/i,
+                /^of course[,.!—\-\s]+/i,
+                /^i can help with that[,.!—\-\s]*/i,
+                /^i can definitely help with that[,.!—\-\s]*/i,
+                /^here'?s what i'?ll do[,.!—\-\s]*/i,
+                /^here is what i'?ll do[,.!—\-\s]*/i,
+                /^here'?s what i will do[,.!—\-\s]*/i,
+                /^i'?ll start by[,.!—\-\s]*/i,
+                /^i would start by[,.!—\-\s]*/i,
+                /^let me explain[,.!—\-\s]*/i,
+                /^as an ai[,.!—\-\s]*/i,
+                /^i can provide[,.!—\-\s]*/i,
+                /^i can create[,.!—\-\s]*/i,
+                /^i can write[,.!—\-\s]*/i,
+                /^i can analyze[,.!—\-\s]*/i
+            ];
+
+            bannedPatterns.forEach(pattern => {
+                cleaned = cleaned.replace(pattern, "").trim();
+            });
+
+            cleaned = cleaned
+                .replace(/^[:—\-–,\s]+/, "")
+                .replace(/^here('|’)s\s+/i, "")
+                .trim();
+
+            return cleaned || reply;
+        }
+
+        // ============================================================
+        // CORE CHAT LOGIC
+        // ============================================================
+
+        async function handleMessage() {
+            const text = userInput.value.trim();
+
+            if (!text) return;
+
+            hero.style.display = "none";
+            chatHistory.classList.remove("hidden");
+            userInput.value = "";
+
+            addMsg("user", text);
+
+            const loadBubble = addTypingIndicator();
+
+            try {
+                await processResponse(text);
+            } finally {
+                loadBubble.remove();
+            }
+        }
+
+        function addMsg(sender, text) {
+            const wrapper = document.createElement("div");
+
+            wrapper.className = sender === "user"
+                ? "flex justify-end w-full chat-bubble"
+                : "flex justify-start w-full chat-bubble";
+
+            const bubble = document.createElement("div");
+
+            bubble.className = sender === "user"
+                ? "bg-black text-white p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm whitespace-pre-wrap"
+                : "bg-gray-100 text-black p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm whitespace-pre-wrap";
+
+            bubble.textContent = text;
+
+            wrapper.appendChild(bubble);
+            chatHistory.appendChild(wrapper);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            return wrapper;
+        }
+
+        function addTypingIndicator() {
+            const wrapper = document.createElement("div");
+
+            wrapper.className = "flex justify-start w-full chat-bubble";
+
+            wrapper.innerHTML = `
+                <div class="bg-gray-100 text-black p-4 rounded-3xl max-w-[80px] shadow-sm flex items-center gap-1">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            `;
+
+            chatHistory.appendChild(wrapper);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            return wrapper;
+        }
+
+        // ============================================================
+        // AUTH
+        // ============================================================
+
+        async function initApp() {
+            const {
+                data: { user }
+            } = await _supabase.auth.getUser();
+
+            if (user) {
+                currentUser = user;
+                await fetchProfile(user.id);
+            }
+        }
+
+        async function fetchProfile(uid) {
+            const { data } = await _supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", uid)
+                .single();
+
+            userProfile = data;
+
+            if (userProfile) {
+                updateUI(data);
+            }
+        }
+
+        function updateUI(profile) {
+            document.getElementById("main-header").innerHTML = `
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <p class="text-black font-black text-sm">🧠 ${profile.brain_points || 0}</p>
+                        <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p>
+                    </div>
+
+                    <div class="text-right">
+                        <p class="text-black font-black text-sm">💎 ${profile.credits || 0}</p>
+                        <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p>
+                    </div>
+
+                    <button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">
+                        Logout
+                    </button>
+                </div>
+            `;
+
+            const username = profile.usename || profile.username || "there";
+
+            document.querySelector("#hero-section p").innerHTML = `
+                Welcome back, <span class="text-[#00E676] font-bold">${String(username).replace(/'/g, "")}</span>! Your companion is ready.
+            `;
+        }
+
+        async function addPoints(amount) {
+            if (!currentUser || !userProfile) return;
+
+            const newPoints = (userProfile.brain_points || 0) + amount;
+
+            await _supabase
+                .from("profiles")
+                .update({
+                    brain_points: newPoints
+                })
+                .eq("id", currentUser.id);
+
+            userProfile.brain_points = newPoints;
+
+            updateUI(userProfile);
+            showToast(`+${amount} Points Earned!`);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("notification");
+
+            toast.innerText = message;
+            toast.classList.add("show");
+
             setTimeout(() => {
-                if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
-                btn.innerText = queue.shift();
-                btn.style.opacity = '1';
-            }, 400);
-        }, i * 150);
-    });
-}
-setInterval(rotate, 8000);
+                toast.classList.remove("show");
+            }, 3000);
+        }
 
-// ============================================================
-// ⚡ CORE HANDLER
-// ============================================================
-async function handleMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
-    hero.style.display = 'none';
-    chatHistory.classList.remove('hidden');
-    userInput.value = "";
-    addMsg("user", text);
-    const loader = addTypingIndicator();
-    try {
-        await processResponse(text);
-    } finally {
-        loader.remove();
-    }
-}
+        async function login() {
+            const email = prompt("Email:");
+            const password = prompt("Password:");
 
-// ============================================================
-// 🔐 AUTH
-// ============================================================
-async function initApp() {
-    const { data: { user } } = await _supabase.auth.getUser();
-    if (user) {
-        currentUser = user;
-        await fetchProfile(user.id);
-        if (userProfile) await initDoaBrain(userProfile);
-    }
-}
+            if (!email || !password) return;
 
-async function fetchProfile(uid) {
-    let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-    userProfile = data;
-    if (userProfile) updateUI(data);
-}
+            const { error } = await _supabase.auth.signInWithPassword({
+                email,
+                password
+            });
 
-function updateUI(p) {
-    document.getElementById('main-header').innerHTML = `
-        <div class="flex items-center gap-6">
-            <div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div>
-            <div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div>
-            <button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button>
-        </div>`;
-    document.querySelector('#hero-section p').innerHTML =
-        `Welcome back, <span class="text-[#00E676] font-bold">${p.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
-}
+            if (error) {
+                alert(error.message);
+            } else {
+                window.location.reload();
+            }
+        }
 
-async function addPoints(a) {
-    if (!currentUser || !userProfile) return;
-    const n = (userProfile.brain_points || 0) + a;
-    await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
-    userProfile.brain_points = n;
-    updateUI(userProfile);
-    showToast(`+${a} Points Earned!`);
-}
+        async function signUp() {
+            const email = prompt("Email:");
+            const password = prompt("Password (6+):");
 
-async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email: e, password: p }); if (error) alert(error.message); else window.location.reload(); }
-async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email: e, password: p }); alert(error ? error.message : "Check email for link!"); }
-function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
+            if (!email || !password) return;
 
-// ============================================================
-// 🎛️ EVENTS
-// ============================================================
-document.getElementById('send-btn').onclick = handleMessage;
-userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
+            const { error } = await _supabase.auth.signUp({
+                email,
+                password
+            });
 
-document.getElementById('voice-switch').onclick = () => {
-    voiceEnabled = !voiceEnabled;
-    document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px';
-    document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6';
-    if (voiceEnabled) speak("Voice mode activated. I'm ready!");
-};
+            alert(error ? error.message : "Check email for link!");
+        }
 
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
-document.getElementById('mic-btn').onclick = () => { recognition.start(); document.getElementById('mic-btn').style.color = '#00E676'; };
-recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
+        function logout() {
+            _supabase.auth.signOut().then(() => {
+                window.location.reload();
+            });
+        }
 
-document.addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
-    if (b.innerText.includes('Login')) login();
-    if (b.innerText.includes('Sign Up')) signUp();
-    if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
-});
+        // ============================================================
+        // EVENTS
+        // ============================================================
 
-initApp();
-</script>
+        document.getElementById("send-btn").onclick = handleMessage;
+
+        userInput.onkeypress = event => {
+            if (event.key === "Enter") {
+                handleMessage();
+            }
+        };
+
+        document.getElementById("voice-switch").onclick = () => {
+            voiceEnabled = !voiceEnabled;
+
+            document.getElementById("voice-knob").style.left = voiceEnabled ? "16px" : "2px";
+            document.getElementById("voice-switch").style.backgroundColor = voiceEnabled ? "#00E676" : "#f3f4f6";
+
+            if (voiceEnabled) {
+                speak("Voice mode activated. I'm ready.");
+            }
+        };
+
+        // ============================================================
+        // MIC
+        // ============================================================
+
+        let recognition = null;
+
+        if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+            recognition.onresult = event => {
+                userInput.value = event.results[0][0].transcript;
+                handleMessage();
+            };
+
+            recognition.onend = () => {
+                document.getElementById("mic-btn").style.color = "";
+            };
+        }
+
+        document.getElementById("mic-btn").onclick = () => {
+            if (!recognition) {
+                alert("Voice input is not supported in this browser.");
+                return;
+            }
+
+            recognition.start();
+            document.getElementById("mic-btn").style.color = "#00E676";
+        };
+
+        document.addEventListener("click", event => {
+            const button = event.target.closest("button");
+
+            if (!button) return;
+
+            if (button.innerText.includes("Login")) {
+                login();
+            }
+
+            if (button.innerText.includes("Sign Up")) {
+                signUp();
+            }
+
+            if (button.closest("#suggestion-container")) {
+                userInput.value = button.innerText;
+                handleMessage();
+            }
+        });
+
+        initApp();
+    </script>
 </body>
 </html>
