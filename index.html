@@ -309,8 +309,6 @@
 
         // ============================================================
         // DOA BEHAVIOR PROMPT
-        // This is what stops the agent from saying:
-        // "I can help with that" / "Here's what I'll do..."
         // ============================================================
 
         const DOA_SYSTEM_PROMPT = `
@@ -451,6 +449,23 @@ Only ask a follow-up question when the request is impossible to answer without o
                 text: text
             });
 
+            const localReply = getLocalDoaReply(text);
+
+            if (localReply) {
+                conversationHistory.push({
+                    role: "model",
+                    text: localReply
+                });
+
+                addMsg("doa", localReply);
+
+                if (voiceEnabled) {
+                    speak(localReply);
+                }
+
+                return;
+            }
+
             try {
                 const res = await fetch(WORKER_URL, {
                     method: "POST",
@@ -478,7 +493,13 @@ Do the task now.
 
                 const data = await res.json();
 
-                let reply = data.reply || "I need a little more detail to answer that properly.";
+                console.log("Worker response:", data);
+
+                let reply = extractGeminiReply(data);
+
+                if (!reply) {
+                    reply = "I’m here. What can I help you with?";
+                }
 
                 reply = cleanDoaReply(reply);
 
@@ -502,14 +523,80 @@ Do the task now.
 
                 addMsg(
                     "doa",
-                    "I couldn't connect to my brain right now. Check the Worker URL or try again."
+                    "I’m having trouble connecting right now. Try again in a moment."
                 );
             }
         }
 
+        function getLocalDoaReply(text) {
+            const message = text.trim().toLowerCase();
+
+            const greetings = [
+                "hi",
+                "hello",
+                "hey",
+                "yo",
+                "sup",
+                "good morning",
+                "good afternoon",
+                "good evening"
+            ];
+
+            if (greetings.includes(message)) {
+                return "Hi, I’m here. What can I help you with?";
+            }
+
+            if (
+                message === "how are you" ||
+                message === "how are you?" ||
+                message === "how are u" ||
+                message === "how are u?"
+            ) {
+                return "I’m good. What can I help you with?";
+            }
+
+            return null;
+        }
+
+        function extractGeminiReply(data) {
+            if (!data) return "";
+
+            if (typeof data.reply === "string") return data.reply.trim();
+            if (typeof data.text === "string") return data.text.trim();
+            if (typeof data.response === "string") return data.response.trim();
+            if (typeof data.message === "string") return data.message.trim();
+            if (typeof data.output === "string") return data.output.trim();
+
+            if (
+                data.candidates &&
+                data.candidates[0] &&
+                data.candidates[0].content &&
+                data.candidates[0].content.parts
+            ) {
+                return data.candidates[0].content.parts
+                    .map(part => part.text || "")
+                    .join("")
+                    .trim();
+            }
+
+            if (
+                data.response &&
+                data.response.candidates &&
+                data.response.candidates[0] &&
+                data.response.candidates[0].content &&
+                data.response.candidates[0].content.parts
+            ) {
+                return data.response.candidates[0].content.parts
+                    .map(part => part.text || "")
+                    .join("")
+                    .trim();
+            }
+
+            return "";
+        }
+
         // ============================================================
         // CLEAN BAD AI OPENERS
-        // Extra protection if Gemini still starts with filler.
         // ============================================================
 
         function cleanDoaReply(reply) {
@@ -752,7 +839,7 @@ Do the task now.
             document.getElementById("voice-switch").style.backgroundColor = voiceEnabled ? "#00E676" : "#f3f4f6";
 
             if (voiceEnabled) {
-                speak("Voice mode activated. I'm ready.");
+                speak("Voice mode activated. I’m ready.");
             }
         };
 
