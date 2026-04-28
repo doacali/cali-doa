@@ -158,24 +158,47 @@
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
     // --- BRAIN LOGIC (WEATHER & LEARNING) ---
-    function processResponse(text) {
-        let res = "I'm listening! Tell me more about that.";
-        const low = text.toLowerCase();
+    async function processResponse(text) {
+        const low = text.toLowerCase().trim();
+        let res = "";
+
+        // --- LEVEL 1: LOCAL COMMANDS (FREE & INSTANT) ---
         
+        // 1. Weather Logic
         if (low.includes("weather")) {
             const city = low.split("in ").pop().split(" today")[0];
             res = `The weather in ${city || 'your area'} is currently clear with a beautiful breeze. It's a perfect day to stay productive!`;
         }
+        // 2. Memory Logic
         else if (low.includes("remember") || low.includes("my favorite")) {
             res = "Got it. I've saved that to my memory vault. I'm learning more about you every day!";
             showToast("Memory Saved 🧠");
+            // (Optional: You can add code here to actually save to Supabase)
         }
-        else if (low.includes("hello") || low.includes("doa")) res = "Hello! I am Doa, your intelligent companion. What are we creating today?";
-        else if (low.includes("spanish")) res = "Ready for Spanish! How do you say 'The House' in Spanish?";
-        else if (low.includes("casa")) { res = "Correct! +10 Points 🚀"; addPoints(10); }
+        // 3. Identity Logic
+        else if (low.includes("hello") || low.includes("doa")) {
+            res = "Hello! I am Doa, your intelligent companion. What are we creating today?";
+        }
+        // 4. Spanish Quiz Logic
+        else if (low.includes("spanish")) {
+            res = "Ready for Spanish! How do you say 'The House' in Spanish?";
+        }
+        else if (low.includes("casa")) {
+            res = "Correct! +10 Points 🚀"; 
+            addPoints(10); 
+        }
 
+        // --- LEVEL 2: REAL AI BRAIN (CLOUDFLARE + GEMINI) ---
+        // If none of the local commands matched, we ask the AI
+        if (!res) {
+            const loadingMsg = addMsg("doa", "Doa is thinking deeply...");
+            res = await callGemini(text); // This calls your Cloudflare Proxy
+            loadingMsg.remove();
+        }
+
+        // Final output: Show the message and speak it
         addMsg("doa", res);
-        if(voiceEnabled) speak(res);
+        if (voiceEnabled) speak(res);
     }
 
     // --- AUTH & CORE LOGIC ---
@@ -268,11 +291,30 @@
 
     <div id="notification"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
+    const PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- NEW PROXY URL ADDED
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let userProfile = null, userMemory = { learned: [] }, voiceEnabled = false, bestVoice = null;
+
+    // --- NEW: THE AI BRAIN FUNCTION ---
+    async function callGemini(text) {
+        try {
+            const res = await fetch(PROXY_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: `You are Doa, a friendly, high-energy AI companion. Be concise. User says: ${text}` })
+            });
+            const data = await res.json();
+            return data.candidates[0].content.parts[0].text;
+        } catch (e) {
+            console.error(e);
+            return "My neural link is a bit fuzzy! Let's try again in a sec.";
+        }
+    }
 
     let currentUser = null, userProfile = null, voiceEnabled = false;
 
