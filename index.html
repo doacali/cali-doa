@@ -148,80 +148,91 @@
         </div>
 
     </div>
-   <!-- CALI DOA MASTER INTEGRATION (DEBUG VERSION) -->
+   <!-- CALI DOA MASTER INTEGRATION (V2 - SMART BUTTONS) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function initApp() {
-        console.log("Doa: Initializing Brain...");
-        const { data: { user }, error } = await _supabase.auth.getUser();
-        
-        if (error) {
-            console.log("Auth Status: Not logged in.");
-            return;
-        }
+    let currentUser = null;
+    let userProfile = null;
 
+    async function initApp() {
+        const { data: { user } } = await _supabase.auth.getUser();
         if (user) {
-            console.log("Auth Status: Logged in as " + user.email);
+            currentUser = user;
             await fetchProfile(user.id);
         }
     }
 
     async function fetchProfile(uid) {
         let { data, error } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-
-        if (error) {
-            console.log("Profile Error: ", error.message);
-            // If profile doesn't exist, create it
-            const { data: newProfile, error: insErr } = await _supabase.from('profiles').insert([{ id: uid }]).select().single();
-            if (insErr) alert("Database Error: " + insErr.message);
-            else { location.reload(); }
-        } else {
-            console.log("Profile Loaded: ", data);
+        if (!error) {
+            userProfile = data;
             updateUI(data);
         }
     }
 
     function updateUI(profile) {
+        // Update Header
         const header = document.querySelector('header');
         if (header) {
             header.innerHTML = `
                 <div class="flex items-center gap-6">
-                    <div class="text-right"><p class="text-black font-black text-sm">🧠 ${profile.brain_points}</p><p; class="text-[8px] text-gray-400 uppercase font-bold">Brain Points</p></div>
+                    <div class="text-right"><p class="text-black font-black text-sm">🧠 ${profile.brain_points}</p><p class="text-[8px] text-gray-400 uppercase font-bold">Brain Points</p></div>
                     <div class="text-right"><p class="text-black font-black text-sm">💎 ${profile.credits}</p><p class="text-[8px] text-gray-400 uppercase font-bold">Credits</p></div>
                     <button onclick="_supabase.auth.signOut().then(()=>location.reload())" class="text-[10px] font-bold text-red-400 hover:text-red-600 ml-4 uppercase tracking-widest">Logout</button>
                 </div>
             `;
         }
+        // Update Welcome Message
         const welcome = document.querySelector('h1 + p');
         if (welcome) welcome.innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${profile.username}</span>! Your intelligent companion is ready.`;
     }
+
+    async function earnPoints() {
+        if (!userProfile) return alert("Please Login to earn points!");
+        
+        const newPoints = userProfile.brain_points + 10;
+        const { error } = await _supabase.from('profiles').update({ brain_points: newPoints }).eq('id', currentUser.id);
+
+        if (!error) {
+            userProfile.brain_points = newPoints;
+            updateUI(userProfile);
+            alert("Doa: +10 Brain Points earned! Great job!");
+        } else {
+            alert("Error saving points: " + error.message);
+        }
+    }
+
+    // SMART CLICK HANDLER
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button'); // Finds the button even if you click the text inside
+        if (!btn) return;
+
+        const txt = btn.innerText.toLowerCase();
+        
+        if (txt.includes('login')) login();
+        else if (txt.includes('sign up')) signUp();
+        else if (txt.includes('writing style') || txt.includes('spanish') || txt.includes('budget')) {
+            earnPoints();
+        }
+    });
 
     async function login() {
         const email = prompt("Email:");
         const password = prompt("Password:");
         const { error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) alert("Login Failed: " + error.message);
-        else window.location.reload();
+        if (error) alert(error.message); else window.location.reload();
     }
 
     async function signUp() {
-        const email = prompt("Create account with email:");
-        const password = prompt("Create password (min 6 chars):");
+        const email = prompt("Email:");
+        const password = prompt("Password (6+ chars):");
         const { error } = await _supabase.auth.signUp({ email, password });
-        if (error) alert("Signup Failed: " + error.message);
-        else alert("Check your email for the confirmation link!");
+        if (error) alert(error.message); else alert("Check email for link!");
     }
-
-    // Attach click events
-    document.addEventListener('click', (e) => {
-        const txt = e.target.innerText.toLowerCase();
-        if (txt.includes('login')) login();
-        if (txt.includes('sign up')) signUp();
-    });
 
     initApp();
 </script>
