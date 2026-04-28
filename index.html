@@ -129,22 +129,27 @@
         let userProfile = null, userMemory = { learned: [] }, voiceEnabled = false, bestVoice = null;
 
         // --- 1. THE BRAIN (CONCIERGE + CLOUDFLARE) ---
-        async function callGemini(text) {
+               async function callGemini(text) {
             try {
                 const res = await fetch(PROXY_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ text: text })
                 });
+                
                 const data = await res.json();
-                if (data.error) throw new Error(data.error);
-                return data.candidates[0].content.parts[0].text;
-            } catch (e) { console.error(e); return "My neural link is fuzzy! Make sure the Cloudflare Worker is deployed."; }
-        }
 
-        async function processResponse(text) {
-            const low = text.toLowerCase().trim();
-            let res = "";
+                if (data.error) {
+                    // This will tell us if it's an "API Key Invalid" or "Quota Exceeded" error
+                    alert("Doa Brain Error: " + data.error);
+                    return "My neural link reported an error: " + data.error;
+                }
+
+                return data.candidates[0].content.parts[0].text;
+            } catch (e) {
+                return "I can't reach my brain proxy. Check your internet or Cloudflare URL.";
+            }
+        }
 
             // Keyword Tasks: Learning
             if (low.startsWith("remember") || low.includes("actually")) {
