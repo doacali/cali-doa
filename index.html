@@ -121,12 +121,19 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
     const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- PUT YOUR WORKER URL HERE
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    
     let currentUser = null, userProfile = null, voiceEnabled = false;
 
-    // --- SUGGESTION ENGINE ---
-    const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
-    let queue = [...list].sort(() => Math.random() - 0.5);
+  // --- SUGGESTION ENGINE ---
+    const allSuggestions = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+    
+    // This helper shuffles any array
+    function shuffle(array) {
+        return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    // Initialize with a fresh random set
+    let queue = shuffle(allSuggestions);
 
     function rotate() {
         const btns = document.querySelectorAll('#suggestion-container button');
@@ -134,14 +141,24 @@
             setTimeout(() => {
                 btn.style.opacity = '0';
                 setTimeout(() => {
-                    if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
-                    btn.innerText = queue.shift();
+                    if (queue.length < 1) queue = shuffle(allSuggestions);
+                    btn.innerText = queue.pop();
                     btn.style.opacity = '1';
                 }, 400);
             }, i * 150);
         });
     }
+
+    // Run the loop every 8 seconds
     setInterval(rotate, 8000);
+
+    // Initial load: Set buttons immediately on page refresh
+    window.onload = () => {
+        const btns = document.querySelectorAll('#suggestion-container button');
+        btns.forEach(btn => {
+            btn.innerText = queue.pop();
+        });
+    };
 
     // --- HUMAN VOICE ENGINE ---
     function speak(t) {
