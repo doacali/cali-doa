@@ -9,9 +9,9 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; font-weight: 600; color: #9ca3af; }
+        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px; font-weight: 600; color: #9ca3af; }
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .sidebar-active { background: #121212 !important; color: white !important; }
         .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
         #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
         #notification.show { opacity: 1; bottom: 40px; }
@@ -27,29 +27,25 @@
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
             <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main</p>
-                <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">💬 <span class="text-sm font-bold">Chat With Doa</span></button>
-                <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">📅 <span class="text-sm font-semibold">Calendar</span> <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">📱 <span class="text-sm font-semibold">Doa Apps</span></button>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
+                <button onclick="location.reload()" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
+                <button class="sidebar-item text-gray-400">📅 <span>Calendar</span></button>
+                <button class="sidebar-item text-gray-400">📱 <span>Doa Apps</span></button>
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Code Builder</span></button>
-                <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">📂 <span class="text-sm font-semibold">Saved Tabs</span> <span>⌄</span></button>
+                <button class="sidebar-item text-gray-400">⚡ <span>Code Builder</span></button>
+                <button class="sidebar-item text-gray-400">📂 <span>Saved Tabs</span></button>
             </nav>
-            <div class="p-6 border-t border-gray-50">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
-                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
-            </div>
         </aside>
 
-        <!-- MAIN -->
+        <!-- MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button onclick="login()" class="hover:text-black transition-colors">Login</button>
-                <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
+                <button class="hover:text-black transition-colors">Login</button>
+                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
             </header>
 
             <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
+                <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
@@ -57,23 +53,19 @@
 
                 <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Analyze YouTube</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Learn Spanish</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Build App</button>
                     </div>
-
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
-                        <div class="flex items-center gap-3 pr-2">
-                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
-                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
-                        </div>
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
+                        <button class="p-3 text-gray-300">+</button>
+                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
+                        <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full →">→</button>
                     </div>
                 </div>
             </div>
 
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
+            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
@@ -84,68 +76,53 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // CONFIG
         const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
         const SUPABASE_KEY = 'YOUR_KEY_HERE';
         const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let voiceEnabled = true; // Enabled by default
-        
-        // --- 1. THE "DOWA" VOICE ENGINE ---
+        // VOICE ENGINE (Fixed "Dowa" Pronunciation)
         function speak(text) {
             window.speechSynthesis.cancel();
-            // Phonetic Fix: Replace Doa with Dowa so it sounds correct
-            const cleanText = text.replace(/\bDoa\b/gi, "Dowa")
-                                 .replace(/\*/g, "")
-                                 .replace(/[\u{1F600}-\u{1F64F}]/gu, "");
-            
+            const cleanText = text.replace(/\bDoa\b/gi, "Dowa"); // Phonetic fix
             const u = new SpeechSynthesisUtterance(cleanText);
-            // Search for high-quality female voices
             const voices = window.speechSynthesis.getVoices();
-            const preferred = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Female"));
-            if (preferred) u.voice = preferred;
-            
+            const pref = voices.find(v => v.name.includes("Female") || v.name.includes("Samantha"));
+            if(pref) u.voice = pref;
             u.pitch = 1.2; u.rate = 0.95;
             window.speechSynthesis.speak(u);
         }
 
-        // --- 2. SUGGESTION ROTATOR ---
-        const list = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea"];
-        function rotate() {
-            const btns = document.querySelectorAll('#suggestion-container button');
-            btns.forEach(b => b.innerText = list[Math.floor(Math.random() * list.length)]);
-        }
-        setInterval(rotate, 6000);
-
-        // --- 3. AI BRAIN LOGIC ---
-        async function processResponse(text) {
-            try {
-                const res = await fetch(CLOUDFLARE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
-                const data = await res.json();
-                const aiMsg = data.candidates[0].content.parts[0].text;
-                addMsg("doa", aiMsg);
-                speak(aiMsg);
-            } catch(e) { addMsg("doa", "Neural link fuzzy!"); }
-        }
-
+        // CHAT LOGIC
         async function handleMessage() {
             const input = document.getElementById('user-input');
             if(!input.value) return;
-            addMsg("user", input.value);
-            processResponse(input.value);
+            document.getElementById('hero-section').classList.add('hidden');
+            document.getElementById('chat-history').classList.remove('hidden');
+            
+            const msg = input.value;
             input.value = "";
+            addMsg("user", msg);
+            
+            // Brain Call
+            const res = await fetch(CLOUDFLARE_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: msg})
+            });
+            const data = await res.json();
+            const aiMsg = data.candidates[0].content.parts[0].text;
+            addMsg("doa", aiMsg);
+            speak(aiMsg);
         }
 
         function addMsg(s, t) {
             const d = document.createElement('div');
             d.className = s === "user" ? "flex justify-end my-4" : "flex justify-start my-4";
-            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm">${t}</div>`;
+            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm">${t.replace(/\bDoa\b/gi, "Doa")}</div>`;
             document.getElementById('chat-history').appendChild(d);
-            document.getElementById('hero-section').classList.add('hidden');
+            document.getElementById('chat-history').scrollTop = document.getElementById('chat-history').scrollHeight;
         }
 
         document.getElementById('send-btn').onclick = handleMessage;
