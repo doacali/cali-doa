@@ -9,9 +9,9 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; font-weight: 600; color: #9ca3af; }
+        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; font-weight: 600; color: #9ca3af; position: relative; }
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -19,13 +19,14 @@
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
         #notification.show { opacity: 1; bottom: 40px; }
+        .cal-badge { font-size: 9px; font-weight: 900; background: #fee2e2; color: #ef4444; padding: 2px 5px; border-radius: 4px; position: absolute; right: 10px; }
     </style>
 </head>
 <body class="text-gray-900">
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- 1. SIDEBAR -->
+        <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1></div>
             <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
@@ -33,15 +34,13 @@
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
                 <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
-                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span> <span id="cal-day" class="ml-auto bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">--</span></button>
+                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span> <span id="cal-day" class="cal-badge">--</span></button>
                 <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>Doa Apps</span></button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
                 <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
                 <button onclick="toggleSavedTabs()" class="sidebar-item flex justify-between"><span>📂 Saved Tabs</span> <span>⌄</span></button>
-                <div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2">
-                    <!-- Dynamic saved tabs load here -->
-                </div>
+                <div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2"></div>
             </nav>
 
             <div class="p-6 border-t border-gray-50">
@@ -50,7 +49,7 @@
             </div>
         </aside>
 
-        <!-- 2. MAIN CONTENT AREA -->
+        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             
             <!-- GLOBAL HEADER -->
@@ -59,20 +58,23 @@
                 <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg shadow-sm">Sign Up</button>
             </header>
 
-            <!-- VIEW: CHAT (Default) -->
+            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
+                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed text-center">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
                 
-                <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Loading Suggestions...</button>
+                <div class="w-full max-w-3xl px-4 shrink-0 pb-6">
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]">
+                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Suggestion 1</button>
+                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Suggestion 2</button>
+                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Suggestion 3</button>
+                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Suggestion 4</button>
                     </div>
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black">+</button>
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
+                        <button class="p-3 text-gray-300 text-xl font-light">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
                         <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full shadow-lg">→</button>
                     </div>
@@ -87,95 +89,84 @@
 
             <!-- VIEW: CALENDAR -->
             <div id="calendar-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
-                <h2 class="text-4xl font-black italic mb-8">MY CALENDAR</h2>
-                <div class="grid grid-cols-7 gap-4 bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
-                    <!-- Dynamic Calendar Grid generated by JS -->
+                <h2 class="text-4xl font-black italic mb-8 uppercase tracking-tighter">My Calendar</h2>
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px]">
+                    <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Upcoming Events</p>
+                    <div class="mt-4 text-sm text-gray-500 italic text-center py-20">Calendar logic syncing with Supabase...</div>
                 </div>
             </div>
 
             <!-- VIEW: APPS -->
             <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
-                <h2 class="text-3xl font-black italic mb-10">DOA APP FACTORY</h2>
-                <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <h2 class="text-3xl font-black italic mb-10 uppercase tracking-tighter">Doa App factory</h2>
+                <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20"></div>
             </div>
 
             <!-- FOOTER TICKER -->
             <div class="w-full bg-black text-white h-8 flex items-center overflow-hidden shrink-0">
                 <div id="world-ticker" class="text-[9px] font-black uppercase tracking-[0.3em]">
-                    ● GLOBAL STATUS: ONLINE ● USER_422 JUST EARNED 50 BRAIN POINTS ● NEW APP CREATED IN SAN FRANCISCO ● 
+                    ● GLOBAL STATUS: ONLINE ● NEW USER REGISTERED IN SACRAMENTO ● RECENT APP SAVED: BUDGET PLANNER ● WORLDWIDE LEADERBOARD RELOADING... ●
                 </div>
             </div>
             
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
+                <div>© 2026 <span class="text-[#00E676]">DOA CALI</span>. ALL RIGHTS RESERVED.</div>
             </footer>
         </main>
 
-        <!-- 3. RIGHT AD PANEL -->
+        <!-- RIGHT AD PANEL -->
         <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
             <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
                 <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
                 <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
             </div>
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
+            <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 text-center">
+                <h3 class="text-lg font-black mb-2 italic uppercase tracking-tighter">Skip Ads</h3>
                 <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Upgrade to Pro for $4.99/mo to unlock Expert Lessons and skip wait times.</p>
                 <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all">Go Pro</button>
             </div>
         </aside>
-
-        <!-- 4. FLOATING AGENT -->
-        <div onclick="switchView('chat')" class="fixed bottom-12 right-10 z-50">
-            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
-                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-            </div>
-        </div>
-
     </div>
 
     <div id="notification"></div>
 
-    <!-- BRAIN & DATA INTEGRATION -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-        const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- VERIFY THIS
+        const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- PASTE WORKER URL HERE
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let appState = {
-            currentUser: null,
-            userProfile: null,
+            currentUser: null, userProfile: null,
             voiceEnabled: JSON.parse(localStorage.getItem('voice_active')) || false,
-            suggestionQueue: ["Learn Spanish", "Analyze YouTube", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search"]
+            suggestions: ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan", "Music Mix", "AI Business", "Market News", "History Fact"]
         };
 
-        // --- NAVIGATION ENGINE ---
-        function switchView(viewName) {
-            document.querySelectorAll('.view-container').forEach(v => v.classList.add('hidden'));
-            document.getElementById(viewName + '-view').classList.remove('hidden');
+        // --- NAVIGATION ---
+        function switchView(v) {
+            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+            document.getElementById(v + '-view').classList.remove('hidden');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-active'));
-            document.getElementById('nav-' + viewName).classList.add('sidebar-active');
-            if(viewName === 'apps') renderAppGrid();
+            document.getElementById('nav-' + v).classList.add('sidebar-active');
         }
 
-        // --- INFINITE SUGGESTION LOOP ---
+        // --- ENDLESS SUGGESTION LOOP ---
         function rotateSuggestions() {
             const btns = document.querySelectorAll('#suggestion-container button');
+            const pool = [...appState.suggestions].sort(() => Math.random() - 0.5);
             btns.forEach((btn, i) => {
                 setTimeout(() => {
                     btn.style.opacity = '0';
                     setTimeout(() => {
-                        const randomItem = appState.suggestionQueue[Math.floor(Math.random() * appState.suggestionQueue.length)];
-                        btn.innerText = randomItem;
+                        btn.innerText = pool[i];
                         btn.style.opacity = '1';
                     }, 500);
                 }, i * 150);
             });
         }
-        setInterval(rotateSuggestions, 6000);
+        setInterval(rotateSuggestions, 7000);
 
         // --- AI BRAIN CONNECTION ---
         async function processResponse(text) {
@@ -189,12 +180,34 @@
                 const aiMsg = data.candidates[0].content.parts[0].text;
                 addMsg("doa", aiMsg);
                 if(appState.voiceEnabled) speak(aiMsg);
-            } catch (e) {
-                addMsg("doa", "Neural link fuzzy! Please refresh or check connection.");
-            }
+            } catch (e) { addMsg("doa", "Neural link fuzzy! Please refresh."); }
         }
 
-        // --- UI & CHAT HELPERS ---
+        // --- HUMAN VOICE ENGINE (CLEAN & FEMALE) ---
+        function speak(t) {
+            window.speechSynthesis.cancel();
+            
+            // 1. NEURAL SPEECH FILTER: Remove markdown and emojis for the voice ONLY
+            const cleanText = t
+                .replace(/\*\*/g, "") // Remove bold markdown
+                .replace(/\*/g, "")   // Remove italic markdown
+                .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "") // Remove all emojis
+                .trim();
+
+            const u = new SpeechSynthesisUtterance(cleanText);
+            const voices = window.speechSynthesis.getVoices();
+            
+            // 2. TARGET PREMIUM FEMALE VOICE
+            const pref = voices.find(v => (v.name.includes("Google") && v.name.includes("Female")) || v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Zira"));
+            
+            if(pref) u.voice = pref;
+            u.pitch = 1.2; 
+            u.rate = 0.95; 
+            window.speechSynthesis.speak(u);
+        }
+        window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+
+        // --- CHAT UI ---
         function addMsg(s, t) {
             const history = document.getElementById('chat-history');
             const d = document.createElement('div');
@@ -218,33 +231,34 @@
             load.remove();
         }
 
-        // --- AUTH & DATABASE ---
+        // --- AUTH & DATA ---
         async function initApp() {
             const { data: { user } } = await _supabase.auth.getUser();
-            document.getElementById('cal-day').innerText = new Date().getDate();
+            const d = new Date().getDate();
+            document.getElementById('cal-day').innerText = d;
             if (user) {
                 appState.currentUser = user;
                 let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
                 appState.userProfile = data;
                 updateHeader(data);
-                showToast("Welcome back, " + data.username);
             }
+            rotateSuggestions();
             updateVoiceUI();
         }
 
         function updateHeader(p) {
-            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest ml-4">Logout</button></div>`;
+            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6 text-right"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest ml-4">Logout</button></div>`;
         }
 
         async function login() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signInWithPassword({email:e, password:p}); location.reload(); }
-        async function signUp() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signUp({email:e, password:p}); alert("Check email!"); }
+        async function signUp() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signUp({email:e, password:p}); alert("Check email for link!"); }
         async function logout() { await _supabase.auth.signOut(); location.reload(); }
 
-        // --- VOICE ENGINE ---
         function toggleVoice() {
             appState.voiceEnabled = !appState.voiceEnabled;
             localStorage.setItem('voice_active', appState.voiceEnabled);
             updateVoiceUI();
+            if(appState.voiceEnabled) speak("Voice synthesis active. I can hear you now.");
         }
         function updateVoiceUI() {
             const knob = document.getElementById('voice-knob');
@@ -252,20 +266,16 @@
             knob.style.left = appState.voiceEnabled ? "16px" : "2px";
             bg.style.backgroundColor = appState.voiceEnabled ? "#00E676" : "#f3f4f6";
         }
-        function speak(t) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(t);
-            const voices = window.speechSynthesis.getVoices();
-            const pref = voices.find(v => v.name.includes("Female") || v.name.includes("Samantha"));
-            if(pref) u.voice = pref; u.pitch = 1.2; u.rate = 0.95; window.speechSynthesis.speak(u);
-        }
 
         function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
-        // --- EVENT LISTENERS ---
         document.getElementById('send-btn').onclick = handleMessage;
         document.getElementById('user-input').onkeypress = (e) => { if(e.key==='Enter') handleMessage(); };
-        
+        document.addEventListener('click', (e) => {
+            const b = e.target.closest('#suggestion-container button');
+            if(b) { document.getElementById('user-input').value = b.innerText; handleMessage(); }
+        });
+
         initApp();
     </script>
 </body>
