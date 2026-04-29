@@ -7,34 +7,39 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px; font-weight: 600; color: #9ca3af; }
+        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; }
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212 !important; color: white !important; }
+        .sidebar-active { background: #121212 !important; color: white !important; border-radius: 12px; }
         .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
-        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
+        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
         #notification.show { opacity: 1; bottom: 40px; }
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
+<body class="bg-[#FBFBFB] text-gray-900">
 
     <div class="flex h-screen w-screen overflow-hidden">
         <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
-            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
+            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest" placeholder="SEARCH..."></div>
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
-                <button onclick="location.reload()" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
-                <button class="sidebar-item text-gray-400">📅 <span>Calendar</span></button>
-                <button class="sidebar-item text-gray-400">📱 <span>Doa Apps</span></button>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main</p>
+                <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">💬 <span class="text-sm font-bold">Chat With Doa</span></button>
+                <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">📅 <span class="text-sm font-semibold">Calendar</span> <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
+                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">📱 <span class="text-sm font-semibold">Doa Apps</span></button>
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button class="sidebar-item text-gray-400">⚡ <span>Code Builder</span></button>
-                <button class="sidebar-item text-gray-400">📂 <span>Saved Tabs</span></button>
+                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Code...</span></button>
+                <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">📂 <span class="text-sm font-semibold">Saved Tabs</span> <span>⌄</span></button>
             </nav>
+            <div class="p-6 border-t border-gray-50">
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
+                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
+            </div>
         </aside>
 
         <!-- MAIN WORKSPACE -->
@@ -45,48 +50,76 @@
             </header>
 
             <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center mt-12 mb-8">
+                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
 
+                <!-- BOTTOM UI -->
                 <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Analyze YouTube</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Learn Spanish</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">Build App</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
                     </div>
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
-                        <button class="p-3 text-gray-300">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full →">→</button>
+
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
+                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
+                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
+                        <div class="flex items-center gap-3 pr-2">
+                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
+                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-end items-center gap-3 pr-2">
+                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
+                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
                     </div>
                 </div>
             </div>
 
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
+            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
         </main>
+
+        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
+            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
+                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
+            </div>
+            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
+                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
+                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
+                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
+            </div>
+        </aside>
     </div>
 
     <div id="notification"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // CONFIG
+        // --- BRAIN LOGIC ---
         const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
         const SUPABASE_KEY = 'YOUR_KEY_HERE';
-        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // VOICE ENGINE (Fixed "Dowa" Pronunciation)
-        function speak(text) {
+        let userProfile = null, voiceEnabled = false;
+
+        // --- SUGGESTION ENGINE ---
+        const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+        setInterval(() => {
+            document.querySelectorAll('#suggestion-container button').forEach(b => b.innerText = list[Math.floor(Math.random() * list.length)]);
+        }, 6000);
+
+        // --- HUMAN VOICE ---
+        function speak(t) {
             window.speechSynthesis.cancel();
-            const cleanText = text.replace(/\bDoa\b/gi, "Dowa"); // Phonetic fix
-            const u = new SpeechSynthesisUtterance(cleanText);
+            const u = new SpeechSynthesisUtterance(t.replace(/\bDoa\b/gi, "Dowa"));
             const voices = window.speechSynthesis.getVoices();
             const pref = voices.find(v => v.name.includes("Female") || v.name.includes("Samantha"));
             if(pref) u.voice = pref;
@@ -94,38 +127,21 @@
             window.speechSynthesis.speak(u);
         }
 
-        // CHAT LOGIC
+        // --- CHAT HANDLING ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             if(!input.value) return;
-            document.getElementById('hero-section').classList.add('hidden');
+            document.getElementById('hero-section').style.display = 'none';
             document.getElementById('chat-history').classList.remove('hidden');
-            
-            const msg = input.value;
-            input.value = "";
-            addMsg("user", msg);
-            
-            // Brain Call
-            const res = await fetch(CLOUDFLARE_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: msg})
-            });
-            const data = await res.json();
-            const aiMsg = data.candidates[0].content.parts[0].text;
-            addMsg("doa", aiMsg);
-            speak(aiMsg);
-        }
-
-        function addMsg(s, t) {
             const d = document.createElement('div');
-            d.className = s === "user" ? "flex justify-end my-4" : "flex justify-start my-4";
-            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm">${t.replace(/\bDoa\b/gi, "Doa")}</div>`;
+            d.className = "flex justify-end my-4";
+            d.innerHTML = `<div class="bg-black text-white p-4 rounded-3xl max-w-sm">${input.value}</div>`;
             document.getElementById('chat-history').appendChild(d);
-            document.getElementById('chat-history').scrollTop = document.getElementById('chat-history').scrollHeight;
+            input.value = "";
         }
 
         document.getElementById('send-btn').onclick = handleMessage;
+        document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; };
     </script>
 </body>
 </html>
