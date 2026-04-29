@@ -168,6 +168,19 @@
             
             const data = await response.json();
 
+              function toggleSavedTabs() {
+        const container = document.getElementById('saved-tabs-list');
+        container.classList.toggle('hidden');
+    }
+
+    function addRecentChat(title) {
+        const historyList = document.getElementById('history-list');
+        const p = document.createElement('p');
+        p.className = "hover:text-black transition-colors cursor-pointer truncate";
+        p.innerText = title;
+        historyList.appendChild(p);
+    }
+
             // 🚨 NEW: CATCH GOOGLE ERRORS
             if (data.error) {
                 alert("Doa Error: " + data.error);
