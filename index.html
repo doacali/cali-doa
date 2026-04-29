@@ -74,7 +74,7 @@
                         <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Suggestion 4</button>
                     </div>
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
-                        <button class="p-3 text-gray-300 text-xl font-light">+</button>
+                        <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
                         <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full shadow-lg">→</button>
                     </div>
@@ -92,7 +92,7 @@
                 <h2 class="text-4xl font-black italic mb-8 uppercase tracking-tighter">My Calendar</h2>
                 <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px]">
                     <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Upcoming Events</p>
-                    <div class="mt-4 text-sm text-gray-500 italic text-center py-20">Calendar logic syncing with Supabase...</div>
+                    <div class="mt-4 text-sm text-gray-500 italic text-center py-20">Syncing schedule...</div>
                 </div>
             </div>
 
@@ -105,13 +105,13 @@
             <!-- FOOTER TICKER -->
             <div class="w-full bg-black text-white h-8 flex items-center overflow-hidden shrink-0">
                 <div id="world-ticker" class="text-[9px] font-black uppercase tracking-[0.3em]">
-                    ● GLOBAL STATUS: ONLINE ● NEW USER REGISTERED IN SACRAMENTO ● RECENT APP SAVED: BUDGET PLANNER ● WORLDWIDE LEADERBOARD RELOADING... ●
+                    ● GLOBAL STATUS: ONLINE ● NEW USER REGISTERED ● APP FACTORY UPDATED ● RECENT EARNINGS: +50 POINTS ●
                 </div>
             </div>
             
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 <span class="text-[#00E676]">DOA CALI</span>. ALL RIGHTS RESERVED.</div>
+                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
         </main>
 
@@ -121,7 +121,7 @@
                 <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
                 <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
             </div>
-            <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 text-center">
+            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
                 <h3 class="text-lg font-black mb-2 italic uppercase tracking-tighter">Skip Ads</h3>
                 <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Upgrade to Pro for $4.99/mo to unlock Expert Lessons and skip wait times.</p>
                 <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all">Go Pro</button>
@@ -135,16 +135,15 @@
     <script>
         const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-        const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- PASTE WORKER URL HERE
+        const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- PASTE CLOUDFLARE URL
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let appState = {
             currentUser: null, userProfile: null,
             voiceEnabled: JSON.parse(localStorage.getItem('voice_active')) || false,
-            suggestions: ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan", "Music Mix", "AI Business", "Market News", "History Fact"]
+            suggestions: ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan", "Music Mix", "AI Business", "Market News"]
         };
 
-        // --- NAVIGATION ---
         function switchView(v) {
             document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
             document.getElementById(v + '-view').classList.remove('hidden');
@@ -152,7 +151,6 @@
             document.getElementById('nav-' + v).classList.add('sidebar-active');
         }
 
-        // --- ENDLESS SUGGESTION LOOP ---
         function rotateSuggestions() {
             const btns = document.querySelectorAll('#suggestion-container button');
             const pool = [...appState.suggestions].sort(() => Math.random() - 0.5);
@@ -168,7 +166,6 @@
         }
         setInterval(rotateSuggestions, 7000);
 
-        // --- AI BRAIN CONNECTION ---
         async function processResponse(text) {
             try {
                 const response = await fetch(CLOUDFLARE_PROXY_URL, {
@@ -183,36 +180,32 @@
             } catch (e) { addMsg("doa", "Neural link fuzzy! Please refresh."); }
         }
 
-        // --- HUMAN VOICE ENGINE (CLEAN & FEMALE) ---
+        // --- IMPROVED HUMAN VOICE ENGINE ---
         function speak(t) {
             window.speechSynthesis.cancel();
             
-            // 1. NEURAL SPEECH FILTER: Remove markdown and emojis for the voice ONLY
+            // 1. NEURAL FILTERS: Remove emojis, bold stars, and PHONETIC FIX for Doa name
             const cleanText = t
-                .replace(/\*\*/g, "") // Remove bold markdown
-                .replace(/\*/g, "")   // Remove italic markdown
-                .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "") // Remove all emojis
+                .replace(/\*\*/g, "") // Clean stars
+                .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "") // Clean emojis
+                .replace(/\bDoa\b/g, "Dowa") // Phonetic fix for her name (sounds like Dough-a)
                 .trim();
 
             const u = new SpeechSynthesisUtterance(cleanText);
             const voices = window.speechSynthesis.getVoices();
-            
-            // 2. TARGET PREMIUM FEMALE VOICE
-            const pref = voices.find(v => (v.name.includes("Google") && v.name.includes("Female")) || v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Zira"));
+            const pref = voices.find(v => (v.name.includes("Google") && v.name.includes("Female")) || v.name.includes("Samantha") || v.name.includes("Victoria"));
             
             if(pref) u.voice = pref;
-            u.pitch = 1.2; 
-            u.rate = 0.95; 
+            u.pitch = 1.25; // Youthful female pitch
+            u.rate = 0.95;  // Smooth conversation speed
             window.speechSynthesis.speak(u);
         }
-        window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
-        // --- CHAT UI ---
         function addMsg(s, t) {
             const history = document.getElementById('chat-history');
             const d = document.createElement('div');
             d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white shadow-lg' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
+            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
             history.appendChild(d);
             history.scrollTop = history.scrollHeight;
             return d;
@@ -231,11 +224,9 @@
             load.remove();
         }
 
-        // --- AUTH & DATA ---
         async function initApp() {
             const { data: { user } } = await _supabase.auth.getUser();
-            const d = new Date().getDate();
-            document.getElementById('cal-day').innerText = d;
+            document.getElementById('cal-day').innerText = new Date().getDate();
             if (user) {
                 appState.currentUser = user;
                 let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
@@ -258,7 +249,7 @@
             appState.voiceEnabled = !appState.voiceEnabled;
             localStorage.setItem('voice_active', appState.voiceEnabled);
             updateVoiceUI();
-            if(appState.voiceEnabled) speak("Voice synthesis active. I can hear you now.");
+            if(appState.voiceEnabled) speak("Voice synthesis active. My name is Doa.");
         }
         function updateVoiceUI() {
             const knob = document.getElementById('voice-knob');
