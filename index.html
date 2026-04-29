@@ -167,15 +167,21 @@
             });
             
             const data = await response.json();
+
+            // 🚨 NEW: CATCH GOOGLE ERRORS
+            if (data.error) {
+                alert("Doa Error: " + data.error);
+                addMsg("doa", "Google rejected the request. Please check the alert box on your screen!");
+                return;
+            }
+
             let aiResponse = data.candidates[0].content.parts[0].text;
 
             // SYSTEM ACTION INTERCEPTER
-            // 1. Give Points
             if (aiResponse.includes('[ADD_POINTS: 10]')) {
                 aiResponse = aiResponse.replace('[ADD_POINTS: 10]', '');
                 addPoints(10);
             }
-            // 2. Affiliate Forwarding
             if (aiResponse.includes('[OPEN_AFFILIATE:')) {
                 const product = aiResponse.match(/\[OPEN_AFFILIATE: (.*?)\]/)[1];
                 aiResponse = aiResponse.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
