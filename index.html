@@ -317,8 +317,14 @@
     </button>
     
     <button id="nav-tabs" onclick="toggleSavedTabs()" class="sidebar-item text-gray-400 flex justify-between">
-        <span>📂 Saved Tabs</span> <span>⌄</span>
-    </button>
+    <span>📂 Saved Tabs</span> <span>⌄</span>
+</button>
+
+<!-- PASTE THE DIV RIGHT HERE, UNDERNEATH THAT BUTTON -->
+<div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2">
+    <!-- Saved apps will appear here -->
+    <p class="text-[10px] text-gray-400 italic">No saved projects yet</p>
+</div>
     
     <!-- This div stays hidden until you toggle it -->
     <div id="saved-tabs-list" class="hidden pl-8 space-y-2 py-2 text-[11px] text-gray-400 font-bold">
