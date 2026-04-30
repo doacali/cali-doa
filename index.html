@@ -326,6 +326,72 @@
             if (b.innerText.includes('Sign Up')) signUp();
             if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
         });
+    // --- APP ENGINE (THE APP FACTORY) ---
+
+    // 1. THE COMPLETE APP REGISTRY (ALL 20+ TOOLS)
+    const allApps = [
+        // FINANCE
+        { id: 'cali-culator', name: "Cali-Culator", cat: "Financial", icon: "💰", desc: "Visual monthly budget planner." },
+        { id: 'sub-zero', name: "Sub-Zero", cat: "Financial", icon: "🧊", desc: "Subscription cost tracker." },
+        { id: 'goal-digger', name: "Goal Digger", cat: "Financial", icon: "🎯", desc: "Savings goal visualizer." },
+        { id: 'debt-dash', name: "Debt Free Dash", cat: "Financial", icon: "🏃", desc: "Snowball method calculator." },
+        { id: 'gig-grind', name: "Gig Grind", cat: "Financial", icon: "💼", desc: "Freelancer income tracker." },
+        { id: 'spend-less', name: "Spend-Less Challenge", cat: "Financial", icon: "🏆", desc: "Gamify your no-spend days." },
+        
+        // HEALTH
+        { id: 'habit-stack', name: "Habit Stack", cat: "Health", icon: "⚡", desc: "Daily habit momentum tracker." },
+        { id: 'h2-go', name: "H2-Go", cat: "Health", icon: "💧", desc: "Ultra-simple water intake log." },
+        { id: 'mindful-moments', name: "Mindful Moments", cat: "Health", icon: "🧘", desc: "Minimalist gratitude journal." },
+        { id: 'screen-streak', name: "Screen-Free Streak", cat: "Health", icon: "📵", desc: "Digital detox timer." },
+        { id: 'rep-counter', name: "Rep Counter", cat: "Health", icon: "🏋️", desc: "No-frills workout logger." },
+        { id: 'sleep-cycle', name: "Sleep Cycle Log", cat: "Health", icon: "🌙", desc: "Manual sleep duration tracker." },
+
+        // PRODUCTIVITY & GROWTH
+        { id: 'focus-flow', name: "Focus Flow", cat: "Growth", icon: "⏲️", desc: "Classic Pomodoro focus timer." },
+        { id: 'milestone-mapper', name: "Milestone Mapper", cat: "Growth", icon: "🗺️", desc: "Break down large goals." },
+        { id: 'one-percent', name: "1% Better", cat: "Growth", icon: "📈", desc: "Daily skill practice tracker." },
+        { id: 'bookworm', name: "Bookworm", cat: "Growth", icon: "📚", desc: "Reading stats & wishlist." },
+        { id: 'decider', name: "The Decider", cat: "Growth", icon: "⚖️", desc: "Pro/Con list logic generator." },
+        { id: 'weekly-reset', name: "Weekly Reset", cat: "Growth", icon: "🔄", desc: "Guided reflection journal." },
+
+        // LIFESTYLE
+        { id: 'binge-list', name: "Binge List", cat: "Lifestyle", icon: "🎬", desc: "Movie & show watchlist." },
+        { id: 'weekly-eats', name: "Weekly Eats", cat: "Lifestyle", icon: "🍎", desc: "Meal planner & shopping list." },
+        { id: 'gift-giver', name: "Gift Giver", cat: "Lifestyle", icon: "🎁", desc: "Gift ideas & budget planner." },
+        { id: 'wanderlog', name: "Wanderlog", cat: "Lifestyle", icon: "✈️", desc: "Trip itinerary builder." },
+        { id: 'plant-parent', name: "Plant Parent", cat: "Lifestyle", icon: "🪴", desc: "Plant care & watering schedules." },
+        { id: 'bucket-list', name: "The Bucket List", cat: "Lifestyle", icon: "🗺️", desc: "Create & manage life goals." }
+    ];
+
+    // 2. THE RENDERER: This function builds the grid of app cards
+    function renderAppGrid() {
+        const grid = document.getElementById('app-grid');
+        grid.innerHTML = allApps.map(app => `
+            <div onclick="launchApp('${app.id}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00E676] transition-all cursor-pointer group">
+                <div class="text-4xl mb-6 transform group-hover:scale-110 transition-transform">${app.icon}</div>
+                <p class="text-[9px] font-black text-gray-300 uppercase mb-1">${app.cat}</p>
+                <h4 class="font-black text-xl mb-3">${app.name}</h4>
+                <p class="text-sm text-gray-400 font-medium mb-8 leading-relaxed">${app.desc}</p>
+                <button class="text-[11px] font-black text-[#00E676] uppercase group-hover:translate-x-2 transition-all">Open App →</button>
+            </div>
+        `).join('');
+    }
+
+    // 3. THE APP LAUNCHER: This opens the individual apps
+    function launchApp(id) {
+        switchView('app-runner');
+        const app = allApps.find(a => a.id === id);
+        const container = document.getElementById('app-content');
+        
+        // --- This is where we will build the logic for each app ---
+        if (id === 'cali-culator') {
+            container.innerHTML = '<h2>Cali-Culator Budget App Loading...</h2>';
+        } else if (id === 'h2-go') {
+            container.innerHTML = '<h2>Water Tracker Loading...</h2>';
+        } else {
+            container.innerHTML = `<div class="text-center mt-20 text-gray-400 font-bold uppercase tracking-widest">Doa is optimizing the Neural code for ${app.name}...</div>`;
+        }
+    }
 
         // --- PASTE IT HERE: SIDEBAR NAVIGATION LOGIC ---
       // --- SIDEBAR NAVIGATION LOGIC ---
