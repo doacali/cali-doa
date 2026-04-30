@@ -195,8 +195,8 @@
             window.speechSynthesis.cancel();
 
             const cleanText = text
-                .replace(/\bDowa\b/gi, "Doe-ah")
-                .replace(/\bDoa\b/gi, "Doe-ah")
+                .replace(/\bDowa\b/gi, "DOUGH-wah")
+                .replace(/\bDoa\b/gi, "DOUGH-wah")
                 .replace(/([a-zA-Z])\1{2,}/g, "$1")
                 .replace(/[*#`_~]/g, "")
                 .replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
