@@ -94,7 +94,7 @@
                     
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
-                        <input id="user-input" onkeydown="if(event.key==='Enter') handleMessage()" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
+                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
                         <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors flex items-center justify-center">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </button>
@@ -137,124 +137,84 @@
         // --- CONFIGURATION ---
         const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
         let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-        
         let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-        let currentChatId = null; 
-
-        // --- LOCAL BRAIN CONSTANTS ---
-        const SIMPLE_INPUTS = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "good night", "thanks", "thank you", "you there", "anyone there"];
-        
-        const TIME_STATES = {
-            morning: ["doing fantastic", "miracles are happening", "everything is aligned"],
-            afternoon: ["feeling great", "exquisitely aligned", "ready to help you create"],
-            evening: ["everything is good", "feeling resplendent", "hope your day was magnificent"],
-            night: ["ready for rest", "feeling peaceful", "staying awake for you"]
-        };
-
-        const SIMPLE_RESPONSES = {
-            thanks: ["You're very welcome!", "My pleasure.", "Glad I could help!", "Always here for you."],
-            presence: ["I'm right here.", "Always online and ready.", "Reporting for duty!"],
-            casual: ["I'm doing well, how about yourself?", "Everything is aligned. What's the plan?"]
-        };
-
-        // --- 1. THE VOICE ENGINE ---
         let voices = [];
         let selectedVoice = null;
 
+        // --- 1. FREE BRAIN DATA ---
+        const SIMPLE_INPUTS = ["hi", "hey", "hello", "yo", "sup", "morning", "afternoon", "evening", "night", "you there", "whats up", "how are you", "thanks", "thank you", "appreciate"];
+        const TIME_STATES = {
+            morning: ["smooth start", "calm and steady", "everything is aligned"],
+            afternoon: ["steady", "everything’s moving well", "on track"],
+            evening: ["winding down clean", "everything’s in place", "settled"],
+            night: ["quiet and clear", "everything is calm", "still and focused"]
+        };
+
+        // --- 2. THE VOICE ENGINE ---
         function loadVoices() {
             voices = window.speechSynthesis.getVoices();
-            selectedVoice = pickFemaleVoice(voices);
-        }
-
-        function pickFemaleVoice(voiceList) {
-            const femaleNames = ["Samantha", "Aria", "Jenny", "Zira", "Victoria", "Google US English"];
-            for (const name of femaleNames) {
-                const match = voiceList.find(v => v.name.includes(name));
-                if (match) return match;
+            // Female Priority Selection
+            const femaleNames = ["Samantha","Karen","Moira","Zira","Aria","Google US English Female","Female"];
+            for (const n of femaleNames) {
+                const match = voices.find(v => v.name.includes(n));
+                if (match) { selectedVoice = match; break; }
             }
-            return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0];
         }
-
         window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
 
         function speak(text) {
             if (!voiceActive) return;
             window.speechSynthesis.cancel();
-            // Ensure Doa sounds natural
+            
+            // Doa Phonics & Cleaning
             const cleanText = text
                 .replace(/\bDoa\b/gi, "DOUGH-wah")
-                .replace(/[*#`_~]/g, "");
+                .replace(/[*#`_~]/g, "")
+                .replace(/[\u{1F600}-\u{1FFFF}]/gu, ""); 
 
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
-            u.rate = 0.95;
+            u.pitch = 1.2; 
+            u.rate = 0.92;
             window.speechSynthesis.speak(u);
         }
 
-        function toggleVoice() {
-            voiceActive = !voiceActive;
-            localStorage.setItem('voice_active', voiceActive);
-            updateVoiceUI();
-            if (voiceActive) speak("Live voice active.");
-        }
-
-        function updateVoiceUI() {
-            const knob = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
-            if (knob && bg) {
-                knob.style.left = voiceActive ? "16px" : "2px";
-                bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-            }
-        }
-
-        // --- 2. LOCAL BRAIN UTILS ---
-        function normalize(str) {
-            return str.toLowerCase().replace(/[^\w\s]/gi, '').trim();
-        }
-
+        // --- 3. LOCAL RESPONSE LOGIC ---
         function getTimeTone() {
-            const hr = new Date().getHours();
-            if (hr < 12) return "morning";
-            if (hr < 17) return "afternoon";
-            if (hr < 21) return "evening";
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 12) return "morning";
+            if (hour >= 12 && hour < 17) return "afternoon";
+            if (hour >= 17 && hour < 22) return "evening";
             return "night";
         }
 
-        function getWeightedChoice(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
-
-        function detectIntent(normalized) {
-            if (normalized.includes("thank")) return "thanks";
-            if (normalized.includes("there") || normalized.includes("you there")) return "presence";
-            return "casual";
-        }
-
-        function buildLocalResponse(input, isFirst) {
-            const normalized = normalize(input);
-            const isKnown = SIMPLE_INPUTS.some(s => normalized.includes(s));
+        function getLocalResponse(input, isFirst) {
+            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/gi, '').trim();
             
-            if (!isKnown) return "SEND_TO_GEMINI";
+            // Check if input is in whitelist
+            if (!SIMPLE_INPUTS.some(s => clean.includes(s))) return null;
 
-            const intent = detectIntent(normalized);
             const timeTone = getTimeTone();
-
+            
             if (isFirst) {
-                const greetingMap = { morning: "good morning", afternoon: "good afternoon", evening: "good evening", night: "evening" };
-                const greeting = greetingMap[timeTone];
-                const state = getWeightedChoice(TIME_STATES[timeTone]);
-                const endings = ["how are you or how can I help you", "how are you or what do you need", "what can I do for you"];
-                return `${greeting} — ${state}, ${getWeightedChoice(endings)}`;
+                const greetingMap = { 
+                    morning: "good morning", 
+                    afternoon: "good afternoon", 
+                    evening: "good evening", 
+                    night: "evening" 
+                };
+                const state = TIME_STATES[timeTone][Math.floor(Math.random() * TIME_STATES[timeTone].length)];
+                return `${greetingMap[timeTone]} — ${state}, how can I help you?`;
             }
 
-            if (intent === "thanks") return getWeightedChoice(SIMPLE_RESPONSES.thanks);
-            if (intent === "presence") return getWeightedChoice(SIMPLE_RESPONSES.presence);
-            if (intent === "casual") return getWeightedChoice(SIMPLE_RESPONSES.casual);
-
-            return "SEND_TO_GEMINI";
+            if (clean.includes("thank")) return "Thank you vehemently, have a harmonious day!";
+            if (clean.includes("there")) return "I’m right here, ready when you are.";
+            
+            return "Everything is exponentially good, what's on your mind?";
         }
 
-        // --- 3. CHAT LOGIC ---
+        // --- 4. MAIN CHAT ENGINE ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
@@ -262,20 +222,122 @@
 
             // UI Setup
             document.getElementById('hero-section').style.display = 'none';
-            const chatHistory = document.getElementById('chat-history');
-            chatHistory.classList.remove('hidden');
+            const historyDiv = document.getElementById('chat-history');
+            historyDiv.classList.remove('hidden');
             
             addBubble('user', text);
             input.value = "";
 
-            // History Management
-            if (currentChatId === null) {
-                currentChatId = Date.now();
-                chatHistoryData.unshift({
-                    id: currentChatId,
-                    title: text.substring(0, 25) + (text.length > 25 ? "..." : ""),
-                    messages: [{ role: 'user', text: text }]
+            // Determine if first message to trigger local greeting
+            const isFirst = historyDiv.children.length <= 1;
+            const localAnswer = getLocalResponse(text, isFirst);
+
+            if (localAnswer) {
+                setTimeout(() => {
+                    addBubble('doa', localAnswer);
+                    speak(localAnswer);
+                    saveHistory(text);
+                }, 600);
+                return;
+            }
+
+            // Fallback to Cloudflare
+            try {
+                const res = await fetch(CLOUDFLARE_URL, { 
+                    method:'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: text}) 
                 });
-            } else {
-                const chat = chatHistoryData.find(c => c.id === currentChatId);
-                if (chat) chat.messages.push({ role: 'user', text: text });
+                const data = await res.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+                
+                addBubble('doa', aiText);
+                speak(aiText);
+                saveHistory(text);
+            } catch(e) {
+                addBubble('doa', "Neural link fuzzy! Check Cloudflare connection.");
+            }
+        }
+
+        function addBubble(role, text) {
+            const h = document.getElementById('chat-history');
+            const d = document.createElement('div');
+            d.className = `flex ${role==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
+            d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${text}</div>`;
+            h.appendChild(d); 
+            h.scrollTop = h.scrollHeight;
+        }
+
+        // --- 5. UI & HISTORY ---
+        function saveHistory(text) {
+            const title = text.length > 20 ? text.substring(0, 20) + "..." : text;
+            chatHistoryData.unshift({ id: Date.now(), title: title });
+            // Limit to last 10
+            if(chatHistoryData.length > 10) chatHistoryData.pop();
+            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            if(!list) return;
+            list.innerHTML = chatHistoryData.map(i => `
+                <div class="flex justify-between group p-2 rounded-lg hover:bg-gray-50 transition">
+                    <p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p>
+                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs px-1">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteHistory(id) {
+            chatHistoryData = chatHistoryData.filter(i => i.id !== id);
+            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+            renderHistory();
+        }
+
+        function startNewChat() {
+            document.getElementById('chat-history').innerHTML = "";
+            document.getElementById('chat-history').classList.add('hidden');
+            document.getElementById('hero-section').style.display = 'block';
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('main-sidebar');
+            const btn = document.getElementById('open-sidebar-btn');
+            sb.classList.toggle('collapsed');
+            if(sb.classList.contains('collapsed')) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
+        }
+
+        function toggleVoice() {
+            voiceActive = !voiceActive;
+            localStorage.setItem('voice_active', voiceActive);
+            const knob = document.getElementById('voice-knob');
+            const bg = document.getElementById('voice-switch');
+            knob.style.left = voiceActive ? "16px" : "2px";
+            bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+            if(voiceActive) speak("Voice Synthesis active.");
+        }
+
+        function switchView(v) {
+            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(v + '-view');
+            if(target) target.classList.remove('hidden');
+        }
+
+        window.onload = () => { 
+            renderHistory(); 
+            // Initialize voice UI state
+            const knob = document.getElementById('voice-knob');
+            const bg = document.getElementById('voice-switch');
+            knob.style.left = voiceActive ? "16px" : "2px";
+            bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+        };
+
+        // Listen for Enter key on the input field
+        document.getElementById('user-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') handleMessage();
+        });
+    </script>
+</body>
+</html>
