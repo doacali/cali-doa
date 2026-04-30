@@ -129,7 +129,7 @@
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
 
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● Dougha Voice Engine Active ●</div></div>
+            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● Dough-wah Voice Engine Active ●</div></div>
         </main>
     </div>
 
@@ -141,7 +141,7 @@
         let voices = [];
         let selectedVoice = null;
 
-        // --- 1. THE "DOUGHA" PREMIUM VOICE ENGINE (LOCKED) ---
+        // --- 1. THE "Dough-wah" PREMIUM VOICE ENGINE (LOCKED) ---
         function loadVoices() {
             voices = window.speechSynthesis.getVoices();
             selectedVoice = pickFemaleVoice(voices);
@@ -166,7 +166,7 @@
             if (!voiceActive) return;
             window.speechSynthesis.cancel();
             // Phonetic fix & Clean-up
-            const cleanText = text.replace(/\bDoa\b/gi, "Dougha").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+            const cleanText = text.replace(/\bDoa\b/gi, "Dough-wah").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
             u.pitch = 1.2; 
@@ -303,7 +303,7 @@
             const bg = document.getElementById('voice-switch');
             if(knob) knob.style.left = voiceActive ? "16px" : "2px";
             if(bg) bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-            if(voiceActive) speak("Live voice active. My name is Dougha.");
+            if(voiceActive) speak("Live voice active. My name is Dough-wah.");
         }
 
         function switchView(v) {
