@@ -28,13 +28,14 @@
 </head>
 <body class="text-gray-900">
 
-    <!-- SIDEBAR RE-OPENER -->
+    <!-- SIDEBAR RE-OPENER ARROW -->
     <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-110 transition">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
 
     <div class="flex h-screen w-screen overflow-hidden">
         
+        <!-- 1. SIDEBAR (RESTORED MENUS) -->
         <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-[60] relative">
             <div class="p-6 flex items-center justify-between">
                 <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="startNewChat()">DOA CALI</h1>
@@ -44,31 +45,46 @@
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
                 <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
+                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span></button>
                 <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
                 <button id="nav-laser" onclick="switchView('laser')" class="sidebar-item">🔫 <span>Laser Tag</span></button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
                 <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
-                
+                <button onclick="document.getElementById('saved-tabs-box').classList.toggle('hidden')" class="sidebar-item flex justify-between"><span>📂 Saved Tabs</span> <span class="text-[8px]">⌄</span></button>
+                <div id="saved-tabs-box" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
+
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Creation</p>
+                <button id="nav-editor" onclick="switchView('editor')" class="sidebar-item">🎨 <span>Editor App</span></button>
+                <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
+                <button id="nav-music" onclick="switchView('music')" class="sidebar-item">🎵 <span>Music Lab</span></button>
+
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Previously</p>
                 <div id="history-list" class="space-y-1 px-1"></div>
             </nav>
         </aside>
 
+        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+            
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button onclick="login()" class="hover:text-black">Login</button>
-                <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
+                <div id="auth-zone" class="flex gap-4">
+                    <button onclick="login()" class="hover:text-black transition">Login</button>
+                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
+                </div>
             </header>
 
+            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="text-6xl font-black mb-4 tracking-tighter">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
+                
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
+                
                 <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
@@ -77,215 +93,7 @@
                     <div class="flex justify-end items-center gap-3 pr-2 mt-4">
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
                         <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
-                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm"></div>
+                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto"></div>
-            <div id="code-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto"></div>
-
-            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-12">
-                <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● New Budget App generated ● Dougha Voice Active ●</div></div>
-        </main>
-    </div>
-
-    <script>
-        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-        const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-        let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-        let currentChatId = null;
-        let userProfile = null;
-        let userMemory = { learned_facts: [] };
-        let selectedVoice = null;
-
-        // --- 1. LOCAL BRAIN DATA (FREE RESPONSES) ---
-        const MOOD_POOL = {
-            positive: ["love that — what would you like me to do for you", "amazing — how can I help", "splendid — what do you need"],
-            neutral: ["that’s fair — what would you like me to do for you", "understood — how can I help", "I hear you"],
-            negative: ["I’m sorry to hear that — how can I help", "that sounds rough — I'm here for you"]
-        };
-        const MOOD_INPUTS = {
-            positive: ["good", "great", "fine", "amazing", "awesome", "fantastic"],
-            neutral: ["okay", "ok", "alright", "it's going"],
-            negative: ["not good", "bad", "rough", "sad", "stressed"]
-        };
-        const GREETINGS = ["hi", "hey", "hello", "yo", "sup", "whats up"];
-
-        function getLocalResponse(input, isFirst) {
-            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoaa\b/gi, '').replace(/\bdoa\b/gi, '').trim();
-            
-            if (clean.includes("morning")) return "Good morning! Miracles are happening, how are you?";
-            if (clean.includes("afternoon")) return "Good afternoon! Exquisitely aligned today, how are things?";
-            
-            if (GREETINGS.includes(clean)) {
-                if (isFirst) return "hello — doing fantastic, how are you or how can I help you";
-                return "miraculously well — how are you or what do you need?";
-            }
-
-            for (const mood in MOOD_INPUTS) {
-                if (MOOD_INPUTS[mood].some(m => clean === m || clean.includes(m))) {
-                    return MOOD_POOL[mood][Math.floor(Math.random() * MOOD_POOL[mood].length)];
-                }
-            }
-
-            if (clean.includes("thank")) return "Thank you vehemently, have a harmonious day!";
-            return null;
-        }
-
-        // --- 2. VOICE ENGINE (doaa Phonetics) ---
-        function loadVoices() {
-            const voices = window.speechSynthesis.getVoices();
-            const names = ["Samantha","Aria","Zira","Google US English Female","Female"];
-            for(const n of names) {
-                const match = voices.find(v => v.name.includes(n));
-                if(match) { selectedVoice = match; break; }
-            }
-        }
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
-
-        function speak(text) {
-            if (!voiceActive) return;
-            window.speechSynthesis.cancel();
-            const clean = text.replace(/\bDoa\b/gi, "doaa").replace(/[*#`_~]/g, "");
-            const u = new SpeechSynthesisUtterance(clean);
-            if (selectedVoice) u.voice = selectedVoice;
-            u.pitch = 1.2; u.rate = 0.92;
-            window.speechSynthesis.speak(u);
-        }
-
-        // --- 3. CHAT ENGINE & PERSISTENCE ---
-        async function handleMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if(!text) return;
-
-            const hDiv = document.getElementById('chat-history');
-            document.getElementById('hero-section').style.display = 'none';
-            hDiv.classList.remove('hidden');
-            
-            const isFirst = (!currentChatId || hDiv.children.length === 0);
-            if(!currentChatId) currentChatId = Date.now();
-
-            addBubble('user', text);
-            input.value = "";
-
-            // Intercept with Local Brain
-            const local = getLocalResponse(text, isFirst);
-            if(local) {
-                setTimeout(() => { addBubble('doa', local); speak(local); }, 500);
-                return;
-            }
-
-            // Fallback to Gemini
-            try {
-                const res = await fetch(CLOUDFLARE_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: text}) });
-                const data = await res.json();
-                const aiText = data.candidates[0].content.parts[0].text;
-                addBubble('doa', aiText);
-                speak(aiText);
-            } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
-        }
-
-        function addBubble(role, text) {
-            const h = document.getElementById('chat-history');
-            const d = document.createElement('div');
-            d.className = `flex ${role==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${text}</div>`;
-            h.appendChild(d); h.scrollTop = h.scrollHeight;
-
-            const chat = chatHistoryData.find(c => c.id === currentChatId);
-            if(chat) {
-                chat.messages = chat.messages || [];
-                chat.messages.push({ role, text });
-            } else {
-                chatHistoryData.unshift({ id: currentChatId, title: text.substring(0,20)+"...", messages: [{role, text}] });
-            }
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
-
-        function loadChat(id) {
-            const chat = chatHistoryData.find(i => i.id === id);
-            if(!chat) return;
-            currentChatId = id;
-            document.getElementById('hero-section').style.display = 'none';
-            const h = document.getElementById('chat-history');
-            h.classList.remove('hidden');
-            h.innerHTML = "";
-            chat.messages.forEach(m => {
-                const d = document.createElement('div');
-                d.className = `flex ${m.role==='user'?'justify-end':'justify-start'} w-full`;
-                d.innerHTML = `<div class="${m.role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm">${m.text}</div>`;
-                h.appendChild(d);
-            });
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = chatHistoryData.map(i => `
-                <div class="flex justify-between group p-2 rounded-lg hover:bg-gray-50 transition ${currentChatId === i.id ? 'bg-gray-50' : ''}">
-                    <p onclick="loadChat(${i.id})" class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black flex-1">${i.title}</p>
-                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs px-1">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function deleteHistory(id) {
-            chatHistoryData = chatHistoryData.filter(i => i.id !== id);
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            if(currentChatId === id) startNewChat();
-            renderHistory();
-        }
-
-        function startNewChat() {
-            currentChatId = null;
-            document.getElementById('chat-history').innerHTML = "";
-            document.getElementById('chat-history').classList.add('hidden');
-            document.getElementById('hero-section').style.display = 'block';
-            renderHistory();
-        }
-
-        function toggleSidebar() { 
-            const sb = document.getElementById('main-sidebar');
-            sb.classList.toggle('collapsed');
-            document.getElementById('open-sidebar-btn').classList.toggle('hidden');
-        }
-
-        function toggleVoice() {
-            voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive);
-            const k = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
-            if(k && bg) { k.style.left = voiceActive ? "16px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; }
-            if(voiceActive) speak("Live voice active. My name is doaa.");
-        }
-
-        async function initApp() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (user) {
-                userProfile = (await _supabase.from('profiles').select('*').eq('id', user.id).single()).data;
-                userMemory = userProfile.memory || { learned_facts: [] };
-            }
-        }
-
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            const target = document.getElementById(v + '-view');
-            if(target) target.classList.remove('hidden');
-        }
-
-        window.onload = () => { renderHistory(); updateVoiceUI(); };
-        document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleMessage(); });
-    </script>
-</body>
-</html>
