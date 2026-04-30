@@ -1,234 +1,521 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cali Doa | AI Operating System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        #main-sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; z-index: 60; }
-        #main-sidebar.collapsed { width: 0; opacity: 0; overflow: hidden; pointer-events: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; font-weight: 600; color: #9ca3af; font-size: 13px; }
-        .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212 !important; color: white !important; }
-        .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #voice-switch { transition: background-color 0.3s; }
-        #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cali Doa | AI Operating System</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      margin: 0;
+      background: #ffffff;
+      color: #111827;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    #main-sidebar {
+      width: 260px;
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 60;
+    }
+
+    #main-sidebar.collapsed {
+      width: 0;
+      opacity: 0;
+      overflow: hidden;
+      pointer-events: none;
+      border-right: 0;
+    }
+
+    .sidebar-item {
+      transition: all 0.2s ease;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 11px 12px;
+      font-weight: 700;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .sidebar-item:hover {
+      background-color: #f3f4f6;
+      color: #111827;
+    }
+
+    .sidebar-active {
+      background: #111111 !important;
+      color: white !important;
+    }
+
+    .chat-bubble {
+      animation: fadeIn 0.28s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .thinking-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #9ca3af;
+      animation: pulse 1s infinite ease-in-out;
+    }
+
+    .thinking-dot:nth-child(2) { animation-delay: 0.15s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: .35; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    #user-input {
+      resize: none;
+      max-height: 150px;
+    }
+
+    #voice-switch { transition: background-color 0.3s; }
+    #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    @media (max-width: 768px) {
+      #main-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        box-shadow: 20px 0 60px rgba(0,0,0,0.08);
+      }
+
+      #chat-view {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+
+      #hero-title {
+        font-size: 42px !important;
+      }
+
+      footer {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
-<body class="text-gray-900">
 
-    <!-- HIDDEN RE-OPEN BUTTON (Top Left) -->
-    <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-110 transition">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-    </button>
+<body>
 
-    <div class="flex h-screen w-screen overflow-hidden">
-        
-        <!-- 1. SIDEBAR -->
-        <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 relative">
-            <div class="p-6 flex items-center justify-between">
-                <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1>
-                <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-[9px] font-black uppercase tracking-widest">Hide</button>
-            </div>
-            
-            <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
-                <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
-                <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
-                
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Shared Tools</p>
-                <div id="shared-apps-list" class="space-y-1 px-1 text-[11px] text-gray-400 font-bold uppercase">
-                    <p class="p-2 opacity-30 italic">No tools published yet...</p>
-                </div>
+  <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-105 transition">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M3 12h18M3 6h18M3 18h18"/>
+    </svg>
+  </button>
 
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Previously</p>
-                <div id="history-list" class="space-y-1 px-1"></div>
-            </nav>
-        </aside>
+  <div class="flex h-screen w-screen overflow-hidden">
 
-        <!-- 2. MAIN WORKSPACE -->
-        <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-            
-            <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <div id="auth-zone" class="flex gap-4">
-                    <button onclick="login()" class="hover:text-black transition">Login</button>
-                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
-                </div>
-            </header>
+    <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 relative">
+      <div class="p-6 flex items-center justify-between">
+        <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1>
+        <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-[9px] font-black uppercase tracking-widest">Hide</button>
+      </div>
 
-            <!-- VIEW: CHAT -->
-            <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center mt-12 mb-8">
-                    <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion powered by Cloud Gemma.</p>
-                </div>
-                
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
-                
-                <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
-                        <button class="p-3 text-gray-300">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doaa anything...">
-                        <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
-                    </div>
+      <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
+        <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mb-2">Main Hub</p>
 
-                    <div class="flex justify-end items-center gap-3 pr-2 mt-4">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                        <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
-                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
-                        </div>
-                    </div>
-                </div>
+        <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
+        <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
+
+        <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mt-8 mb-2">Shared Tools</p>
+        <div id="shared-apps-list" class="space-y-1 px-1 text-[11px] text-gray-400 font-bold uppercase">
+          <p class="p-2 opacity-30 italic">No tools published yet...</p>
+        </div>
+
+        <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mt-10 mb-3">Previously</p>
+        <div id="history-list" class="space-y-1 px-1"></div>
+      </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+
+      <header id="main-header" class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 shrink-0">
+        <div id="auth-zone" class="flex gap-4 items-center">
+          <button onclick="login()" class="hover:text-black transition">Login</button>
+          <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-xl shadow-sm font-bold hover:scale-[1.02] transition">Sign Up</button>
+        </div>
+      </header>
+
+      <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center overflow-hidden px-10">
+
+        <div id="chat-shell" class="w-full max-w-4xl flex-1 flex flex-col min-h-0">
+
+          <div id="hero-section" class="flex-1 flex flex-col items-center justify-center text-center pb-24">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-100 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mb-6">
+              AI Operating System
             </div>
 
-            <!-- VIEW: APPS -->
-            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
-                 <h2 class="text-4xl font-black italic uppercase tracking-tighter">App Factory</h2>
-                 <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10"></div>
+            <h1 id="hero-title" class="text-6xl font-black mb-5 tracking-tighter leading-none">
+              What can <span class="text-[#00E676]">Doa</span><br>do for you?
+            </h1>
+
+            <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto leading-relaxed">
+              Your intelligent companion powered by Cloud Gemma.
+            </p>
+          </div>
+
+          <div id="chat-history" class="hidden w-full flex-1 overflow-y-auto hide-scrollbar space-y-5 py-6 px-1 min-h-0"></div>
+
+          <div class="w-full shrink-0 pb-7 pt-3 bg-white">
+            <div class="bg-white border border-gray-200 shadow-[0_20px_70px_rgba(0,0,0,0.08)] rounded-[28px] p-2.5 flex items-end gap-2">
+              <button class="shrink-0 w-10 h-10 rounded-full text-gray-300 hover:text-black hover:bg-gray-50 transition text-xl leading-none">+</button>
+
+              <textarea
+                id="user-input"
+                rows="1"
+                class="flex-1 py-3 px-1 outline-none text-[15px] font-medium leading-relaxed hide-scrollbar"
+                placeholder="Ask Doaa anything..."
+              ></textarea>
+
+              <button id="send-btn" onclick="handleMessage()" class="shrink-0 bg-black text-white w-11 h-11 rounded-full shadow-lg hover:bg-[#00E676] hover:text-black transition-colors font-bold">
+                →
+              </button>
             </div>
 
-            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-10 shrink-0">
-                <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-        </main>
-    </div>
+            <div class="flex justify-end items-center gap-3 pr-2 mt-4">
+              <span class="text-[9px] font-black text-gray-300 tracking-[0.22em] uppercase">Live Voice</span>
+              <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer">
+                <div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm"></div>
+              </div>
+            </div>
+          </div>
 
-    <script>
-        // --- 1. CONFIGURATION ---
-        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; 
-        let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-        let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-        let selectedVoice = null;
-        let voices = [];
+        </div>
+      </div>
 
-        // --- 2. VOICE ENGINE (doaa Phonetic Lock) ---
-        function loadVoices() {
-            voices = window.speechSynthesis.getVoices();
-            const priority = ["Samantha","Karen","Moira","Zira","Aria","Google US English Female","Female"];
-            for (const n of priority) {
-                const match = voices.find(v => v.name.includes(n));
-                if (match) { selectedVoice = match; break; }
-            }
+      <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
+        <h2 class="text-4xl font-black italic uppercase tracking-tighter">App Factory</h2>
+        <p class="text-gray-400 mt-3 font-medium">Create, save, and publish tools from Doa.</p>
+        <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10"></div>
+      </div>
+
+      <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 shrink-0">
+        <div class="flex gap-10">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+        <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+
+    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
+    let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
+    let selectedVoice = null;
+    let isThinking = false;
+
+    function loadVoices() {
+      const voices = window.speechSynthesis.getVoices();
+      const priority = ["Samantha", "Karen", "Moira", "Zira", "Aria", "Google US English Female", "Female"];
+
+      for (const name of priority) {
+        const match = voices.find(v => v.name.includes(name));
+        if (match) {
+          selectedVoice = match;
+          break;
         }
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
+      }
+    }
 
-        function speak(text) {
-            if (!voiceActive) return;
-            window.speechSynthesis.cancel();
-            // FORCED PHONETICS
-            const cleanText = text.replace(/\bDoa\b/gi, "doaa").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
-            const u = new SpeechSynthesisUtterance(cleanText);
-            if (selectedVoice) u.voice = selectedVoice;
-            u.pitch = 1.2; u.rate = 0.92;
-            window.speechSynthesis.speak(u);
-        }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
 
-        // --- 3. CHAT LOGIC (FAILSAFE JSON PARSING) ---
-        async function handleMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if(!text) return;
+    function speak(text) {
+      if (!voiceActive || !text) return;
 
-            document.getElementById('hero-section').style.display = 'none';
-            document.getElementById('chat-history').classList.remove('hidden');
-            
-            addBubble('user', text);
-            input.value = "";
+      window.speechSynthesis.cancel();
 
-            try {
-                const res = await fetch(CLOUDFLARE_URL, { method:'POST', body: JSON.stringify({text: text}) });
-                const data = await res.json();
-                
-                // FAILSAFE: Check common JSON paths for AI response
-                const aiText = data.response || (data.result ? data.result.response : null) || data.text || "Neural Link fuzzy!";
-                
-                addBubble('doaa', aiText);
-                speak(aiText);
-            } catch(e) { 
-                console.error("Fetch Error:", e);
-                addBubble('doaa', "Neural Link fuzzy! Check Cloudflare logs."); 
-            }
-        }
+      const cleanText = String(text)
+        .replace(/\bDoa\b/gi, "doaa")
+        .replace(/[*#`_~]/g, "")
+        .replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
 
-        function addBubble(sender, text) {
-            const h = document.getElementById('chat-history');
-            const d = document.createElement('div');
-            d.className = `flex ${sender==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${sender==='user'?'bg-black text-white shadow-lg':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${text}</div>`;
-            h.appendChild(d); h.scrollTop = h.scrollHeight;
-            saveHistory(sender, text);
-        }
+      const utterance = new SpeechSynthesisUtterance(cleanText);
 
-        function saveHistory(sender, text) {
-            if(sender !== 'user') return;
-            const history = { text, timestamp: Date.now() };
-            chatHistoryData.unshift(history);
-            if(chatHistoryData.length > 10) chatHistoryData.pop();
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
+      if (selectedVoice) utterance.voice = selectedVoice;
 
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = chatHistoryData.map(h => `
-                <div class="p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-400 font-bold truncate group flex justify-between items-center">
-                    <span>${h.text.substring(0, 18)}...</span>
-                    <button onclick="clearHistoryItem(${h.timestamp})" class="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 text-[10px]">✕</button>
-                </div>
-            `).join('');
-        }
+      utterance.pitch = 1.12;
+      utterance.rate = 0.92;
+      utterance.volume = 1;
 
-        function clearHistoryItem(time) {
-            chatHistoryData = chatHistoryData.filter(h => h.timestamp !== time);
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
+      window.speechSynthesis.speak(utterance);
+    }
 
-        // --- 4. UI UTILS ---
-        function toggleSidebar() { 
-            document.getElementById('main-sidebar').classList.toggle('collapsed'); 
-            document.getElementById('open-sidebar-btn').classList.toggle('hidden');
-        }
+    async function handleMessage() {
+      if (isThinking) return;
 
-        function toggleVoice() {
-            voiceActive = !voiceActive;
-            localStorage.setItem('voice_active', voiceActive);
-            const knob = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
-            if(knob && bg) {
-                knob.style.left = voiceActive ? "16px" : "2px";
-                bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-            }
-            if(voiceActive) speak("Live voice active. My name is doaa.");
-        }
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
 
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            document.getElementById(v + '-view').classList.remove('hidden');
-        }
+      if (!text) return;
 
-        document.getElementById('user-input').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') handleMessage();
+      setChatMode();
+      addBubble('user', text);
+      input.value = '';
+      autoResizeInput();
+
+      showThinking();
+
+      try {
+        isThinking = true;
+        updateSendButton(true);
+
+        const res = await fetch(CLOUDFLARE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
         });
 
-        window.onload = () => { renderHistory(); updateVoiceUI(); };
-        
-        function updateVoiceUI() {
-            const knob = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
-            if(knob && bg) {
-                knob.style.left = voiceActive ? "16px" : "2px";
-                bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-            }
+        const raw = await res.text();
+
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          data = { text: raw };
         }
-    </script>
+
+        const aiText =
+          data.response ||
+          data.text ||
+          data.answer ||
+          data.message ||
+          data.output ||
+          data.result?.response ||
+          data.result?.text ||
+          data.result?.answer ||
+          data.choices?.[0]?.message?.content ||
+          "Neural Link fuzzy!";
+
+        removeThinking();
+        addBubble('doaa', aiText);
+        speak(aiText);
+
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        removeThinking();
+        addBubble('doaa', "Neural Link fuzzy! Check Cloudflare logs.");
+      } finally {
+        isThinking = false;
+        updateSendButton(false);
+        input.focus();
+      }
+    }
+
+    function setChatMode() {
+      document.getElementById('hero-section').classList.add('hidden');
+      document.getElementById('chat-history').classList.remove('hidden');
+    }
+
+    function addBubble(sender, text) {
+      const history = document.getElementById('chat-history');
+      const row = document.createElement('div');
+
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble`;
+
+      const bubbleClass = sender === 'user'
+        ? 'bg-black text-white shadow-lg rounded-[24px] rounded-br-md'
+        : 'bg-gray-100 text-gray-900 rounded-[24px] rounded-bl-md';
+
+      row.innerHTML = `
+        <div class="${bubbleClass} px-5 py-4 max-w-[78%] text-[14px] leading-relaxed shadow-sm whitespace-pre-wrap">${escapeHTML(text)}</div>
+      `;
+
+      history.appendChild(row);
+      scrollChatToBottom();
+
+      if (sender === 'user') saveHistory(text);
+    }
+
+    function showThinking() {
+      const history = document.getElementById('chat-history');
+      const row = document.createElement('div');
+
+      row.id = 'thinking-bubble';
+      row.className = 'flex justify-start w-full chat-bubble';
+
+      row.innerHTML = `
+        <div class="bg-gray-100 px-5 py-4 rounded-[24px] rounded-bl-md shadow-sm flex gap-2 items-center">
+          <span class="thinking-dot"></span>
+          <span class="thinking-dot"></span>
+          <span class="thinking-dot"></span>
+        </div>
+      `;
+
+      history.appendChild(row);
+      scrollChatToBottom();
+    }
+
+    function removeThinking() {
+      const thinking = document.getElementById('thinking-bubble');
+      if (thinking) thinking.remove();
+    }
+
+    function scrollChatToBottom() {
+      const history = document.getElementById('chat-history');
+      requestAnimationFrame(() => {
+        history.scrollTo({ top: history.scrollHeight, behavior: 'smooth' });
+      });
+    }
+
+    function saveHistory(text) {
+      const history = { text, timestamp: Date.now() };
+
+      chatHistoryData.unshift(history);
+
+      const seen = new Set();
+      chatHistoryData = chatHistoryData.filter(item => {
+        const key = item.text.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      if (chatHistoryData.length > 12) chatHistoryData.pop();
+
+      localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+
+      if (!chatHistoryData.length) {
+        list.innerHTML = '<p class="p-2 text-gray-300 font-bold text-xs">No chats yet...</p>';
+        return;
+      }
+
+      list.innerHTML = chatHistoryData.map(h => `
+        <div onclick="reuseHistory('${encodeURIComponent(h.text)}')" class="p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-400 font-bold truncate group flex justify-between items-center">
+          <span>${escapeHTML(h.text.substring(0, 18))}${h.text.length > 18 ? '...' : ''}</span>
+          <button onclick="event.stopPropagation(); clearHistoryItem(${h.timestamp})" class="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 text-[10px]">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function reuseHistory(encodedText) {
+      const input = document.getElementById('user-input');
+      input.value = decodeURIComponent(encodedText);
+      input.focus();
+      autoResizeInput();
+    }
+
+    function clearHistoryItem(time) {
+      chatHistoryData = chatHistoryData.filter(h => h.timestamp !== time);
+      localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+      renderHistory();
+    }
+
+    function toggleSidebar() {
+      document.getElementById('main-sidebar').classList.toggle('collapsed');
+      document.getElementById('open-sidebar-btn').classList.toggle('hidden');
+    }
+
+    function toggleVoice() {
+      voiceActive = !voiceActive;
+      localStorage.setItem('voice_active', voiceActive);
+      updateVoiceUI();
+
+      if (voiceActive) speak("Live voice active. My name is doaa.");
+    }
+
+    function updateVoiceUI() {
+      const knob = document.getElementById('voice-knob');
+      const bg = document.getElementById('voice-switch');
+
+      if (!knob || !bg) return;
+
+      knob.style.left = voiceActive ? "18px" : "2px";
+      bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+    }
+
+    function switchView(view) {
+      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+      document.getElementById(view + '-view').classList.remove('hidden');
+
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
+
+      const navItem = document.getElementById('nav-' + view);
+      if (navItem) navItem.classList.add('sidebar-active');
+    }
+
+    function updateSendButton(loading) {
+      const btn = document.getElementById('send-btn');
+      btn.innerHTML = loading ? '…' : '→';
+      btn.disabled = loading;
+      btn.style.opacity = loading ? '0.7' : '1';
+    }
+
+    function autoResizeInput() {
+      const input = document.getElementById('user-input');
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 150) + 'px';
+    }
+
+    function escapeHTML(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function login() {
+      alert("Login system coming next.");
+    }
+
+    function signUp() {
+      alert("Sign up system coming next.");
+    }
+
+    const input = document.getElementById('user-input');
+
+    input.addEventListener('input', autoResizeInput);
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleMessage();
+      }
+    });
+
+    window.onload = () => {
+      renderHistory();
+      updateVoiceUI();
+      input.focus();
+    };
+  </script>
+
 </body>
 </html>
