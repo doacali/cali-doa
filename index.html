@@ -276,17 +276,31 @@
         });
 
         // --- PASTE IT HERE: SIDEBAR NAVIGATION LOGIC ---
-        function switchView(viewName) {
-            // 1. Remove the black highlight from all buttons
-            document.getElementById('nav-chat').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
-            document.getElementById('nav-calendar').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
-            document.getElementById('nav-apps').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
-            document.getElementById('nav-code').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+      // --- SIDEBAR NAVIGATION LOGIC ---
+    function switchView(viewName) {
+        // 1. Hide all main views
+        document.getElementById('chat-view').classList.add('hidden');
+        document.getElementById('apps-view').classList.add('hidden');
+        document.getElementById('app-runner').classList.add('hidden');
+        
+        // 2. Show the requested view
+        document.getElementById(viewName + '-view').classList.remove('hidden');
 
-            // 2. Add the black highlight to the button you just clicked
-            document.getElementById('nav-' + viewName).classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        // 3. Update sidebar active state
+        document.getElementById('nav-chat').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        document.getElementById('nav-calendar').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        document.getElementById('nav-apps').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        document.getElementById('nav-code').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+
+        // Note: If viewName is 'app-runner', keep 'nav-apps' highlighted
+        const targetNav = viewName === 'app-runner' ? 'nav-apps' : 'nav-' + viewName;
+        document.getElementById(targetNav).classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        
+        // 4. Trigger specific actions
+        if (viewName === 'apps') {
+            renderAppGrid(); // We will write this function next!
         }
-
+    }
         initApp();
     </script>
 </body>
