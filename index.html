@@ -221,9 +221,9 @@
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
     // --- THE REAL CLOUDFLARE BRAIN ---
+   // --- THE NEURAL COMMAND CENTER (EARS) ---
     async function processResponse(text) {
         try {
-            // Send user message to Cloudflare Brain
             const response = await fetch(CLOUDFLARE_PROXY_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -231,33 +231,129 @@
             });
             
             const data = await response.json();
-
-            // 🚨 NEW: CATCH GOOGLE ERRORS
+            
             if (data.error) {
                 alert("Doa Error: " + data.error);
-                addMsg("doa", "Google rejected the request. Please check the alert box on your screen!");
                 return;
             }
 
-            let aiResponse = data.candidates[0].content.parts[0].text;
+            let aiMsg = data.candidates[0].content.parts[0].text;
 
-            // SYSTEM ACTION INTERCEPTER
-            if (aiResponse.includes('[ADD_POINTS: 10]')) {
-                aiResponse = aiResponse.replace('[ADD_POINTS: 10]', '');
-                addPoints(10);
-            }
-            if (aiResponse.includes('[OPEN_AFFILIATE:')) {
-                const product = aiResponse.match(/\[OPEN_AFFILIATE: (.*?)\]/)[1];
-                aiResponse = aiResponse.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
-                setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2000);
+            // 1. DETECT: Auto-Build Command
+            if (aiMsg.includes('[TRIGGER_BUILD:')) {
+                const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
+                const appName = match[1];
+                const appDesc = match[2];
+
+                aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
+                
+                addMsg("doa", aiMsg);
+                if(voiceEnabled) speak(aiMsg);
+
+                setTimeout(() => {
+                    showToast(`🚀 Neural Lab: Initializing ${appName}...`);
+                    switchView('code'); 
+                    startNeuralBuild(appName, appDesc); 
+                }, 2000);
+                return;
             }
 
-            addMsg("doa", aiResponse.trim());
-            if(voiceEnabled) speak(aiResponse.trim());
+            // 2. DETECT: Points Earned
+            if (aiMsg.includes('[ADD_POINTS:')) {
+                const ptsMatch = aiMsg.match(/\[ADD_POINTS: (\d+)\]/);
+                if (ptsMatch) {
+                    const pts = parseInt(ptsMatch[1]);
+                    aiMsg = aiMsg.replace(/\[ADD_POINTS:.*?\]/g, "");
+                    addPoints(pts);
+                }
+            }
+
+            // 3. DETECT: Affiliate Shopping
+            if (aiMsg.includes('[OPEN_AFFILIATE:')) {
+                const productMatch = aiMsg.match(/\[OPEN_AFFILIATE: (.*?)\]/);
+                if (productMatch) {
+                    const product = productMatch[1];
+                    aiMsg = aiMsg.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
+                    setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2500);
+                }
+            }
+
+            // Final Output
+            addMsg("doa", aiMsg.trim());
+            if(voiceEnabled) speak(aiMsg.trim());
 
         } catch (e) {
             console.error(e);
-            addMsg("doa", "My neural link to Cloudflare is offline. Please check the connection!");
+            addMsg("doa", "Neural link fuzzy! Please refresh.");
+        }
+    }
+
+    // --- 1. NEURAL BUILD ANIMATION (WORKS WITH AUTO-JUMP) ---
+    function startNeuralBuild(name, desc) {
+        const log = document.getElementById('builder-log');
+        const preview = document.getElementById('builder-preview');
+        if (!log || !preview) return;
+
+        // Reset the workspace
+        log.innerHTML = `<div>> Initializing Blueprint Engine...</div>`;
+        preview.innerHTML = `<div class="h-full flex items-center justify-center text-gray-400 animate-pulse italic text-xs uppercase tracking-widest">Synthesizing Neural Code...</div>`;
+        
+        const sequences = [
+            `> Accessing Shubhamsaboo/awesome-llm-apps library...`,
+            `> Logic Pattern Found for: ${name}`,
+            `> Synthesizing Tailwind CSS & HTML5...`,
+            `> Injecting Neural logic...`,
+            `> BUILD SUCCESSFUL.`
+        ];
+
+        sequences.forEach((msg, i) => {
+            setTimeout(() => {
+                const line = document.createElement('div');
+                line.innerText = msg;
+                line.className = "text-[#00E676] py-1 border-b border-white/5";
+                log.appendChild(line);
+                log.scrollTop = log.scrollHeight;
+                
+                // When the animation finishes, show the "Mock" app in the preview
+                if(i === sequences.length - 1) {
+                    preview.innerHTML = `
+                        <div class="flex justify-end mb-4">
+                            <button onclick="saveToSupabase('${name}', 'Logic for ${name}')" class="text-[9px] font-black bg-[#00E676] text-black px-4 py-1.5 rounded-full uppercase hover:scale-105 transition shadow-lg shadow-green-500/20">💾 Save Tab</button>
+                        </div>
+                        <div class="p-8 bg-green-50 rounded-[32px] text-center border-2 border-green-100 animate-in fade-in zoom-in duration-500">
+                            <div class="text-4xl mb-4">🚀</div>
+                            <h3 class="text-2xl font-black mb-2 italic text-gray-900">${name.toUpperCase()}</h3>
+                            <p class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">${desc}</p>
+                            <div class="inline-block bg-white px-6 py-2 rounded-2xl shadow-sm text-[10px] font-black text-[#00E676] tracking-[0.2em] uppercase border border-green-50">System Live</div>
+                        </div>
+                    `;
+                }
+            }, i * 1000);
+        });
+    }
+
+    // --- 2. DATABASE SAVE ENGINE ---
+    async function saveToSupabase(name, content) {
+        if (!currentUser) {
+            showToast("Please Login to save tabs!");
+            return;
+        }
+
+        const { error } = await _supabase
+            .from('saved_tabs')
+            .insert([{ 
+                user_id: currentUser.id, 
+                app_name: name, 
+                code_content: content 
+            }]);
+
+        if (!error) {
+            showToast("Project Saved to Sidebar! 📂");
+            // This function will refresh your sidebar later
+            if (typeof loadSavedTabs === 'function') loadSavedTabs(); 
+        } else {
+            console.error(error);
+            showToast("Neural Save Error.");
         }
     }
 
