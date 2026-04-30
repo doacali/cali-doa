@@ -10,30 +10,31 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        #main-sidebar { transition: all 0.3s ease; width: 260px; }
-        #main-sidebar.collapsed { width: 0; opacity: 0; overflow: hidden; }
+        #main-sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; z-index: 60; }
+        #main-sidebar.collapsed { width: 0; opacity: 0; overflow: hidden; pointer-events: none; }
         .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; font-weight: 600; color: #9ca3af; font-size: 13px; }
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
         .sidebar-active { background: #121212 !important; color: white !important; }
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         #voice-switch { transition: background-color 0.3s; }
-        #voice-knob { transition: left 0.3s; }
+        #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="text-gray-900">
 
+    <!-- HIDDEN RE-OPEN BUTTON (Top Left) -->
     <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-110 transition">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- SIDEBAR -->
-        <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-[60] relative">
+        <!-- 1. SIDEBAR -->
+        <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 relative">
             <div class="p-6 flex items-center justify-between">
                 <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1>
-                <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-[9px] font-black uppercase">Hide</button>
+                <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-[9px] font-black uppercase tracking-widest">Hide</button>
             </div>
             
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
@@ -43,7 +44,7 @@
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Shared Tools</p>
                 <div id="shared-apps-list" class="space-y-1 px-1 text-[11px] text-gray-400 font-bold uppercase">
-                    <!-- Admin generated apps will appear here for ALL users -->
+                    <p class="p-2 opacity-30 italic">No tools published yet...</p>
                 </div>
 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Previously</p>
@@ -51,13 +52,17 @@
             </nav>
         </aside>
 
+        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+            
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button onclick="login()" class="hover:text-black transition">Login</button>
-                <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
+                <div id="auth-zone" class="flex gap-4">
+                    <button onclick="login()" class="hover:text-black transition">Login</button>
+                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
+                </div>
             </header>
 
-            <!-- CHAT VIEW -->
+            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
@@ -82,13 +87,13 @@
                 </div>
             </div>
 
-            <!-- APPS VIEW -->
+            <!-- VIEW: APPS -->
             <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
-                 <h2 class="text-4xl font-black italic uppercase">App Factory</h2>
+                 <h2 class="text-4xl font-black italic uppercase tracking-tighter">App Factory</h2>
                  <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10"></div>
             </div>
 
-            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-10">
+            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-10 shrink-0">
                 <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
@@ -96,16 +101,17 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURATION (LOCKED) ---
-        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // YOUR WORKER LINK
+        // --- 1. CONFIGURATION ---
+        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; 
         let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
         let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
         let selectedVoice = null;
+        let voices = [];
 
-        // --- 2. THE "DOAA" VOICE ENGINE (PHONETIC LOCK) ---
+        // --- 2. VOICE ENGINE (doaa Phonetic Lock) ---
         function loadVoices() {
-            const voices = window.speechSynthesis.getVoices();
-            const priority = ["Samantha","Aria","Zira","Google US English Female","Female"];
+            voices = window.speechSynthesis.getVoices();
+            const priority = ["Samantha","Karen","Moira","Zira","Aria","Google US English Female","Female"];
             for (const n of priority) {
                 const match = voices.find(v => v.name.includes(n));
                 if (match) { selectedVoice = match; break; }
@@ -117,7 +123,7 @@
         function speak(text) {
             if (!voiceActive) return;
             window.speechSynthesis.cancel();
-            // CORRECT PHONETIC FIX: doaa
+            // FORCED PHONETICS
             const cleanText = text.replace(/\bDoa\b/gi, "doaa").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
@@ -125,7 +131,7 @@
             window.speechSynthesis.speak(u);
         }
 
-        // --- 3. CHAT & ENTER KEY LOGIC ---
+        // --- 3. CHAT LOGIC (FAILSAFE JSON PARSING) ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
@@ -140,40 +146,53 @@
             try {
                 const res = await fetch(CLOUDFLARE_URL, { method:'POST', body: JSON.stringify({text: text}) });
                 const data = await res.json();
-                const aiText = data.response; // Cloudflare Workers AI returns 'response' field
+                
+                // FAILSAFE: Check common JSON paths for AI response
+                const aiText = data.response || (data.result ? data.result.response : null) || data.text || "Neural Link fuzzy!";
+                
                 addBubble('doaa', aiText);
                 speak(aiText);
-            } catch(e) { addBubble('doaa', "Neural Link fuzzy!"); }
+            } catch(e) { 
+                console.error("Fetch Error:", e);
+                addBubble('doaa', "Neural Link fuzzy! Check Cloudflare logs."); 
+            }
         }
 
         function addBubble(sender, text) {
             const h = document.getElementById('chat-history');
             const d = document.createElement('div');
             d.className = `flex ${sender==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${sender==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm">${text}</div>`;
+            d.innerHTML = `<div class="${sender==='user'?'bg-black text-white shadow-lg':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${text}</div>`;
             h.appendChild(d); h.scrollTop = h.scrollHeight;
             saveHistory(sender, text);
         }
 
-        // --- 4. HISTORY LOGIC ---
         function saveHistory(sender, text) {
-            const history = { sender, text, timestamp: Date.now() };
+            if(sender !== 'user') return;
+            const history = { text, timestamp: Date.now() };
             chatHistoryData.unshift(history);
-            if(chatHistoryData.length > 20) chatHistoryData.pop();
+            if(chatHistoryData.length > 10) chatHistoryData.pop();
             localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
             renderHistory();
         }
 
         function renderHistory() {
             const list = document.getElementById('history-list');
-            list.innerHTML = chatHistoryData.filter(h => h.sender === 'user').slice(0, 5).map(h => `
-                <div class="p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-400 font-bold truncate">
-                    ${h.text.substring(0, 20)}...
+            list.innerHTML = chatHistoryData.map(h => `
+                <div class="p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-400 font-bold truncate group flex justify-between items-center">
+                    <span>${h.text.substring(0, 18)}...</span>
+                    <button onclick="clearHistoryItem(${h.timestamp})" class="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 text-[10px]">✕</button>
                 </div>
             `).join('');
         }
 
-        // --- 5. UI UTILS ---
+        function clearHistoryItem(time) {
+            chatHistoryData = chatHistoryData.filter(h => h.timestamp !== time);
+            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+            renderHistory();
+        }
+
+        // --- 4. UI UTILS ---
         function toggleSidebar() { 
             document.getElementById('main-sidebar').classList.toggle('collapsed'); 
             document.getElementById('open-sidebar-btn').classList.toggle('hidden');
@@ -200,7 +219,16 @@
             if(e.key === 'Enter') handleMessage();
         });
 
-        window.onload = renderHistory;
+        window.onload = () => { renderHistory(); updateVoiceUI(); };
+        
+        function updateVoiceUI() {
+            const knob = document.getElementById('voice-knob');
+            const bg = document.getElementById('voice-switch');
+            if(knob && bg) {
+                knob.style.left = voiceActive ? "16px" : "2px";
+                bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+            }
+        }
     </script>
 </body>
 </html>
