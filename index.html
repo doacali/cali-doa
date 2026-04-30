@@ -67,7 +67,8 @@
                 <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
             </header>
 
-            <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
+            <!-- VIEW 1: THE CHAT AREA (Default) -->
+            <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
@@ -96,6 +97,29 @@
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
                         <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: THE APPS DASHBOARD (Hidden by default) -->
+            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-4xl font-black italic tracking-tighter mb-2 uppercase">DOA APP ECOSYSTEM</h2>
+                    <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] mb-12">Specialized Multi-Agent Tools</p>
+                    
+                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20">
+                        <!-- We will generate the 20 apps here with Javascript! -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- VIEW 3: APP RUNNER (For when you click an app) -->
+            <div id="app-runner" class="view-container hidden flex-1 w-full bg-white flex flex-col overflow-hidden relative">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 id="active-app-name" class="font-black italic text-lg tracking-tighter text-[#00E676]">APP NAME</h3>
+                    <button onclick="switchView('apps')" class="text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors">Close ×</button>
+                </div>
+                <div id="app-content" class="flex-1 p-10 overflow-y-auto">
+                    <!-- App Logic loads here -->
                 </div>
             </div>
 
