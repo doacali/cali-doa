@@ -18,8 +18,6 @@
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
         .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
-
-
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -31,14 +29,14 @@
         #mic-btn.listening { color: #00E676; animation: micPulse 1s ease-in-out infinite; }
         @keyframes micPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
 
-        /* ── CHAT LAYOUT (ChatGPT-style) ── */
-        #chat-view { display: flex; flex-direction: column; overflow: hidden; }
+        /* ── CHAT LAYOUT IMPROVEMENTS ── */
+        #chat-view { display: flex; flex-direction: column; overflow: hidden; padding-top: 5vh; }
 
-        /* Hero: takes all space when idle, collapses when chat starts */
+        /* Hero: No longer uses flex-grow/center to allow input to sit higher */
         #hero-section { transition: all 0.45s cubic-bezier(0.4,0,0.2,1); overflow: hidden; }
-        #hero-section.chat-started { flex: 0 0 0 !important; max-height: 0 !important; opacity: 0; padding: 0 !important; margin: 0 !important; }
+        #hero-section.chat-started { max-height: 0 !important; opacity: 0; margin: 0 !important; padding: 0 !important; }
 
-        /* Chat history: flex-grow fills remaining height, self-scrolls */
+        /* Chat history: fills middle when active */
         #chat-history {
             flex: 1 1 auto;
             min-height: 0;
@@ -46,14 +44,12 @@
             overflow-x: hidden;
             scroll-behavior: smooth;
         }
-        /* Scrollbar on far right of the chat column */
-        #chat-history::-webkit-scrollbar { width: 6px; }
-        #chat-history::-webkit-scrollbar-track { background: #f9fafb; border-radius: 99px; }
-        #chat-history::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
-        #chat-history::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        #chat-history::-webkit-scrollbar { width: 4px; }
+        #chat-history::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
 
-        /* Input area: never overlaps ticker */
-        #chat-input-wrap { flex-shrink: 0; padding-bottom: 16px; }
+        /* Input area: top margin reduced to pull it up */
+        #chat-input-wrap { flex-shrink: 0; padding-bottom: 30px; margin-top: 2rem; transition: margin 0.4s; }
+        #chat-view.active-chat #chat-input-wrap { margin-top: 0; }
     </style>
 </head>
 <body class="text-gray-900">
@@ -94,36 +90,36 @@
 
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button onclick="login()" class="hover:text-black">Login</button>
-                <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
+                <button onclick="login()" class="hover:text-black transition">Login</button>
+                <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold transition hover:bg-[#00c565]">Sign Up</button>
             </header>
 
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col overflow-hidden">
 
-                <!-- HERO: fades/collapses fully when chat starts -->
-                <div id="hero-section" class="text-center px-10 flex-1 flex flex-col items-center justify-center pb-16">
+                <!-- HERO SECTION -->
+                <div id="hero-section" class="text-center px-10">
                     <h1 class="text-6xl font-black mb-5 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
 
-                <!-- CHAT HISTORY: grows upward, scrollbar thins as content fills -->
-                <div id="chat-history" class="w-full max-w-3xl mx-auto px-4 space-y-4 py-6 hidden"></div>
+                <!-- CHAT HISTORY -->
+                <div id="chat-history" class="w-full max-w-2xl mx-auto px-4 space-y-4 py-6 hidden"></div>
 
-                <!-- INPUT BAR: stays pinned at bottom, never clips under ticker -->
-                <div id="chat-input-wrap" class="w-full max-w-3xl mx-auto px-4 mt-auto">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-3 min-h-[36px]"></div>
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center gap-2">
+                <!-- INPUT AREA -->
+                <div id="chat-input-wrap" class="w-full max-w-2xl mx-auto px-4">
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-4 min-h-[36px]"></div>
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center gap-2">
                         <button class="p-3 text-gray-300 shrink-0">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium min-w-0" placeholder="Ask Doa anything...">
                         <button id="mic-btn" onclick="toggleMic()" title="Speak to Doa"
                             class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-[#00E676] transition-colors">
-                            <svg id="mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
                             </svg>
                         </button>
-                        <div class="flex items-center gap-2 shrink-0 border-l border-gray-100 pl-2 ml-1">
-                            <span class="text-[8px] font-black text-gray-300 tracking-widest uppercase whitespace-nowrap">Live Voice</span>
-                            <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer shrink-0">
+                        <div class="flex items-center gap-2 shrink-0 border-l border-gray-100 pl-2">
+                            <span class="text-[8px] font-black text-gray-300 tracking-widest uppercase">Live Voice</span>
+                            <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
                                 <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
                             </div>
                         </div>
@@ -137,36 +133,13 @@
             <div id="calendar-view" class="view-container hidden flex-1 p-10 overflow-y-auto"></div>
             <div id="editor-view" class="view-container hidden flex-1 p-10 overflow-y-auto"></div>
             <div id="code-view" class="view-container hidden flex-1 p-10 overflow-y-auto"></div>
+            <div id="laser-view" class="view-container hidden flex-1 p-10 bg-black"></div>
 
-            <!-- VIEW: LASER TAG ARENA -->
-            <div id="laser-view" class="view-container hidden flex-1 w-full h-full bg-black relative overflow-hidden">
-                <!-- The 3D Rendering Screen -->
-                <canvas id="laser-canvas" class="w-full h-full block"></canvas>
-
-                <!-- UI Overlay -->
-                <div class="absolute top-10 left-10 text-[#00E676] font-black italic uppercase tracking-tighter pointer-events-none">
-                    <p class="text-2xl">Arena Beta</p>
-                    <p class="text-sm mt-1">Tags: <span id="tag-count">0</span></p>
-                    <p class="text-sm">World Rank: #<span id="world-rank">--</span></p>
-                    <p class="text-[10px] opacity-40 mt-1">WASD to move &bull; Click to shoot</p>
-                </div>
-
-                <!-- Crosshair -->
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div class="w-6 h-6 border-2 border-[#00E676]/40 rounded-full flex items-center justify-center">
-                        <div class="w-1 h-1 bg-[#00E676] rounded-full"></div>
-                    </div>
-                </div>
-
-                <!-- Toast -->
-                <div id="laser-toast" class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#00E676] text-black text-xs font-black uppercase tracking-widest px-5 py-2 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none"></div>
-            </div>
-
-            <footer class="w-full py-4 px-10 border-t border-gray-100 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 shrink-0">
+            <footer class="w-full py-4 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 shrink-0">
                 <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
-
+            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● doaa Voice Active ●</div></div>
         </main>
     </div>
 
@@ -177,7 +150,7 @@
         let currentChatId = null;
         let selectedVoice = null;
 
-        // --- 1. VOICE ENGINE ---
+        // --- 1. VOICE ENGINE (doaa) ---
         function loadVoices() {
             const voices = window.speechSynthesis.getVoices();
             const names = ["Samantha", "Aria", "Jenny", "Google US English Female"];
@@ -189,16 +162,13 @@
         window.speechSynthesis.onvoiceschanged = loadVoices;
         loadVoices();
 
-        function speak(text, forcePlay) {
-            if (!voiceActive && !forcePlay) return;
+        function speak(text) {
+            if (!voiceActive) return;
             window.speechSynthesis.cancel();
-            const clean = text.replace(/\bDoa\b/gi, "doaa").replace(/[*#``_~]/g, "");
+            const clean = text.replace(/\bDoa\b/gi, "doaa").replace(/[*#`_~]/g, "");
             const u = new SpeechSynthesisUtterance(clean);
             if (selectedVoice) u.voice = selectedVoice;
-            // Phone-call effect: slightly higher pitch, slightly faster, mid-range tone
-            u.pitch = 1.35;
-            u.rate = 1.05;
-            u.volume = 0.95;
+            u.pitch = 1.2; u.rate = 0.92;
             window.speechSynthesis.speak(u);
         }
 
@@ -218,83 +188,35 @@
             if(voiceActive) speak("Live voice active. My name is doaa.");
         }
 
-        // --- 2. LOCAL BRAIN (FREE RESPONSES) ---
-        const usedLocalResponses = new Set();
-
+        // --- 2. LOCAL BRAIN ---
         function getLocalResponse(input, isFirst) {
-            const clean = input.toLowerCase()
-                .replace(/[^\w\s]/gi, '')
-                .replace(/\bdoaa\b/gi, '')
-                .replace(/\bdoa\b/gi, '')
-                .trim();
-
-            const greetings = ["hi", "hey", "hello", "yo", "sup", "whats up"];
-            const isGreeting = greetings.some(g => clean.includes(g) || g === clean);
-            const isSmallTalk = ["good", "great", "bad", "okay", "thanks", "thank you", "morning", "afternoon", "evening"].some(s => clean.includes(s));
-
-            if (!isGreeting && !isSmallTalk) return null;
-
-            function pickFresh(key, options) {
-                const unused = options.filter(o => !usedLocalResponses.has(key + ':' + o));
-                const pool = unused.length > 0 ? unused : options;
-                const chosen = pool[Math.floor(Math.random() * pool.length)];
-                usedLocalResponses.add(key + ':' + chosen);
-                return chosen;
+            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').trim();
+            if (clean.includes("morning")) return "good morning miracles are happening, how are you?";
+            if (isFirst && (clean === "hello" || clean === "hi" || clean === "hey")) {
+                return "hello doing fantastic, how are you or how can I help you?";
             }
-
-            if (clean.includes("morning")) return pickFresh("morning", [
-                "good morning, miracles are happening \u2014 how are you?",
-                "good morning, the best part of the day \u2014 what do you need?",
-                "good morning, you're right on time \u2014 how can I help?"
-            ]);
-            if (clean.includes("afternoon")) return pickFresh("afternoon", [
-                "good afternoon, exquisitely aligned today \u2014 how are things?",
-                "good afternoon, the momentum is real \u2014 what's on your mind?",
-                "good afternoon, perfectly timed \u2014 how can I assist?"
-            ]);
-            if (clean.includes("evening")) return pickFresh("evening", [
-                "good evening, everything is good \u2014 how can I help?",
-                "good evening, winding down beautifully \u2014 what do you need?",
-                "good evening, still going strong \u2014 how can I assist?"
-            ]);
-
-            if (isFirst && isGreeting) {
-                return pickFresh("first_greet", [
-                    "hello, doing fantastic \u2014 how are you or how can I help you?",
-                    "hi, everything is exponentially good \u2014 how are you or how can I help?",
-                    "hey there, doing great \u2014 how are you or how can I assist?"
-                ]);
-            }
-
             if (clean.includes("thank")) return "thank you vehemently, have a harmonious day!";
-            if (clean.includes("good") || clean.includes("great")) return "love that, what would you like me to do for you?";
-
-            return "miraculously well, how are you or what do you need?";
+            return null;
         }
 
-        // --- 3. CHAT ENGINE & PERSISTENCE ---
+        // --- 3. CHAT ENGINE ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
             if(!text) return;
 
-            if(!currentChatId) {
-                currentChatId = Date.now();
-                chatHistoryData.unshift({ id: currentChatId, title: text.substring(0, 20) + "...", messages: [] });
-            }
-
+            if(!currentChatId) currentChatId = Date.now();
             document.getElementById('hero-section').classList.add('chat-started');
+            document.getElementById('chat-view').classList.add('active-chat');
             const h = document.getElementById('chat-history');
             h.classList.remove('hidden');
             
             addBubble('user', text);
             input.value = "";
 
-            const isFirst = h.children.length <= 1;
-            const local = getLocalResponse(text, isFirst);
-            if (local) {
-                addBubble('doa', local);
-                speak(local);
+            const local = getLocalResponse(text, h.children.length <= 1);
+            if(local) {
+                setTimeout(() => { addBubble('doa', local); speak(local); }, 500);
                 return;
             }
 
@@ -306,76 +228,22 @@
             } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
         }
 
-        function addBubble(role, text, targetContainer) {
-            const h = targetContainer || document.getElementById('chat-history');
-            const msgIndex = h.children.length;
+        function addBubble(role, text) {
+            const h = document.getElementById('chat-history');
             const d = document.createElement('div');
-            d.className = `flex ${role==='user' ? 'justify-end' : 'justify-start'} w-full group`;
-            d.dataset.role = role;
-            d.dataset.index = msgIndex;
-
-            if (role === 'user') {
-                d.innerHTML = `
-                    <div class="flex flex-col items-end gap-1 max-w-md">
-                        <div class="bg-black text-white p-4 rounded-3xl text-sm shadow-sm leading-relaxed">${text}</div>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-                            <button onclick="editBubble(this)" data-text="${text.replace(/"/g,'&quot;')}"
-                                class="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black">✏ Edit</button>
-                        </div>
-                    </div>`;
-            } else {
-                const bubbleId = 'bubble-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
-                d.innerHTML = `
-                    <div class="flex flex-col items-start gap-1 max-w-md">
-                        <div id="${bubbleId}" class="bg-gray-100 p-4 rounded-3xl text-sm shadow-sm leading-relaxed">${text}</div>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity pl-2">
-                            <button onclick="speakBubble('${bubbleId}')"
-                                class="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-[#00E676]">🔊 Play</button>
-                        </div>
-                    </div>`;
-            }
-
-            h.appendChild(d);
-            h.scrollTop = h.scrollHeight;
+            d.className = `flex ${role==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
+            d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-sm text-sm my-1 shadow-sm leading-relaxed">${text}</div>`;
+            h.appendChild(d); h.scrollTop = h.scrollHeight;
 
             const chat = chatHistoryData.find(c => c.id === currentChatId);
             if(chat) {
+                chat.messages = chat.messages || [];
                 chat.messages.push({ role, text });
-                localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-                renderHistory();
+            } else {
+                chatHistoryData.unshift({ id: currentChatId, title: text.substring(0,20)+"...", messages: [{role, text}] });
             }
-        }
-
-        function speakBubble(bubbleId) {
-            const el = document.getElementById(bubbleId);
-            if (!el) return;
-            speak(el.innerText, true);
-        }
-
-        function editBubble(btn) {
-            const originalText = btn.dataset.text;
-            const input = document.getElementById('user-input');
-            input.value = originalText;
-            input.focus();
-
-            // Find this bubble's wrapper and remove all messages after it (inclusive)
-            const h = document.getElementById('chat-history');
-            const bubbleRow = btn.closest('[data-role="user"]');
-            const allRows = Array.from(h.children);
-            const idx = allRows.indexOf(bubbleRow);
-
-            if (idx !== -1) {
-                // Remove from DOM
-                while (h.children.length > idx) {
-                    h.removeChild(h.lastChild);
-                }
-                // Remove from saved history
-                const chat = chatHistoryData.find(c => c.id === currentChatId);
-                if (chat) {
-                    chat.messages = chat.messages.slice(0, idx);
-                    localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-                }
-            }
+            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+            renderHistory();
         }
 
         function loadChat(id) {
@@ -383,10 +251,12 @@
             if(!chat) return;
             currentChatId = id;
             document.getElementById('hero-section').classList.add('chat-started');
+            document.getElementById('chat-view').classList.add('active-chat');
             const h = document.getElementById('chat-history');
             h.classList.remove('hidden');
             h.innerHTML = "";
             chat.messages.forEach(m => addBubble(m.role, m.text));
+            renderHistory();
         }
 
         function renderHistory() {
@@ -411,12 +281,9 @@
             document.getElementById('chat-history').innerHTML = "";
             document.getElementById('chat-history').classList.add('hidden');
             document.getElementById('hero-section').classList.remove('chat-started');
+            document.getElementById('chat-view').classList.remove('active-chat');
             renderHistory();
-            // Switch to chat view if not already there, but DON'T force away from other pages
-            const chatView = document.getElementById('chat-view');
-            if (!chatView || chatView.classList.contains('hidden')) {
-                switchView('chat');
-            }
+            switchView('chat');
         }
 
         function toggleSidebar() { 
@@ -426,329 +293,22 @@
         }
 
         function switchView(v) {
-            // Stop/start laser game on tab change
-            gameActive = (v === 'laser');
             document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            document.getElementById(v + '-view').classList.remove('hidden');
-            if (v === 'laser') initLaserTag();
-            // Update active nav highlight
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
-            const navBtn = document.getElementById('nav-' + v);
-            if (navBtn) navBtn.classList.add('sidebar-active');
+            const target = document.getElementById(v + '-view');
+            if(target) target.classList.remove('hidden');
         }
-
-
-        // ========================================================
-        // --- LASER TAG ENGINE (Phase 9 + 10) ---
-        // ========================================================
-        const TILE_SIZE = 64;
-        const MAP = [
-            [1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,0,0,0,0,0,1],
-            [1,0,1,0,0,0,0,1,0,1],
-            [1,0,1,0,0,0,0,1,0,1],
-            [1,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,1,1,0,0,0,1],
-            [1,0,0,0,1,1,0,0,0,1],
-            [1,0,0,0,0,0,0,0,0,1],
-            [1,1,1,1,1,1,1,1,1,1]
-        ];
-
-        let player = { x: 150, y: 150, dir: 0, speed: 0 };
-        let gameActive = false;
-        let keys = {};
-        let bots = [
-            { x: 400, y: 400, alive: true, id: 1 },
-            { x: 200, y: 500, alive: true, id: 2 },
-            { x: 500, y: 200, alive: true, id: 3 }
-        ];
-        let playerStats = { tags: 0, rank: 0 };
-        let laserBeamActive = false;
-        let laserBeamTimer = null;
-
-        function initLaserTag() {
-            const canvas = document.getElementById('laser-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-
-            // Reset bots each session
-            bots = [
-                { x: 400, y: 400, alive: true, id: 1 },
-                { x: 200, y: 500, alive: true, id: 2 },
-                { x: 500, y: 200, alive: true, id: 3 }
-            ];
-
-            function resize() {
-                canvas.width = canvas.clientWidth || canvas.offsetWidth;
-                canvas.height = canvas.clientHeight || canvas.offsetHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            function gameLoop() {
-                if (!gameActive) return;
-                updatePlayer();
-                drawArena(ctx, canvas);
-                requestAnimationFrame(gameLoop);
-            }
-            gameLoop();
-        }
-
-        function updatePlayer() {
-            // Rotation with A/D
-            if (keys['a'] || keys['ArrowLeft'])  player.dir -= 0.06;
-            if (keys['d'] || keys['ArrowRight']) player.dir += 0.06;
-
-            // Forward/back speed with W/S
-            let spd = 0;
-            if (keys['w'] || keys['ArrowUp'])   spd = 3.5;
-            if (keys['s'] || keys['ArrowDown']) spd = -3.5;
-
-            let nextX = player.x + Math.cos(player.dir) * spd;
-            let nextY = player.y + Math.sin(player.dir) * spd;
-
-            // Collision check with padding
-            const pad = 10;
-            const mapX = Math.floor(nextX / TILE_SIZE);
-            const mapY = Math.floor(nextY / TILE_SIZE);
-            if (mapY >= 0 && mapY < MAP.length && mapX >= 0 && mapX < MAP[0].length) {
-                if (MAP[mapY][mapX] === 0) {
-                    player.x = nextX;
-                    player.y = nextY;
-                }
-            }
-
-            const posEl = document.getElementById('player-pos');
-            if (posEl) posEl.innerText = `X: ${Math.round(player.x)} Y: ${Math.round(player.y)}`;
-        }
-
-        function drawArena(ctx, canvas) {
-            const w = canvas.width;
-            const h = canvas.height;
-            if (!w || !h) return;
-
-            // Floor & Ceiling
-            ctx.fillStyle = "#030303"; ctx.fillRect(0, 0, w, h/2);
-            ctx.fillStyle = "#080808"; ctx.fillRect(0, h/2, w, h/2);
-
-            // Floor grid shimmer
-            ctx.strokeStyle = "rgba(0,230,118,0.03)";
-            ctx.lineWidth = 1;
-            for (let y = h/2; y < h; y += 20) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-            }
-
-            // Raycasting
-            const FOV = Math.PI / 3;
-            const STEP = FOV / w;
-
-            for (let i = 0; i < w; i++) {
-                let rayAngle = (player.dir - FOV/2) + (i * STEP);
-                let distance = 0;
-                let hit = false;
-
-                while (!hit && distance < 900) {
-                    distance += 2;
-                    let tx = player.x + Math.cos(rayAngle) * distance;
-                    let ty = player.y + Math.sin(rayAngle) * distance;
-                    let mx = Math.floor(tx / TILE_SIZE);
-                    let my = Math.floor(ty / TILE_SIZE);
-                    if (my >= 0 && my < MAP.length && mx >= 0 && mx < MAP[0].length) {
-                        if (MAP[my][mx] === 1) hit = true;
-                    } else {
-                        hit = true;
-                    }
-                }
-
-                // Fisheye fix
-                let correctedDist = distance * Math.cos(rayAngle - player.dir);
-                let wallHeight = Math.min((TILE_SIZE * h) / correctedDist, h);
-
-                // Wall color: green-tinted with distance shading
-                let brightness = Math.max(0, Math.min(255, 255 - (distance / 3.5)));
-                ctx.fillStyle = `rgb(0, ${Math.floor(brightness * 0.85)}, ${Math.floor(brightness * 0.35)})`;
-                ctx.fillRect(i, (h - wallHeight) / 2, 1, wallHeight);
-            }
-
-            // Draw bots as sprites
-            bots.forEach(bot => {
-                if (!bot.alive) return;
-                let dx = bot.x - player.x;
-                let dy = bot.y - player.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                let angleToBot = Math.atan2(dy, dx);
-                let angleDiff = angleToBot - player.dir;
-                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                while (angleDiff > Math.PI)  angleDiff -= Math.PI * 2;
-
-                const FOV = Math.PI / 3;
-                if (Math.abs(angleDiff) < FOV / 2 && dist < 700) {
-                    let screenX = w/2 + (angleDiff / (FOV/2)) * (w/2);
-                    let spriteH = Math.min((TILE_SIZE * h) / dist, h * 0.8);
-                    let spriteW = spriteH * 0.5;
-                    // Bot body
-                    ctx.fillStyle = "#ff4444";
-                    ctx.fillRect(screenX - spriteW/2, (h - spriteH)/2, spriteW, spriteH * 0.7);
-                    // Bot head
-                    ctx.fillStyle = "#ff8888";
-                    ctx.beginPath();
-                    ctx.arc(screenX, (h - spriteH)/2, spriteW * 0.5, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            });
-
-            // Laser beam flash
-            if (laserBeamActive) {
-                ctx.strokeStyle = "#00E676";
-                ctx.lineWidth = 3;
-                ctx.shadowColor = "#00E676";
-                ctx.shadowBlur = 15;
-                ctx.beginPath();
-                ctx.moveTo(w/2, h);
-                ctx.lineTo(w/2, h/2);
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-            }
-        }
-
-        // --- SHOOTING ---
-        function fireLaser() {
-            if (!gameActive) return;
-
-            // Flash beam
-            laserBeamActive = true;
-            clearTimeout(laserBeamTimer);
-            laserBeamTimer = setTimeout(() => { laserBeamActive = false; }, 120);
-
-            // Hit detection
-            bots.forEach(bot => {
-                if (!bot.alive) return;
-                let dx = bot.x - player.x;
-                let dy = bot.y - player.y;
-                let angleToBot = Math.atan2(dy, dx);
-                let diff = player.dir - angleToBot;
-                while (diff < -Math.PI) diff += Math.PI * 2;
-                while (diff > Math.PI)  diff -= Math.PI * 2;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                if (Math.abs(diff) < 0.12 && dist < 450) {
-                    tagBot(bot);
-                }
-            });
-        }
-
-        async function tagBot(bot) {
-            bot.alive = false;
-            playerStats.tags++;
-            updateLaserUI();
-            showLaserToast("Target Tagged! +10 Points 🔫");
-            speak("miraculous shot — ranking updated", true);
-
-            // Respawn bot after 5s
-            setTimeout(() => {
-                bot.alive = true;
-                bot.x = 100 + Math.random() * 450;
-                bot.y = 100 + Math.random() * 450;
-            }, 5000);
-
-            await syncScore();
-        }
-
-        async function syncScore() {
-            // Supabase sync (when userProfile is connected)
-            if (typeof userProfile === 'undefined' || !userProfile) {
-                playerStats.rank = "Local";
-                updateLaserUI();
-                return;
-            }
-            try {
-                await _supabase.from('leaderboard').upsert({
-                    user_id: userProfile.id,
-                    total_tags: playerStats.tags
-                });
-                const { count, error } = await _supabase
-                    .from('leaderboard')
-                    .select('*', { count: 'exact', head: true })
-                    .gt('total_tags', playerStats.tags);
-                if (!error) {
-                    playerStats.rank = count + 1;
-                    updateLaserUI();
-                }
-            } catch(e) {
-                console.log('Supabase sync skipped:', e.message);
-            }
-        }
-
-        function updateLaserUI() {
-            const tc = document.getElementById('tag-count');
-            const wr = document.getElementById('world-rank');
-            if (tc) tc.innerText = playerStats.tags;
-            if (wr) wr.innerText = playerStats.rank || '--';
-        }
-
-        function showLaserToast(msg) {
-            const toast = document.getElementById('laser-toast');
-            if (!toast) return;
-            toast.innerText = msg;
-            toast.style.opacity = '1';
-            setTimeout(() => { toast.style.opacity = '0'; }, 2000);
-        }
-
-        // --- CONTROLS ---
-        window.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
-            if (e.key === ' ' && gameActive) { e.preventDefault(); fireLaser(); }
-        });
-        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
-
-        window.addEventListener('mousedown', (e) => {
-            if (!gameActive) return;
-            const canvas = document.getElementById('laser-canvas');
-            if (canvas && canvas.contains(e.target)) fireLaser();
-        });
 
         window.onload = () => { renderHistory(); updateVoiceUI(); };
         document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleMessage(); });
 
-        // --- MIC / SPEECH RECOGNITION ---
-        let recognition = null;
-        let micActive = false;
-
+        // --- MIC ---
         function toggleMic() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert("Your browser doesn't support voice input. Try Chrome.");
-                return;
-            }
-            if (micActive) {
-                recognition && recognition.stop();
-                return;
-            }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onstart = () => {
-                micActive = true;
-                document.getElementById('mic-btn').classList.add('listening');
-                document.getElementById('user-input').placeholder = 'Listening...';
-            };
-            recognition.onresult = (e) => {
-                const transcript = e.results[0][0].transcript;
-                document.getElementById('user-input').value = transcript;
-                handleMessage();
-            };
-            recognition.onerror = () => { stopMic(); };
-            recognition.onend = () => { stopMic(); };
-            recognition.start();
-        }
-
-        function stopMic() {
-            micActive = false;
-            const btn = document.getElementById('mic-btn');
-            if (btn) btn.classList.remove('listening');
-            const inp = document.getElementById('user-input');
-            if (inp) inp.placeholder = 'Ask Doa anything...';
+            const rec = new SpeechRecognition();
+            rec.onstart = () => { document.getElementById('mic-btn').classList.add('listening'); };
+            rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; handleMessage(); };
+            rec.onend = () => { document.getElementById('mic-btn').classList.remove('listening'); };
+            rec.start();
         }
     </script>
 </body>
