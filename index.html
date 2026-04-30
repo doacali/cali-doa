@@ -26,28 +26,38 @@
         
         <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
-            <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1></div>
-            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
-            
-            <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
+            <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
+            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest" placeholder="SEARCH..."></div>
+           <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
-                <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
-                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span> <span id="cal-day" class="cal-badge">--</span></button>
-                <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>Doa Apps</span></button>
+                
+                <button id="nav-chat" onclick="switchView('chat')" class="w-full text-left flex items-center gap-3 p-3 sidebar-item sidebar-active shadow-lg shadow-black/10">
+                    💬 <span class="text-sm font-bold">Chat With Doa</span>
+                </button>
+                
+                <button id="nav-calendar" onclick="switchView('calendar')" class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">
+                    <div class="flex items-center gap-3">📅 <span class="text-sm font-semibold">Calendar</span></div> 
+                    <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span>
+                </button>
+                
+                <button id="nav-apps" onclick="switchView('apps')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+                    📱 <span class="text-sm font-semibold">Doa Apps</span>
+                </button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
-                <button onclick="toggleSavedTabs()" class="sidebar-item flex justify-between"><span>📂 Saved Tabs</span> <span>⌄</span></button>
-                <div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2"></div>
-
-                <!-- MOVED RECENT CHATS UP HERE -->
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Recent Chats</p>
-                <div id="history-list" class="space-y-3 px-2 text-[11px] text-gray-400 font-bold truncate">
-                    <!-- Chats will populate here automatically -->
-                    <p class="hover:text-black cursor-pointer transition-colors">Analyze YouTube...</p>
-                    <p class="hover:text-black cursor-pointer transition-colors">Learn Spanish...</p>
-                </div>
+                
+                <button id="nav-code" onclick="switchView('code')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+                    ⚡ <span class="text-sm font-semibold">Code Builder</span>
+                </button>
+                
+                <button id="nav-tabs" class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">
+                    <div class="flex items-center gap-3">📂 <span class="text-sm font-semibold">Saved Tabs</span></div> <span>⌄</span>
+                </button>
             </nav>
+            <div class="p-6 border-t border-gray-50">
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
+                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
+            </div>
         </aside>
 
         <!-- MAIN WORKSPACE -->
