@@ -239,9 +239,22 @@
                 const res = await fetch(CLOUDFLARE_URL, { method:'POST', body:JSON.stringify({text:text}) });
                 const data = await res.json();
                 const aiText = data.candidates[0].content.parts[0].text;
-                addBubble('doa', aiText);
-                speak(aiText);
-            } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
+
+// Check for TRIGGER_BUILD command
+const buildMatch = aiText.match(/\[TRIGGER_BUILD:\s*([^|]+)\|([^\]]+)\]/);
+if (buildMatch) {
+    const appName = buildMatch[1].trim();
+    const appDesc = buildMatch[2].trim();
+    const cleanResponse = aiText.replace(/\[TRIGGER_BUILD:[^\]]+\]/, '').trim();
+    addBubble('doa', cleanResponse);
+    speak(cleanResponse);
+    switchView('code');
+    // Optional: pre-fill the code view with the app name/description
+    document.getElementById('nav-code').click();
+} else {
+    addBubble('doa', aiText);
+    speak(aiText);
+}
         }
 
         function addBubble(s, t) {
