@@ -11,7 +11,6 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* SIDEBAR ANIMATION */
         #main-sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; }
         #main-sidebar.collapsed { width: 0; padding: 0; border: none; overflow: hidden; opacity: 0; }
         
@@ -19,27 +18,18 @@
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
         .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
-        /* CHAT BUBBLES */
-        .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* WORLD TICKER - FIXED POSITION */
         #ticker-wrap { white-space: nowrap; overflow: hidden; position: fixed; bottom: 0; width: 100%; background: #000; padding: 8px 0; z-index: 100; border-top: 1px solid #111; }
         #ticker-content { display: inline-block; animation: marquee 40s linear infinite; font-size: 9px; font-weight: 900; text-transform: uppercase; tracking-widest; color: #333; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-        /* STUDIO UI (AI STUDIO STYLE) */
         .studio-dark { background: #0b0b0b; color: white; }
         .stream-panel { background: #141414; border-right: 1px solid #222; }
-
-        /* VOICE TOGGLE UI */
-        #voice-switch { transition: background-color 0.3s; }
-        #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="text-gray-900">
 
-    <!-- RE-OPEN SIDEBAR TRIGGER -->
     <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-110 transition">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
@@ -56,18 +46,22 @@
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
                 <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
+                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span></button>
                 <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
                 <button id="nav-laser" onclick="switchView('laser')" class="sidebar-item">🔫 <span>Laser Tag</span></button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
                 <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
-                
-                <button onclick="document.getElementById('saved-tabs-box').classList.toggle('hidden')" class="sidebar-item flex justify-between mt-4">
+                <button onclick="document.getElementById('saved-tabs-box').classList.toggle('hidden')" class="sidebar-item flex justify-between">
                     <span>📂 Saved Tabs</span> <span class="text-[8px]">⌄</span>
                 </button>
                 <div id="saved-tabs-box" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
 
-                <!-- HISTORY SECTION -->
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Creation</p>
+                <button id="nav-editor" onclick="switchView('editor')" class="sidebar-item">🎨 <span>Editor App</span></button>
+                <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
+                <button id="nav-music" onclick="switchView('music')" class="sidebar-item">🎵 <span>Music Lab</span></button>
+
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Previously</p>
                 <div id="history-list" class="space-y-1 px-1"></div>
             </nav>
@@ -79,7 +73,7 @@
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
                 <div id="auth-zone" class="flex gap-4">
                     <button onclick="login()" class="hover:text-black transition">Login</button>
-                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold transition hover:bg-[#00c565]">Sign Up</button>
+                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
                 </div>
             </header>
 
@@ -97,10 +91,8 @@
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button id="chat-send-btn" onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
+                        <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
                     </div>
-
-                    <!-- VOICE TOGGLE SWITCH -->
                     <div class="flex justify-end items-center gap-3 pr-2 mt-4">
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
                         <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
@@ -110,28 +102,26 @@
                 </div>
             </div>
 
-            <!-- VIEW: APPS FACTORY (FULL DESCRIPTIONS) -->
+            <!-- VIEW: APP FACTORY -->
             <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
                 <div class="max-w-6xl mx-auto">
-                    <h2 class="text-5xl font-black italic mb-2 uppercase tracking-tighter">App Factory</h2>
-                    <p class="text-gray-400 text-[10px] font-black uppercase tracking-[0.4em] mb-12 border-b pb-6">24 Specialized Neural Tools</p>
+                    <h2 class="text-5xl font-black italic mb-2 uppercase">App Factory</h2>
                     <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-32"></div>
                 </div>
             </div>
 
-            <!-- VIEW: CODE BUILDER (AI STUDIO STYLE) -->
+            <!-- VIEW: CODE BUILDER -->
             <div id="code-view" class="view-container hidden flex-1 w-full studio-dark flex flex-col">
                 <div class="p-5 border-b border-white/5 flex justify-between items-center bg-[#0b0b0b]">
                     <div class="flex items-center gap-6">
-                        <button onclick="toggleSidebar()" class="text-gray-500 hover:text-[#00E676] text-sm">◀ OPEN SIDENAV</button>
+                        <button onclick="toggleSidebar()" class="text-gray-500 hover:text-[#00E676] text-sm">◀ SIDENAV</button>
                         <h2 class="text-lg font-black italic text-[#00E676] uppercase">Neural Studio</h2>
                     </div>
-                    <button class="bg-[#00E676] text-black text-[10px] font-black px-6 py-2 rounded-full hover:scale-105 transition">GENERATE THIS APP</button>
+                    <button class="bg-[#00E676] text-black text-[10px] font-black px-6 py-2 rounded-full">BUILD NEW APP</button>
                 </div>
                 <div class="flex-1 flex overflow-hidden">
                     <div class="w-1/3 stream-panel p-6 flex flex-col overflow-hidden">
-                        <span class="text-[9px] font-black text-gray-500 uppercase mb-4 tracking-widest">Thought Stream</span>
-                        <div id="builder-log" class="flex-1 font-mono text-[11px] text-[#00E676]/60 space-y-3 overflow-y-auto hide-scrollbar"></div>
+                        <div id="builder-log" class="flex-1 font-mono text-[11px] text-[#00E676]/50 space-y-3 overflow-y-auto"></div>
                     </div>
                     <div class="flex-1 bg-white p-8 overflow-y-auto" id="builder-preview"></div>
                 </div>
@@ -142,86 +132,45 @@
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
 
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● Doa Academy: 4,202 students online now ● [System] Dougha Voice Synthesis Active ● User_442 just upgraded to PRO ●</div></div>
+            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● New Budget App generated ● Doa Academy: 4,202 students online now ● Dougha Voice Active ●</div></div>
         </main>
     </div>
 
     <script>
         const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-        const _supabase = null; // Connect yours here
+        const _supabase = null; 
 
         let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
         let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-
-        // --- FULL 24-APP REGISTRY ---
-        const apps = [
-            { name: "Cali-Culator", cat: "Financial", badge: "Most Popular", desc: "A simple, visual monthly budget tool. Input income and expenses to see a donut chart of your spending." },
-            { name: "Sub-Zero", cat: "Financial", badge: "New", desc: "Track recurring subscriptions and calculate monthly/annual costs to identify potential savings." },
-            { name: "Goal Digger", cat: "Financial", badge: "Featured", desc: "Set savings goals and target dates. Visualize progress and see exactly how much to save weekly." },
-            { name: "Debt Free Dash", cat: "Financial", badge: "Essential", desc: "Choose between Snowball or Avalanche methods to strategically pay off multiple debts efficiently." },
-            { name: "Gig Grind Tracker", cat: "Financial", badge: "Hustle", desc: "Separate business finances from personal ones with this simple income and expense tracker for freelancers." },
-            { name: "Spend-Less Challenge", cat: "Financial", badge: "Gamified", desc: "Gamify your 'No-Spend' challenges. Track successful days and build streaks of essential-only spending." },
-            { name: "Daily Habit Stack", cat: "Health", badge: "Fan Favorite", desc: "Build momentum by stacking positive habits and tracking daily streaks in a clean interface." },
-            { name: "H2-Go Water Tracker", cat: "Health", badge: "Simple", desc: "Ultra-simple daily water intake tracking. Tap to fill your virtual bottle and hit hydration goals." },
-            { name: "Mindful Moments", cat: "Health", badge: "Wellness", desc: "A minimalist gratitude and mood journal. Three simple daily prompts to keep you grounded." },
-            { name: "Screen-Free Streak", cat: "Health", badge: "Detox", desc: "Start a digital detox timer and track your total screen-free time per week to improve focus." },
-            { name: "Rep Counter Log", cat: "Health", badge: "Fitness", desc: "No-frills fitness tracking. Log exercises, sets, reps, and weight to monitor your progress." },
-            { name: "Sleep Cycle Log", cat: "Health", badge: "Rest", desc: "Manual sleep tracker. Input bedtime and wake-up time to calculate duration and weekly trends." },
-            { name: "Focus Flow Timer", cat: "Growth", badge: "Focus", desc: "Classic Pomodoro timer for 25-minute focus intervals. Track your daily sessions and productivity." },
-            { name: "Milestone Mapper", cat: "Growth", badge: "Planning", desc: "Break down large goals into smaller, actionable milestones and tasks to ensure project success." },
-            { name: "1% Better Skill", cat: "Growth", badge: "Growth", desc: "Define a skill, commit to daily practice time, and track your journey to mastery." },
-            { name: "Bookworm Tracker", cat: "Growth", badge: "Reading", desc: "Manage your reading list, rate finished books, and view your annual reading statistics." },
-            { name: "The Decider", cat: "Growth", badge: "Clarity", desc: "Digital tool to help make clear decisions. List pros and cons to gain clarity and overcome analysis paralysis." },
-            { name: "The Weekly Reset", cat: "Growth", badge: "Reflection", desc: "Structured weekly review tool with prompts for wins, lessons learned, and priorities for the week." },
-            { name: "Binge List Tracker", cat: "Lifestyle", badge: "Entertainment", desc: "Your personal watchlist for movies and TV shows. Mark as watched and give simple ratings." },
-            { name: "Weekly Eats Planner", cat: "Lifestyle", badge: "Kitchen", desc: "Drag-and-drop weekly meal planning with an auto-generated shopping list feature." },
-            { name: "Gift Giver Planner", cat: "Lifestyle", badge: "Social", desc: "Track birthday and holiday gift ideas, budgets, and purchase status for everyone." },
-            { name: "Wanderlog Builder", cat: "Lifestyle", badge: "Travel", desc: "Create day-by-day itineraries for your trips, including flights, hotels, and plans." },
-            { name: "Plant Parent Care", cat: "Lifestyle", badge: "Nature", desc: "Track watering schedules, sunlight needs, and fertilization for all your house plants." },
-            { name: "Bucket List Builder", cat: "Lifestyle", badge: "Dreams", desc: "Create and manage your life's bucket list. Add goals, check them off, and add photos." }
-        ];
-
-        // --- PRESERVED VOICE ENGINE (DOUGHA) ---
         let voices = [];
         let selectedVoice = null;
 
+        // --- PREMIUM VOICE ENGINE (STRICT) ---
         function loadVoices() {
             voices = window.speechSynthesis.getVoices();
-            selectedVoice = pickFemaleVoice(voices);
-        }
-
-        function pickFemaleVoice(voiceList) {
             const femaleNames = ["Samantha","Karen","Moira","Tessa","Veena","Fiona","Victoria","Allison","Ava","Susan","Zoe","Microsoft Zira","Microsoft Aria","Microsoft Jenny","Google US English Female","Google UK English Female"];
             for (const name of femaleNames) {
-                const match = voiceList.find(v => v.name.includes(name));
-                if (match) return match;
+                const match = voices.find(v => v.name.includes(name));
+                if (match) { selectedVoice = match; break; }
             }
-            const femaleKeywords = ["female", "woman", "girl", "fiona", "aria", "zira", "jenny", "ava"];
-            const keywordMatch = voiceList.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
-            if (keywordMatch) return keywordMatch;
-            const englishVoice = voiceList.find(v => v.lang.startsWith("en"));
-            if (englishVoice) return englishVoice;
-            return voiceList[0] || null;
         }
-
         window.speechSynthesis.onvoiceschanged = loadVoices;
         loadVoices();
 
         function speak(text) {
             if (!voiceActive) return;
             window.speechSynthesis.cancel();
-            const cleanText = text.replace(/\bDowa\b/gi, "DOUGH-wah").replace(/\bDoa\b/gi, "DOUGH-wah").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+            const cleanText = text.replace(/\bDowa\b/gi, "DOUGH-wah").replace(/\bDoa\b/gi, "DOUGH-wah").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
-            u.lang = "en-US"; u.pitch = 1.0; u.rate = 0.95; u.volume = 1.0;
-            window.speechSynthesis.speak(u);
+            u.pitch = 1.2; u.rate = 0.92; window.speechSynthesis.speak(u);
         }
 
         function toggleVoice() {
             voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive);
-            selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
+            selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices()); // Logic placeholder
             updateVoiceUI();
-            if (voiceActive) speak("Live voice active. My name is Doe-ah.");
+            if (voiceActive) speak("Live voice active. My name is Dough-wah.");
         }
 
         function updateVoiceUI() {
@@ -233,7 +182,16 @@
             }
         }
 
-        // --- CHAT ENGINE & HISTORY ---
+        // --- NAVIGATION ---
+        function switchView(v) {
+            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+            document.getElementById(v + '-view').classList.remove('hidden');
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-active'));
+            const nav = document.getElementById('nav-' + v); if(nav) nav.classList.add('sidebar-active');
+            if(v === 'apps') renderApps();
+        }
+
+        // --- CHAT & HISTORY ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
@@ -248,7 +206,7 @@
                 const data = await res.json();
                 const aiText = data.candidates[0].content.parts[0].text;
                 addBubble('doa', aiText); speak(aiText);
-            } catch(e) { addBubble('doa', "Neural Link Offline."); }
+            } catch(e) { addBubble('doa', "Neural link offline."); }
         }
 
         function addBubble(s, t) {
@@ -260,7 +218,7 @@
         }
 
         function saveHistory(text) {
-            const title = text.length > 20 ? text.substring(0, 20) + "..." : text;
+            const title = text.substring(0, 20) + "...";
             chatHistoryData.unshift({ id: Date.now(), title: title });
             if(chatHistoryData.length > 8) chatHistoryData.pop();
             localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
@@ -269,39 +227,13 @@
 
         function renderHistory() {
             const list = document.getElementById('history-list');
-            list.innerHTML = chatHistoryData.map(i => `
-                <div class="flex justify-between group p-2 rounded-lg hover:bg-gray-50 transition">
-                    <p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p>
-                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs px-1">✕</button>
-                </div>
-            `).join('');
+            list.innerHTML = chatHistoryData.map(i => `<div class="flex justify-between group p-2 rounded-lg hover:bg-gray-50 transition"><p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p><button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs px-1">✕</button></div>`).join('');
         }
 
         function deleteHistory(id) {
             chatHistoryData = chatHistoryData.filter(i => i.id !== id);
             localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
             renderHistory();
-        }
-
-        // --- NAVIGATION ---
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            document.getElementById(v + '-view').classList.remove('hidden');
-            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-active'));
-            const nav = document.getElementById('nav-' + v); if(nav) nav.classList.add('sidebar-active');
-            if(v === 'apps') renderApps();
-        }
-
-        function renderApps() {
-            const grid = document.getElementById('app-grid');
-            grid.innerHTML = apps.map(a => `
-                <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group">
-                    <p class="text-[8px] font-black text-[#00E676] uppercase mb-1 tracking-widest">${a.badge}</p>
-                    <h4 class="font-black text-lg mb-3 uppercase italic">${a.name}</h4>
-                    <p class="text-[11px] text-gray-400 font-medium mb-8 leading-relaxed">${a.desc}</p>
-                    <button onclick="switchView('code')" class="w-full text-center text-[9px] font-black bg-black text-white py-3 rounded-2xl uppercase tracking-[0.2em] group-hover:bg-[#00E676] group-hover:text-black transition-all">Generate This App</button>
-                </div>
-            `).join('');
         }
 
         function toggleSidebar() { 
@@ -313,7 +245,6 @@
         }
 
         window.onload = () => { renderHistory(); updateVoiceUI(); };
-        document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleMessage(); });
     </script>
 </body>
 </html>
