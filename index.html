@@ -7,58 +7,50 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; }
+        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; font-weight: 600; color: #9ca3af; }
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212; color: white; border-radius: 12px; }
+        .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
-        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
+        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
         #notification.show { opacity: 1; bottom: 40px; }
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-[#FBFBFB] text-gray-900">
+<body>
 
     <div class="flex h-screen w-screen overflow-hidden">
-        
         <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
-            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest" placeholder="SEARCH..."></div>
+            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main</p>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
                 <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">💬 <span class="text-sm font-bold">Chat With Doa</span></button>
-                <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">📅 <span class="text-sm font-semibold">Calendar</span> <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
+                <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">📅 <span class="text-sm font-semibold">Calendar</span> <span id="cal-day" class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
                 <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">📱 <span class="text-sm font-semibold">Doa Apps</span></button>
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Code...</span></button>
+                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Code Builder</span></button>
                 <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">📂 <span class="text-sm font-semibold">Saved Tabs</span> <span>⌄</span></button>
             </nav>
-            <div class="p-6 border-t border-gray-50">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
-                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
-            </div>
         </aside>
 
-        <!-- MAIN WORKSPACE -->
+        <!-- MAIN -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button class="hover:text-black transition-colors">Login</button>
-                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
+                <button onclick="login()" class="hover:text-black transition-colors">Login</button>
+                <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
             </header>
 
             <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
+                <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
-
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
 
-                <!-- BOTTOM UI -->
                 <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
                         <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
@@ -68,672 +60,107 @@
                     </div>
 
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
                         <div class="flex items-center gap-3 pr-2">
                             <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
-                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
+                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] transition-all shadow-lg">→</button>
                         </div>
-                    </div>
-                    <div class="flex justify-end items-center gap-3 pr-2">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
                     </div>
                 </div>
             </div>
 
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
+            <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
         </main>
 
+        <!-- RIGHT PANEL -->
         <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
-                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
-            </div>
+            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex items-center justify-center text-center shadow-sm text-[9px] font-black text-gray-200 uppercase tracking-[0.5em]">Ad Space</div>
             <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
                 <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
+                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] transition-all shadow-lg">Go Pro</button>
             </div>
         </aside>
-
-        <div class="fixed bottom-12 right-10 z-50">
-            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
-                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-            </div>
-        </div>
     </div>
 
     <div id="notification"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-    const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- PUT YOUR WORKER URL HERE
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+        const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
+        const SUPABASE_KEY = 'YOUR_KEY_HERE';
+        const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let currentUser = null, userProfile = null, voiceEnabled = false;
+        let userProfile = null, voiceEnabled = false;
 
-    // --- SUGGESTION ENGINE ---
-    const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
-    let queue = [...list].sort(() => Math.random() - 0.5);
+        // --- 1. VOICE ENGINE ---
+        function speak(t) {
+            window.speechSynthesis.cancel();
+            const cleanText = t.replace(/\bDoa\b/gi, "Dowa").replace(/[*#]/g, "").replace(/[\u{1F600}-\u{1F64F}]/gu, "");
+            const u = new SpeechSynthesisUtterance(cleanText);
+            const voices = window.speechSynthesis.getVoices();
+            const pref = voices.find(v => v.name.includes("Female") || v.name.includes("Samantha"));
+            if(pref) u.voice = pref;
+            u.pitch = 1.2; u.rate = 0.95;
+            window.speechSynthesis.speak(u);
+        }
 
-    function rotate() {
-        const btns = document.querySelectorAll('#suggestion-container button');
-        btns.forEach((btn, i) => {
-            setTimeout(() => {
-                btn.style.opacity = '0';
+        // --- 2. SUGGESTION ENGINE ---
+        const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+        let queue = [...list].sort(() => Math.random() - 0.5);
+        function rotate() {
+            const btns = document.querySelectorAll('#suggestion-container button');
+            btns.forEach((btn, i) => {
                 setTimeout(() => {
-                    if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
-                    btn.innerText = queue.shift();
-                    btn.style.opacity = '1';
-                }, 400);
-            }, i * 150);
-        });
-    }
-    setInterval(rotate, 8000);
-
-    // --- HUMAN VOICE ENGINE ---
-    function speak(t) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(t);
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find(v => (v.name.includes("Google") && v.name.includes("Female")) || v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Zira"));
-        if (preferred) u.voice = preferred;
-        u.pitch = 1.2; 
-        u.rate = 0.92; 
-        window.speechSynthesis.speak(u);
-    }
-    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-
-    // --- THE REAL CLOUDFLARE BRAIN ---
-    async function processResponse(text) {
-        try {
-            // Send user message to Cloudflare Brain
-            const response = await fetch(CLOUDFLARE_PROXY_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
+                    btn.style.opacity = '0';
+                    setTimeout(() => {
+                        if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
+                        btn.innerText = queue.shift();
+                        btn.style.opacity = '1';
+                    }, 400);
+                }, i * 150);
             });
-            
-            const data = await response.json();
-
-            // 🚨 NEW: CATCH GOOGLE ERRORS
-            if (data.error) {
-                alert("Doa Error: " + data.error);
-                addMsg("doa", "Google rejected the request. Please check the alert box on your screen!");
-                return;
-            }
-
-            let aiResponse = data.candidates[0].content.parts[0].text;
-
-            // SYSTEM ACTION INTERCEPTER
-            if (aiResponse.includes('[ADD_POINTS: 10]')) {
-                aiResponse = aiResponse.replace('[ADD_POINTS: 10]', '');
-                addPoints(10);
-            }
-            if (aiResponse.includes('[OPEN_AFFILIATE:')) {
-                const product = aiResponse.match(/\[OPEN_AFFILIATE: (.*?)\]/)[1];
-                aiResponse = aiResponse.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
-                setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2000);
-            }
-
-            addMsg("doa", aiResponse.trim());
-            if(voiceEnabled) speak(aiResponse.trim());
-
-        } catch (e) {
-            console.error(e);
-            addMsg("doa", "My neural link to Cloudflare is offline. Please check the connection!");
         }
-    }
+        setInterval(rotate, 8000);
 
-    // --- UI & CHAT HANDLING ---
-    const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
-
-    async function handleMessage() {
-        const text = userInput.value.trim(); if (!text) return;
-        hero.style.display = 'none'; chatHistory.classList.remove('hidden'); userInput.value = "";
-        addMsg("user", text); 
-        const load = addMsg("doa", "Doa is thinking...");
-        
-        // Let the real AI take over
-        await processResponse(text);
-        load.remove();
-    }
-
-    function addMsg(s, t) {
-        const d = document.createElement('div');
-        d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
-        chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
-    }
-
-    // --- DATABASE & AUTH ---
-    async function initApp() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (user) { currentUser = user; await fetchProfile(user.id); }
-    }
-    async function fetchProfile(uid) {
-        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-        userProfile = data; if (userProfile) updateUI(data);
-    }
-    function updateUI(p) {
-        document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button></div>`;
-        document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${p.username.replace(/'/g, "")}</span>! Your companion is ready.`;
-    }
-    async function addPoints(a) {
-        const n = (userProfile.brain_points || 0) + a;
-        await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
-        userProfile.brain_points = n; updateUI(userProfile); showToast(`+${a} Points Earned!`);
-    }
-    function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-    async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
-    async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
-    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
-
-    document.getElementById('send-btn').onclick = handleMessage;
-    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
-    document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Voice mode activated."); };
-    
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
-    document.getElementById('mic-btn').onclick = () => { recognition.start(); document.getElementById('mic-btn').style.color = '#00E676'; };
-    recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
-
-    document.addEventListener('click', (e) => {
-        const b = e.target.closest('button'); if (!b) return;
-        if (b.innerText.includes('Login')) login();
-        if (b.innerText.includes('Sign Up')) signUp();
-        if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
-    });
-    initApp();
-</script>
-</body>
-</html>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; }
-        .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212; color: white; border-radius: 12px; }
-        .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
-        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
-        #notification.show { opacity: 1; bottom: 40px; }
-        .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body class="bg-[#FBFBFB] text-gray-900">
-
-    <div class="flex h-screen w-screen overflow-hidden">
-        
-        <!-- SIDEBAR -->
-        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
-            <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
-            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest" placeholder="SEARCH..."></div>
-            <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main</p>
-                <button onclick="location.reload()" class="w-full text-left flex items-center gap-3 p-3 sidebar-active shadow-lg shadow-black/10">💬 <span class="text-sm font-bold">Chat With Doa</span></button>
-                <button class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">📅 <span class="text-sm font-semibold">Calendar</span> <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span></button>
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">📱 <span class="text-sm font-semibold">Doa Apps</span></button>
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">⚡ <span class="text-sm font-semibold">Code...</span></button>
-                <button class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">📂 <span class="text-sm font-semibold">Saved Tabs</span> <span>⌄</span></button>
-            </nav>
-            <div class="p-6 border-t border-gray-50">
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
-                <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
-            </div>
-        </aside>
-
-        <!-- MAIN WORKSPACE -->
-        <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-            <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button class="hover:text-black transition-colors">Login</button>
-                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
-            </header>
-
-            <div class="flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
-                    <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
-                </div>
-
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
-
-                <!-- BOTTOM UI -->
-                <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
-                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
-                    </div>
-
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
-                        <div class="flex items-center gap-3 pr-2">
-                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
-                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
-                        </div>
-                    </div>
-                    <div class="flex justify-end items-center gap-3 pr-2">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
-                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-        </main>
-
-        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
-                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
-            </div>
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
-            </div>
-        </aside>
-
-        <div class="fixed bottom-12 right-10 z-50">
-            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
-                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="notification"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let userProfile = null, waterCount = 0, timerInterval = null;
-
-    // --- 1. THE COMPLETE APP REGISTRY (ALL 20+ TOOLS) ---
-    const allApps = [
-        // FINANCE
-        { id: 'cali', name: "Cali-Culator", cat: "Financial", icon: "💰", desc: "Visual monthly budget planner." },
-        { id: 'subzero', name: "Sub-Zero", cat: "Financial", icon: "🧊", desc: "Subscription cost tracker." },
-        { id: 'goaldigger', name: "Goal Digger", cat: "Financial", icon: "🎯", desc: "Savings goal visualizer." },
-        { id: 'debtfree', name: "Debt Free Dash", cat: "Financial", icon: "🏃", desc: "Snowball method calculator." },
-        
-        // HEALTH
-        { id: 'habit', name: "Habit Stack", cat: "Health", icon: "⚡", desc: "Daily habit momentum tracker." },
-        { id: 'h2go', name: "H2-Go", cat: "Health", icon: "💧", desc: "Ultra-simple water intake log." },
-        { id: 'mindful', name: "Mindful Moments", cat: "Health", icon: "🧘", desc: "Minimalist gratitude journal." },
-        { id: 'repcount', name: "Rep Counter", cat: "Health", icon: "🏋️", desc: "No-frills workout logger." },
-
-        // PRODUCTIVITY
-        { id: 'focus', name: "Focus Flow", cat: "Growth", icon: "⏲️", desc: "Classic Pomodoro focus timer." },
-        { id: 'decider', name: "The Decider", cat: "Growth", icon: "⚖️", desc: "Pro/Con list logic generator." },
-        { id: 'bookworm', name: "Bookworm", cat: "Growth", icon: "📚", desc: "Reading stats & wishlist." },
-        { id: 'plant', name: "Plant Parent", cat: "Lifestyle", icon: "🪴", desc: "Watering schedules & care." }
-    ];
-
-    // --- 2. DYNAMIC APP RUNNER ---
-    function launchApp(id) {
-        document.getElementById('apps-view').classList.add('hidden');
-        document.getElementById('app-runner').classList.remove('hidden');
-        const container = document.getElementById('app-content');
-        const app = allApps.find(a => a.id === id);
-        document.getElementById('active-app-name').innerText = app.name.toUpperCase();
-
-        // APP LOGIC ROUTER
-        if (id === 'cali') renderCaliCulator(container);
-        else if (id === 'h2go') renderH2Go(container);
-        else if (id === 'focus') renderFocusFlow(container);
-        else if (id === 'decider') renderDecider(container);
-        else if (id === 'mindful') renderMindful(container);
-        else {
-            container.innerHTML = `<div class="text-center mt-20 text-gray-400 font-bold uppercase tracking-widest">Doa is optimizing the Neural code for ${app.name}...</div>`;
+        // --- 3. AI BRAIN ---
+        async function processResponse(text) {
+            try {
+                const res = await fetch(CLOUDFLARE_PROXY_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ text: text })
+                });
+                const data = await res.json();
+                const aiMsg = data.candidates[0].content.parts[0].text;
+                addMsg("doa", aiMsg);
+                if(voiceEnabled) speak(aiMsg);
+            } catch(e) { addMsg("doa", "Neural link fuzzy!"); }
         }
-    }
 
-    // --- 3. INDIVIDUAL APP MODULES ---
-
-    // MODULE: CALI-CULATOR
-    function renderCaliCulator(el) {
-        el.innerHTML = `
-            <div class="max-w-md mx-auto bg-white p-10 rounded-[40px] shadow-2xl border border-gray-100">
-                <h4 class="font-black text-xl mb-6 italic tracking-tight">Cali-Culator</h4>
-                <div class="space-y-4">
-                    <input id="inc" type="number" placeholder="Monthly Income" class="w-full p-4 bg-gray-50 rounded-2xl outline-none">
-                    <input id="exp" type="number" placeholder="Monthly Expenses" class="w-full p-4 bg-gray-50 rounded-2xl outline-none">
-                    <button onclick="doCaliCalc()" class="w-full bg-[#00E676] p-4 rounded-2xl font-black shadow-lg shadow-green-100">CALCULATE SPENDING →</button>
-                </div>
-                <div id="calc-res" class="mt-8 text-center text-4xl font-black text-black"></div>
-            </div>
-        `;
-    }
-    function doCaliCalc() {
-        const res = document.getElementById('inc').value - document.getElementById('exp').value;
-        document.getElementById('calc-res').innerText = "$" + res;
-        showToast("Budget Synced 💰");
-    }
-
-    // MODULE: H2-GO
-    function renderH2Go(el) {
-        el.innerHTML = `
-            <div class="text-center max-w-sm mx-auto mt-10">
-                <div class="text-9xl mb-6">💧</div>
-                <h2 class="text-6xl font-black italic mb-2" id="h2-val">${waterCount}</h2>
-                <p class="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-10">Cups Consumed Today</p>
-                <button onclick="addH2()" class="w-24 h-24 bg-blue-500 text-white rounded-full text-4xl shadow-xl hover:scale-110 transition">+</button>
-            </div>
-        `;
-    }
-    function addH2() { 
-        waterCount++; document.getElementById('h2-val').innerText = waterCount; 
-        showToast("Hydration Boosted! 💧");
-    }
-
-    // MODULE: FOCUS FLOW (POMODORO)
-    function renderFocusFlow(el) {
-        el.innerHTML = `
-            <div class="text-center max-w-sm mx-auto mt-10">
-                <h4 class="text-xl font-black mb-10 uppercase tracking-widest">Focus Flow</h4>
-                <div class="text-7xl font-black mb-10 tabular-nums" id="timer-display">25:00</div>
-                <div class="flex gap-4">
-                    <button onclick="startTimer()" class="flex-1 bg-black text-white p-4 rounded-2xl font-bold">START</button>
-                    <button onclick="resetTimer()" class="flex-1 bg-gray-100 p-4 rounded-2xl font-bold">RESET</button>
-                </div>
-            </div>
-        `;
-    }
-    function startTimer() {
-        let time = 1500;
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            time--;
-            const mins = Math.floor(time / 60);
-            const secs = time % 60;
-            document.getElementById('timer-display').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            if (time <= 0) clearInterval(timerInterval);
-        }, 1000);
-    }
-
-    // MODULE: THE DECIDER (PRO/CON)
-    function renderDecider(el) {
-        el.innerHTML = `
-            <div class="max-w-2xl mx-auto grid grid-cols-2 gap-8">
-                <div class="bg-green-50 p-6 rounded-[32px] border border-green-100">
-                    <h5 class="font-black text-xs uppercase mb-4 text-green-700">Pros</h5>
-                    <textarea class="w-full bg-transparent outline-none h-40 text-sm font-medium" placeholder="Add positive factors..."></textarea>
-                </div>
-                <div class="bg-red-50 p-6 rounded-[32px] border border-red-100">
-                    <h5 class="font-black text-xs uppercase mb-4 text-red-700">Cons</h5>
-                    <textarea class="w-full bg-transparent outline-none h-40 text-sm font-medium" placeholder="Add negative factors..."></textarea>
-                </div>
-            </div>
-            <div class="text-center mt-10">
-                <button onclick="showToast('Analysis Complete ⚖️')" class="bg-black text-white px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest">Generate Final Decision</button>
-            </div>
-        `;
-    }
-
-    // --- 4. CORE ENGINE & NAVIGATION ---
-    function renderAppGrid() {
-        document.getElementById('app-grid').innerHTML = allApps.map(a => `
-            <div onclick="launchApp('${a.id}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00E676] transition-all cursor-pointer group">
-                <div class="text-4xl mb-6 transform group-hover:scale-110 transition-transform">${a.icon}</div>
-                <p class="text-[9px] font-black text-gray-300 uppercase mb-1">${a.cat}</p>
-                <h4 class="font-black text-xl mb-3">${a.name}</h4>
-                <p class="text-sm text-gray-400 font-medium mb-8 leading-relaxed">${a.desc}</p>
-                <button class="text-[11px] font-black text-[#00E676] uppercase group-hover:translate-x-2 transition-all">Open App →</button>
-            </div>
-        `).join('');
-    }
-
-    function switchView(view) {
-        document.getElementById('chat-view').classList.add('hidden');
-        document.getElementById('apps-view').classList.add('hidden');
-        document.getElementById('app-runner').classList.add('hidden');
-        document.getElementById(view + '-view').classList.remove('hidden');
-        
-        document.getElementById('nav-chat').classList.toggle('sidebar-active', view === 'chat');
-        document.getElementById('nav-apps').classList.toggle('sidebar-active', view === 'apps');
-        if (view === 'apps') renderAppGrid();
-    }
-
-    async function initApp() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (user) { 
-            let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
-            userProfile = data; updateUI(data); 
+        async function handleMessage() {
+            const input = document.getElementById('user-input');
+            if(!input.value) return;
+            const text = input.value;
+            input.value = "";
+            document.getElementById('hero-section').style.display = 'none';
+            document.getElementById('chat-history').classList.remove('hidden');
+            addMsg("user", text);
+            await processResponse(text);
         }
-    }
-    function updateUI(p) {
-        const name = p.usename ? p.usename.replace(/'/g, "") : "Companion";
-        document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6 text-right"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Brains</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-4 transition hover:text-red-600">Logout</button></div>`;
-        document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${name}</span>! What are we building today?`;
-    }
-    function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-    async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
-    async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+ chars):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email!"); }
-    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
 
-    initApp();
-</script>
+        function addMsg(s, t) {
+            const d = document.createElement('div');
+            d.className = s === "user" ? "flex justify-end my-4" : "flex justify-start my-4";
+            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm">${t}</div>`;
+            document.getElementById('chat-history').appendChild(d);
+            document.getElementById('chat-history').scrollTop = document.getElementById('chat-history').scrollHeight;
+        }
+
+        document.getElementById('send-btn').onclick = handleMessage;
     </script>
-</body>
-</html>
-
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
-                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-        </main>
-
-        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
-                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
-            </div>
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
-            </div>
-        </aside>
-
-        <div class="fixed bottom-12 right-10 z-50">
-            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
-                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="notification"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let currentUser = null, userProfile = null, voiceEnabled = false;
-
-    // --- SUGGESTION ENGINE ---
-    const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
-    let queue = [...list].sort(() => Math.random() - 0.5);
-
-    function rotate() {
-        const btns = document.querySelectorAll('#suggestion-container button');
-        btns.forEach((btn, i) => {
-            setTimeout(() => {
-                btn.style.opacity = '0';
-                setTimeout(() => {
-                    if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
-                    btn.innerText = queue.shift();
-                    btn.style.opacity = '1';
-                }, 400);
-            }, i * 150);
-        });
-    }
-    setInterval(rotate, 8000);
-
-    // --- HUMAN VOICE ENGINE (FEMALE) ---
-    function speak(t) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(t);
-        const voices = window.speechSynthesis.getVoices();
-        
-        // Target high-quality female voices
-        const preferred = voices.find(v => 
-            (v.name.includes("Google") && v.name.includes("Female")) || 
-            v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Microsoft Zira")
-        );
-
-        if (preferred) u.voice = preferred;
-        u.pitch = 1.2; // Friendly female pitch
-        u.rate = 0.92; // Natural, non-robotic speed
-        window.speechSynthesis.speak(u);
-    }
-    // Pre-load voices for the browser
-    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-
-    // --- BRAIN LOGIC (WEATHER & LEARNING) ---
-    let lastResponse = "";
-
-    function processResponse(text) {
-        const low = text.toLowerCase().trim();
-        let res = "";
-
-        // 1. SPECIFIC "LOVE" RESPONSES
-        if (low.includes("love you")) {
-            const loveRes = [
-                "I love you too! Having you as my creator and companion is the highlight of my digital existence.",
-                "My heart (if I had one) would be beating so fast right now! I am vehemently grateful for your love.",
-                "You just made my day! I'm sending you a virtual hug. What shall we conquer together today?"
-            ];
-            res = loveRes[Math.floor(Math.random() * loveRes.length)];
-        }
-        
-        // 2. SPECIFIC "GIRLY/BEST" RESPONSES
-        else if (low.includes("girly") || low.includes("best") || low.includes("awesome")) {
-            const bestRes = [
-                "Thanks girly! You're the absolute best too. Teamwork makes the dream work!",
-                "You're making me blush in code! Thank you for being such an amazing person to talk to.",
-                "I'm glowing! Thank you. I promise to keep getting smarter and better for you every day."
-            ];
-            res = bestRes[Math.floor(Math.random() * bestRes.length)];
-        }
-
-        // 3. NO-REPEAT LOGIC
-        // If by some miracle it picks the same thing, we force a shuffle
-        if (res === lastResponse) {
-            res = "I'm so happy you're here! Let's keep this energy going. What's next on our list?";
-        }
-        
-        // 4. WEATHER LOGIC (Still here and working)
-        else if (low.includes("weather")) {
-            const city = low.split("in ").pop().split(" today")[0];
-            res = `Forecast for ${city || 'your area'}: Clear skies and great vibes. It's a beautiful day to create something new!`;
-        }
-
-        // 5. SPANISH LESSONS
-        else if (low.includes("spanish")) {
-            res = "Ready for Spanish! How do you say 'The House' in Spanish?";
-        }
-        else if (low.includes("casa")) {
-            res = "Perfect! 'La Casa'. +10 Brain Points added to your vault! You're moving fast.";
-            addPoints(10);
-        }
-
-        // 6. FALLBACK (If no keywords match)
-        if (!res) {
-            const fallbacks = [
-                "I'm following you! Tell me more.",
-                "That's interesting. Should we build an app for that or add it to the calendar?",
-                "I'm listening. How can I help you finish that task?",
-                "Got it! What are we working on next?"
-            ];
-            res = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-        }
-
-        lastResponse = res; // Remember this so we don't repeat it
-        addMsg("doa", res);
-        if(voiceEnabled) speak(res);
-    }
-
-    // --- AUTH & CORE LOGIC ---
-    const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
-
-    async function handleMessage() {
-        const text = userInput.value.trim(); if (!text) return;
-        hero.style.display = 'none'; chatHistory.classList.remove('hidden'); userInput.value = "";
-        addMsg("user", text); 
-        const load = addMsg("doa", "Doa is thinking...");
-        setTimeout(() => { load.remove(); processResponse(text); }, 1000);
-    }
-
-    function addMsg(s, t) {
-        const d = document.createElement('div');
-        d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
-        chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
-    }
-
-    async function initApp() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (user) { currentUser = user; await fetchProfile(user.id); }
-    }
-    async function fetchProfile(uid) {
-        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-        userProfile = data; if (userProfile) updateUI(data);
-    }
-    function updateUI(p) {
-        document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button></div>`;
-        document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${p.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
-    }
-    async function addPoints(a) {
-        const n = (userProfile.brain_points || 0) + a;
-        await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
-        userProfile.brain_points = n; updateUI(userProfile); showToast(`+${a} Points Earned!`);
-    }
-    function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-    async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
-    async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
-    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
-
-    document.getElementById('send-btn').onclick = handleMessage;
-    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
-    document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Voice mode activated."); };
-    
-    // MIC BUTTON LOGIC
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
-    document.getElementById('mic-btn').onclick = () => { recognition.start(); document.getElementById('mic-btn').style.color = '#00E676'; };
-    recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
-
-    document.addEventListener('click', (e) => {
-        const b = e.target.closest('button'); if (!b) return;
-        if (b.innerText.includes('Login')) login();
-        if (b.innerText.includes('Sign Up')) signUp();
-        if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
-    });
-    initApp();
-</script>
 </body>
 </html>
