@@ -35,11 +35,14 @@
 </head>
 <body class="text-gray-900">
 
+    <!-- RE-OPEN SIDEBAR TRIGGER -->
     <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-110 transition">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
 
     <div class="flex h-screen w-screen overflow-hidden">
+        
+        <!-- 1. SIDEBAR -->
         <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-[60] relative">
             <div class="p-6 flex items-center justify-between">
                 <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="startNewChat()">DOA CALI</h1>
@@ -59,11 +62,15 @@
                 <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Recent Chats</p>
-                <div id="history-list" class="space-y-1 px-1"></div>
+                <div id="history-list" class="space-y-1 px-1">
+                    <!-- History injected here -->
+                </div>
             </nav>
         </aside>
 
+        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+            
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
                 <div id="auth-zone" class="flex gap-4">
                     <button onclick="login()" class="hover:text-black transition">Login</button>
@@ -71,16 +78,20 @@
                 </div>
             </header>
 
+            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto text-center">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
                 
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
+                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden">
+                    <!-- Bubbles injected here -->
+                </div>
                 
                 <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
+                    
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" onkeydown="if(event.key==='Enter') handleMessage()" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
@@ -89,10 +100,25 @@
                         </button>
                     </div>
 
+                    <!-- VOICE TOGGLE SWITCH -->
                     <div class="flex justify-end items-center gap-3 pr-2 mt-4">
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
                         <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
                             <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: APPS (Placeholder) -->
+            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-4xl font-black italic mb-2 uppercase">App Factory</h2>
+                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32">
+                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                            <div class="text-3xl mb-4">🎨</div>
+                            <h3 class="font-bold text-lg">Image Gen</h3>
+                            <p class="text-gray-400 text-sm">Create visuals from text.</p>
                         </div>
                     </div>
                 </div>
@@ -108,42 +134,46 @@
     </div>
 
     <script>
+        // --- CONFIGURATION ---
         const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
         let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
+        
+        // Data structure: [{ id, title, messages: [{role, text}] }]
         let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
         let currentChatId = null; 
+
+        // --- LOCAL RESPONSE CONSTANTS ---
+        const SIMPLE_INPUTS = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "good night", "thanks", "thank you", "you there", "anyone there"];
+        const FIRST_RESPONSE_VARIANTS = [
+            "hello! doing fantastic, how are you or how can I help",
+            "hey there! miracles are happening, how are you?",
+            "hi! ready to create, what's on your mind?"
+        ];
+        const SIMPLE_RESPONSES = {
+            thanks: ["You're very welcome!", "My pleasure.", "Glad I could help!", "Always here for you."],
+            presence: ["I'm right here.", "Always online and ready.", "Reporting for duty!"],
+            casual: ["I'm doing well, how about yourself?", "Everything is aligned. What's the plan?"]
+        };
         let recentLocalResponses = [];
 
-        // --- DATA ---
-        const SIMPLE_INPUTS = ["hi", "hey", "hello", "yo", "sup", "hi doa", "hey doa", "hello doa", "good morning", "good morning doa", "morning", "morning doa", "good afternoon", "good afternoon doa", "afternoon", "afternoon doa", "good evening", "good evening doa", "evening", "evening doa", "good night", "good night doa", "you there", "are you there", "you around", "are you around", "whats up", "what's up", "whats up doa", "what's up doa", "how are you", "how are you doing", "how you doing", "hows it going", "how's it going", "hows it going doa", "how's it going doa", "how are things", "hows everything", "how's everything", "thanks", "thank you", "thanks doa", "thank you doa", "appreciate it", "much appreciated"];
-
-        const FIRST_RESPONSE_VARIANTS = [
-            "hello — doing fantastic, how are you or how can I help you",
-            "hey — doing great, how are you or what do you need",
-            "hi — everything is exponentially good, how are you or how can I help",
-            "hello — miraculously well, how are you or how can I help you",
-            "hey — splendid, how are you or what can I help with",
-            "hi — marvelous, how are you or what do you need",
-            "hello — magnificent, how are you or how can I help you",
-            "hey — sublime, how are you or what can I do for you",
-            "hello — exuberantly well, what do you need?",
-            "hi — radiantly so, how are you or how can I assist"
-        ];
-
-        const SIMPLE_RESPONSES = {
-            presence: ["yeah, I’m here", "I’m here", "right here", "ready when you are", "go ahead"],
-            casual: ["what’s up", "everything is exponentially good", "miraculously well", "splendid", "marvelous"],
-            thanks: ["thank you vehemently", "thank you deeply", "thank you kindly", "much appreciated", "have a harmonious day"]
-        };
-
-        // --- VOICE ---
+        // --- 1. THE VOICE ENGINE ---
         let voices = [];
         let selectedVoice = null;
+
         function loadVoices() {
             voices = window.speechSynthesis.getVoices();
-            const femaleNames = ["Samantha", "Aria", "Jenny", "Zira", "Victoria", "Google US English"];
-            selectedVoice = voices.find(v => femaleNames.some(name => v.name.includes(name))) || voices[0];
+            selectedVoice = pickFemaleVoice(voices);
         }
+
+        function pickFemaleVoice(voiceList) {
+            const femaleNames = ["Samantha", "Aria", "Jenny", "Zira", "Victoria", "Google US English"];
+            for (const name of femaleNames) {
+                const match = voiceList.find(v => v.name.includes(name));
+                if (match) return match;
+            }
+            return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0];
+        }
+
         window.speechSynthesis.onvoiceschanged = loadVoices;
 
         function speak(text) {
@@ -151,8 +181,8 @@
             window.speechSynthesis.cancel();
             const cleanText = text
                 .replace(/\bDoa\b/gi, "DOUGH-wah")
-                .replace(/\bDowa\b/gi, "DOUGH-wah")
                 .replace(/[*#`_~]/g, "");
+
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
             u.rate = 0.95;
@@ -173,10 +203,12 @@
             bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
         }
 
-        // --- LOCAL RESPONSE LOGIC (STRICT TIME MATCHING) ---
+        // --- 2. THE LOCAL BRAIN (New Logic Integrated) ---
         function getLocalResponse(input) {
             const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/gi, '').trim();
-            if (!SIMPLE_INPUTS.some(s => s.replace(/[^\w\s]/gi, '').includes(clean))) return null;
+            
+            // Check if input matches any of our simple phrases
+            if (!SIMPLE_INPUTS.some(s => clean.includes(s.replace(/[^\w\s]/gi, '')))) return null;
 
             let pool = [];
 
@@ -204,7 +236,8 @@
                     "good night! have a harmonious rest.",
                     "night! I'll be right here when you wake up."
                 ];
-            } else if (clean.includes("thank") || clean.includes("appreciate")) {
+            } 
+            else if (clean.includes("thank") || clean.includes("appreciate")) {
                 pool = SIMPLE_RESPONSES.thanks;
             } else if (clean.includes("there") || clean.includes("around") || clean.includes("you there")) {
                 pool = SIMPLE_RESPONSES.presence;
@@ -223,49 +256,54 @@
 
             recentLocalResponses.push(choice);
             if (recentLocalResponses.length > 4) recentLocalResponses.shift();
+
             return choice;
         }
 
-        function updateHistoryData(userText, aiText) {
-            if (currentChatId === null) {
-                currentChatId = Date.now();
-                chatHistoryData.unshift({
-                    id: currentChatId,
-                    title: userText.substring(0, 25) + (userText.length > 25 ? "..." : ""),
-                    messages: [{ role: 'user', text: userText }, { role: 'doa', text: aiText }]
-                });
-            } else {
-                const chat = chatHistoryData.find(c => c.id === currentChatId);
-                if (chat) {
-                    chat.messages.push({ role: 'user', text: userText });
-                    chat.messages.push({ role: 'doa', text: aiText });
-                }
-            }
-            renderHistory();
-            saveToLocalStorage();
-        }
-
-        // --- CHAT CORE ---
+        // --- 3. CHAT LOGIC ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
             if(!text) return;
 
+            // UI Setup
             document.getElementById('hero-section').style.display = 'none';
             document.getElementById('chat-history').classList.remove('hidden');
+            
+            // 1. Add User Bubble
             addBubble('user', text);
             input.value = "";
 
-            const localAnswer = getLocalResponse(text);
-            if (localAnswer) {
-                updateHistoryData(text, localAnswer);
+            // 2. Manage History State Init
+            if (currentChatId === null) {
+                currentChatId = Date.now();
+                chatHistoryData.unshift({
+                    id: currentChatId,
+                    title: text.substring(0, 25) + (text.length > 25 ? "..." : ""),
+                    messages: [{ role: 'user', text: text }]
+                });
+            } else {
+                const chat = chatHistoryData.find(c => c.id === currentChatId);
+                if (chat) chat.messages.push({ role: 'user', text: text });
+            }
+
+            renderHistory();
+            saveToLocalStorage();
+
+            // 3. Check for Local Response First
+            const localResponse = getLocalResponse(text);
+            if (localResponse) {
                 setTimeout(() => {
-                    addBubble('doa', localAnswer);
-                    speak(localAnswer);
-                }, 400);
+                    addBubble('doa', localResponse);
+                    speak(localResponse);
+                    const chat = chatHistoryData.find(c => c.id === currentChatId);
+                    if (chat) chat.messages.push({ role: 'doa', text: localResponse });
+                    saveToLocalStorage();
+                }, 300);
                 return;
             }
 
+            // 4. Fetch AI Response (Cloudflare)
             try {
                 const res = await fetch(CLOUDFLARE_URL, { 
                     method:'POST', 
@@ -274,11 +312,16 @@
                 });
                 const data = await res.json();
                 const aiText = data.candidates[0].content.parts[0].text;
+                
                 addBubble('doa', aiText);
                 speak(aiText);
-                updateHistoryData(text, aiText);
+
+                const chat = chatHistoryData.find(c => c.id === currentChatId);
+                if (chat) chat.messages.push({ role: 'doa', text: aiText });
+                saveToLocalStorage();
+
             } catch(e) { 
-                addBubble('doa', "Connection fuzzy. Try again!"); 
+                addBubble('doa', "Connection to Cali Link fuzzy. Try again!"); 
             }
         }
 
@@ -291,7 +334,10 @@
             h.scrollTop = h.scrollHeight;
         }
 
-        function saveToLocalStorage() { localStorage.setItem('doa_history', JSON.stringify(chatHistoryData)); }
+        // --- 4. PERSISTENCE & UI ---
+        function saveToLocalStorage() {
+            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+        }
 
         function renderHistory() {
             const list = document.getElementById('history-list');
@@ -308,13 +354,19 @@
         function loadChat(id) {
             const chat = chatHistoryData.find(i => i.id === id);
             if (!chat) return;
+
             currentChatId = id;
             switchView('chat'); 
+
             document.getElementById('hero-section').style.display = 'none';
             const historyDiv = document.getElementById('chat-history');
             historyDiv.classList.remove('hidden');
             historyDiv.innerHTML = ""; 
-            chat.messages.forEach(msg => addBubble(msg.role, msg.text));
+
+            chat.messages.forEach(msg => {
+                addBubble(msg.role, msg.text);
+            });
+
             renderHistory();
         }
 
@@ -348,7 +400,11 @@
             if(target) target.classList.remove('hidden');
         }
 
-        window.onload = () => { loadVoices(); renderHistory(); updateVoiceUI(); };
+        window.onload = () => { 
+            loadVoices();
+            renderHistory(); 
+            updateVoiceUI(); 
+        };
     </script>
 </body>
 </html>
