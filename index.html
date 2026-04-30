@@ -188,38 +188,6 @@
 
     let currentUser = null, userProfile = null, voiceEnabled = false;
 
-    // --- SUGGESTION ENGINE ---
-    const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
-    let queue = [...list].sort(() => Math.random() - 0.5);
-
-    function rotate() {
-        const btns = document.querySelectorAll('#suggestion-container button');
-        btns.forEach((btn, i) => {
-            setTimeout(() => {
-                btn.style.opacity = '0';
-                setTimeout(() => {
-                    if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
-                    btn.innerText = queue.shift();
-                    btn.style.opacity = '1';
-                }, 400);
-            }, i * 150);
-        });
-    }
-    setInterval(rotate, 8000);
-
-    // --- HUMAN VOICE ENGINE ---
-    function speak(t) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(t);
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find(v => (v.name.includes("Google") && v.name.includes("Female")) || v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Zira"));
-        if (preferred) u.voice = preferred;
-        u.pitch = 1.2; 
-        u.rate = 0.92; 
-        window.speechSynthesis.speak(u);
-    }
-    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-
     // --- THE REAL CLOUDFLARE BRAIN ---
     async function processResponse(text) {
         try {
