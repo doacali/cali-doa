@@ -268,8 +268,27 @@
         if (b.innerText.includes('Sign Up')) signUp();
         if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
     });
-    initApp();
-</script>
+   document.addEventListener('click', (e) => {
+            const b = e.target.closest('button'); if (!b) return;
+            if (b.innerText.includes('Login')) login();
+            if (b.innerText.includes('Sign Up')) signUp();
+            if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
+        });
+
+        // --- PASTE IT HERE: SIDEBAR NAVIGATION LOGIC ---
+        function switchView(viewName) {
+            // 1. Remove the black highlight from all buttons
+            document.getElementById('nav-chat').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+            document.getElementById('nav-calendar').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+            document.getElementById('nav-apps').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+            document.getElementById('nav-code').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+
+            // 2. Add the black highlight to the button you just clicked
+            document.getElementById('nav-' + viewName).classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        }
+
+        initApp();
+    </script>
 </body>
 </html>
 
