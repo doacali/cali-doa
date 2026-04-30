@@ -26,7 +26,7 @@
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- SIDEBAR -->
+        <!-- 1. SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1></div>
             <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
@@ -41,7 +41,7 @@
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
                 <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
                 <button onclick="toggleSavedTabs()" class="sidebar-item flex justify-between"><span>📂 Saved Tabs</span> <span>⌄</span></button>
-                <div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2"></div>
+                <div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
             </nav>
 
             <div class="p-6 border-t border-gray-50">
@@ -50,7 +50,7 @@
             </div>
         </aside>
 
-        <!-- MAIN WORKSPACE -->
+        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
@@ -58,11 +58,10 @@
                 <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg shadow-sm">Sign Up</button>
             </header>
 
-            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p id="welcome-text" class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto text-center">Your intelligent companion for thinking, building, and creating.</p>
+                    <p id="welcome-text" class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto text-center text-balance">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
                 
@@ -76,7 +75,6 @@
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button id="mic-btn" class="text-gray-300 hover:text-black p-2">🎤</button>
                         <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full shadow-lg">→</button>
                     </div>
                     <div class="flex justify-end items-center gap-3 pr-2">
@@ -91,23 +89,8 @@
             <!-- VIEW: APPS -->
             <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
                 <h2 class="text-4xl font-black italic mb-2 uppercase tracking-tighter">Doa App factory</h2>
-                <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] mb-10">Specialized Neural Tools</p>
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] mb-10 border-b pb-4">24 Specialized Neural Tools</p>
                 <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20"></div>
-            </div>
-
-            <!-- VIEW: APP RUNNER -->
-            <div id="app-runner-view" class="view-container hidden flex-1 w-full bg-white flex flex-col overflow-hidden relative">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                    <h3 id="active-app-name" class="font-black italic text-lg tracking-tighter text-[#00E676]">APP NAME</h3>
-                    <button onclick="switchView('apps')" class="text-xs font-bold text-gray-400 hover:text-black uppercase">Close ×</button>
-                </div>
-                <div id="app-content" class="flex-1 p-10 overflow-y-auto"></div>
-            </div>
-
-            <!-- VIEW: CALENDAR -->
-            <div id="calendar-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
-                <h2 class="text-4xl font-black italic mb-8 uppercase tracking-tighter">My Calendar</h2>
-                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold uppercase tracking-widest text-[10px]">Syncing Schedule...</div>
             </div>
 
             <!-- VIEW: CODE BUILDER -->
@@ -120,42 +103,20 @@
                             <div id="builder-log" class="text-xs font-mono text-gray-400 space-y-2 h-64 overflow-y-auto hide-scrollbar"></div>
                         </div>
                         <div class="bg-white rounded-[32px] overflow-hidden flex flex-col min-h-[400px]">
+                            <div class="bg-gray-100 p-3 flex justify-between px-6 items-center">
+                                <span class="text-[9px] font-black text-gray-400 uppercase">Live Preview</span>
+                            </div>
                             <div id="builder-preview" class="flex-1 p-6 text-black overflow-y-auto bg-white"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: LASER TAG -->
-            <div id="laser-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-black text-white text-center">
-                <h2 class="text-4xl font-black italic mb-8 uppercase text-[#00E676]">Laser Tag Arena</h2>
-                <div class="mt-20 text-gray-600 font-bold uppercase tracking-[0.5em] text-xs">Loading POV Engine...</div>
-            </div>
-
-            <!-- FOOTER TICKER -->
-            <div class="w-full bg-black text-white h-8 flex items-center overflow-hidden shrink-0">
-                <div id="world-ticker" class="text-[9px] font-black uppercase tracking-[0.3em]">
-                    ● GLOBAL STATUS: ONLINE ● NEW USER REGISTERED ● APP FACTORY UPDATED ● LEADERBOARD SYNCING ●
-                </div>
-            </div>
-            
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
         </main>
-
-        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-                <p class="text-[9px] font-black text-gray-200 uppercase mb-4">Ad Space</p>
-                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
-            </div>
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-                <p class="text-[10px] text-gray-400 mb-6 font-medium">Upgrade to Pro for $4.99/mo to remove ads.</p>
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] transition-all">Go Pro</button>
-            </div>
-        </aside>
     </div>
 
     <div id="notification"></div>
@@ -163,26 +124,41 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-        const SUPABASE_KEY = 'PASTE_YOUR_SUPABASE_KEY_HERE';
-        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_KEY';
+        const CLOUDFLARE_URL = 'YOUR_CLOUDFLARE_URL'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null, userProfile = null, voiceEnabled = JSON.parse(localStorage.getItem('voice_active')) || false;
 
-        // --- APPS REGISTRY ---
+        // --- FULL 24 APP REGISTRY ---
         const allApps = [
-            { id: 'cali', name: "Cali-Culator", cat: "Financial", icon: "💰", desc: "Visual monthly budget tool." },
-            { id: 'subzero', name: "Sub-Zero", cat: "Financial", icon: "🧊", desc: "Subscription tracker." },
-            { id: 'goaldigger', name: "Goal Digger", cat: "Financial", icon: "🎯", desc: "Savings goal visualizer." },
-            { id: 'habit', name: "Habit Stack", cat: "Health", icon: "⚡", desc: "Momentum tracker." },
-            { id: 'h2go', name: "H2-Go", cat: "Health", icon: "💧", desc: "Water intake log." },
-            { id: 'mindful', name: "Mindful Moments", cat: "Health", icon: "🧘", desc: "Minimalist journal." },
-            { id: 'focus', name: "Focus Flow", cat: "Growth", icon: "⏲️", desc: "Pomodoro focus timer." },
-            { id: 'bookworm', name: "Bookworm", cat: "Growth", icon: "📚", desc: "Reading stats & wishlist." },
-            { id: 'plant', name: "Plant Parent", cat: "Lifestyle", icon: "🪴", desc: "Plant care schedules." }
+            { id: 'cali', name: "Cali-Culator", cat: "Financial", badge: "Popular", icon: "💰", desc: "Visual monthly budget planner." },
+            { id: 'subzero', name: "Sub-Zero", cat: "Financial", badge: "New", icon: "🧊", desc: "Subscription tracker." },
+            { id: 'goaldigger', name: "Goal Digger", cat: "Financial", badge: "Featured", icon: "🎯", desc: "Savings goal visualizer." },
+            { id: 'debtfree', name: "Debt Free Dash", cat: "Financial", badge: "Essential", icon: "🏃", desc: "Snowball method calculator." },
+            { id: 'giggrind', name: "Gig Grind", cat: "Financial", badge: "Hustle", icon: "💼", desc: "Freelancer income tracker." },
+            { id: 'spendless', name: "Spend-Less", cat: "Financial", badge: "Gamified", icon: "🏆", desc: "Gamify no-spend challenges." },
+            { id: 'habit', name: "Habit Stack", cat: "Health", badge: "Favorite", icon: "⚡", desc: "Daily streak tracker." },
+            { id: 'h2go', name: "H2-Go", cat: "Health", badge: "Simple", icon: "💧", desc: "Water intake log." },
+            { id: 'mindful', name: "Mindful Moments", cat: "Health", badge: "Wellness", icon: "🧘", desc: "Minimalist gratitude journal." },
+            { id: 'screenstreak', name: "Screen-Free", cat: "Health", badge: "Detox", icon: "📵", desc: "Digital detox timer." },
+            { id: 'repcount', name: "Rep Counter", cat: "Health", badge: "Fitness", icon: "🏋️", desc: "Workout logger." },
+            { id: 'sleep', name: "Sleep Cycle", cat: "Health", badge: "Rest", icon: "🌙", desc: "Manual sleep duration tracker." },
+            { id: 'focus', name: "Focus Flow", cat: "Growth", badge: "Focus", icon: "⏲️", desc: "Pomodoro timer." },
+            { id: 'milestone', name: "Milestone Mapper", cat: "Growth", badge: "Planning", icon: "🗺️", desc: "Goal breakdown tool." },
+            { id: 'skill', name: "1% Better", cat: "Growth", badge: "Growth", icon: "📈", desc: "Skill practice tracker." },
+            { id: 'bookworm', name: "Bookworm", cat: "Growth", badge: "Reading", icon: "📚", desc: "Reading statistics." },
+            { id: 'decider', name: "The Decider", cat: "Growth", badge: "Clarity", icon: "⚖️", desc: "Pro/Con list logic." },
+            { id: 'reset', name: "Weekly Reset", cat: "Growth", badge: "Reflection", icon: "🔄", desc: "Guided reflection journal." },
+            { id: 'binge', name: "Binge List", cat: "Lifestyle", badge: "Entertainment", icon: "🎬", desc: "Watchlist for shows." },
+            { id: 'eats', name: "Weekly Eats", cat: "Lifestyle", badge: "Kitchen", icon: "🍎", desc: "Meal planning tool." },
+            { id: 'gift', name: "Gift Giver", cat: "Lifestyle", badge: "Social", icon: "🎁", desc: "Gift ideas & budget." },
+            { id: 'wander', name: "Wanderlog", cat: "Lifestyle", badge: "Travel", icon: "✈️", desc: "Trip itinerary builder." },
+            { id: 'plant', name: "Plant Parent", cat: "Lifestyle", badge: "Nature", icon: "🪴", desc: "Plant care schedule." },
+            { id: 'bucket', name: "Bucket List", cat: "Lifestyle", badge: "Dreams", icon: "🗺️", desc: "Life goals manager." }
         ];
 
-        // --- NAVIGATION ---
+        // --- NAVIGATION & RENDER ---
         function switchView(v) {
             document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
             const target = document.getElementById(v + '-view');
@@ -197,17 +173,31 @@
         function renderAppGrid() {
             const grid = document.getElementById('app-grid');
             grid.innerHTML = allApps.map(app => `
-                <div onclick="launchApp('${app.id}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00E676] transition-all cursor-pointer group">
-                    <div class="text-4xl mb-4 transform group-hover:scale-110 transition-transform">${app.icon}</div>
-                    <h4 class="font-black text-xl mb-2">${app.name}</h4>
-                    <p class="text-sm text-gray-400 font-medium">${app.desc}</p>
+                <div onclick="launchApp('${app.id}')" class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-3xl transform group-hover:scale-110 transition-transform">${app.icon}</div>
+                        <span class="text-[7px] font-black bg-gray-50 text-gray-400 px-2 py-1 rounded-full uppercase">${app.badge}</span>
+                    </div>
+                    <h4 class="font-black text-lg mb-1">${app.name}</h4>
+                    <p class="text-xs text-gray-400 font-medium leading-relaxed">${app.desc}</p>
                 </div>
             `).join('');
         }
 
-        function toggleSavedTabs() { document.getElementById('saved-tabs-container').classList.toggle('hidden'); }
+        // --- VOICE ENGINE (DOUGHA FIX) ---
+        function speak(text) {
+            if(!voiceEnabled) return;
+            window.speechSynthesis.cancel();
+            const cleanText = text.replace(/\bDoa\b/gi, "Dougha").replace(/[*#]/g, "").replace(/[\u{1F600}-\u{1F64F}]/gu, "");
+            const u = new SpeechSynthesisUtterance(cleanText);
+            const voices = window.speechSynthesis.getVoices();
+            const pref = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Female"));
+            if(pref) u.voice = pref;
+            u.pitch = 1.3; u.rate = 0.95;
+            window.speechSynthesis.speak(u);
+        }
 
-        // --- BRAIN & VOICE ---
+        // --- CORE BRAIN ---
         async function processResponse(text) {
             try {
                 const response = await fetch(CLOUDFLARE_URL, {
@@ -217,28 +207,11 @@
                 });
                 const data = await response.json();
                 let aiMsg = data.candidates[0].content.parts[0].text;
-                if (aiMsg.includes('[TRIGGER_BUILD:')) {
-                    const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
-                    aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
-                    addMsg("doa", aiMsg);
-                    setTimeout(() => { switchView('code'); startNeuralBuild(match[1], match[2]); }, 2000);
-                    return;
-                }
                 addMsg("doa", aiMsg);
-                if(voiceEnabled) speak(aiMsg);
+                speak(aiMsg);
             } catch (e) { addMsg("doa", "Neural link fuzzy!"); }
         }
 
-        function speak(t) {
-            window.speechSynthesis.cancel();
-            const cleanText = t.replace(/\bDoa\b/gi, "Dowa").replace(/[*#]/g, "").replace(/[\u{1F600}-\u{1F64F}]/gu, "");
-            const u = new SpeechSynthesisUtterance(cleanText);
-            const voices = window.speechSynthesis.getVoices();
-            const pref = voices.find(v => v.name.includes("Samantha") || v.name.includes("Female") || v.name.includes("Google"));
-            if(pref) u.voice = pref; u.pitch = 1.3; u.rate = 0.95; window.speechSynthesis.speak(u);
-        }
-
-        // --- UI HELPERS ---
         function addMsg(s, t) {
             const history = document.getElementById('chat-history');
             const d = document.createElement('div');
@@ -254,19 +227,8 @@
             document.getElementById('hero-section').style.display = 'none';
             document.getElementById('chat-history').classList.remove('hidden');
             addMsg('user', input.value);
-            const val = input.value; input.value = "";
-            await processResponse(val);
-        }
-
-        function startNeuralBuild(name, desc) {
-            const log = document.getElementById('builder-log');
-            const preview = document.getElementById('builder-preview');
-            log.innerHTML = `<div>> Initializing Blueprint Engine...</div>`;
-            setTimeout(() => { log.innerHTML += `<div class="text-[#00E676]">> Logic Pattern Found: ${name}</div>`; }, 1000);
-            setTimeout(() => { 
-                log.innerHTML += `<div class="text-[#00E676]">> BUILD SUCCESSFUL.</div>`; 
-                preview.innerHTML = `<div class="p-8 text-center bg-green-50 rounded-3xl border-2 border-green-100 font-bold">${name.toUpperCase()}<br><span class="font-normal text-sm">${desc}</span></div>`;
-            }, 2000);
+            const msg = input.value; input.value = "";
+            await processResponse(msg);
         }
 
         async function initApp() {
@@ -275,27 +237,33 @@
             if (user) {
                 currentUser = user;
                 let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
-                userProfile = data;
                 updateHeader(data);
-                document.getElementById('welcome-text').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${data.username.replace(/'/g, "")}</span>! Ready to create?`;
+                document.getElementById('welcome-text').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${data.username}</span>! Ready to create?`;
             }
             updateVoiceUI();
         }
 
         function updateHeader(p) {
-            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest ml-4">Logout</button></div>`;
+            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 ml-4">Logout</button></div>`;
         }
 
-        async function login() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signInWithPassword({email:e, password:p}); location.reload(); }
-        async function signUp() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signUp({email:e, password:p}); alert("Check email!"); }
-        async function logout() { await _supabase.auth.signOut(); location.reload(); }
-        function toggleVoice() { voiceEnabled = !voiceEnabled; localStorage.setItem('voice_active', voiceEnabled); updateVoiceUI(); }
+        function toggleVoice() { 
+            voiceEnabled = !voiceEnabled; 
+            localStorage.setItem('voice_active', voiceEnabled); 
+            updateVoiceUI(); 
+            if(voiceEnabled) speak("Voice synthesis active. My name is Dougha."); 
+        }
+
         function updateVoiceUI() {
             const knob = document.getElementById('voice-knob');
             const bg = document.getElementById('voice-switch');
             knob.style.left = voiceEnabled ? "16px" : "2px";
             bg.style.backgroundColor = voiceEnabled ? "#00E676" : "#f3f4f6";
         }
+
+        async function login() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signInWithPassword({email:e, password:p}); location.reload(); }
+        async function signUp() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signUp({email:e, password:p}); alert("Check email!"); }
+        async function logout() { await _supabase.auth.signOut(); location.reload(); }
 
         document.getElementById('send-btn').onclick = handleMessage;
         document.getElementById('user-input').onkeypress = (e) => { if(e.key==='Enter') handleMessage(); };
