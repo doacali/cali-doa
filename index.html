@@ -58,6 +58,7 @@
                 <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg shadow-sm">Sign Up</button>
             </header>
 
+            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
@@ -112,6 +113,12 @@
                 </div>
             </div>
 
+            <!-- VIEW: LASER TAG -->
+            <div id="laser-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-black text-white text-center">
+                <h2 class="text-4xl font-black italic mb-8 uppercase text-[#00E676]">Laser Tag Arena</h2>
+                <div class="mt-20 text-gray-600 font-bold uppercase tracking-[0.5em] text-xs">Loading POV Engine...</div>
+            </div>
+
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
@@ -124,8 +131,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_KEY';
-        const CLOUDFLARE_URL = 'YOUR_CLOUDFLARE_URL'; 
+        const SUPABASE_KEY = 'PASTE_SUPABASE_KEY';
+        const CLOUDFLARE_URL = 'PASTE_CLOUDFLARE_URL'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null, userProfile = null, voiceEnabled = JSON.parse(localStorage.getItem('voice_active')) || false;
@@ -164,7 +171,7 @@
             const target = document.getElementById(v + '-view');
             if(target) target.classList.remove('hidden');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-active'));
-            const navId = v === 'app-runner' ? 'nav-apps' : 'nav-' + v;
+            const navId = v === 'app-runner' ? 'nav-apps' : 'nav-' + (v === 'laser' ? 'laser' : v);
             const navEl = document.getElementById(navId);
             if(navEl) navEl.classList.add('sidebar-active');
             if(v === 'apps') renderAppGrid();
@@ -184,20 +191,35 @@
             `).join('');
         }
 
-        // --- VOICE ENGINE (DOUGHA FIX) ---
+        function toggleSavedTabs() { document.getElementById('saved-tabs-container').classList.toggle('hidden'); }
+
+        // --- THE "DOUGHA" VOICE ENGINE (GIRLY & HUMAN) ---
+        let voices = [];
+        function loadVoices() { voices = window.speechSynthesis.getVoices(); }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+
         function speak(text) {
             if(!voiceEnabled) return;
             window.speechSynthesis.cancel();
-            const cleanText = text.replace(/\bDoa\b/gi, "Dougha").replace(/[*#]/g, "").replace(/[\u{1F600}-\u{1F64F}]/gu, "");
+            
+            // Phonetic & Clean-up Filter
+            const cleanText = text.replace(/\bDoa\b/gi, "Dougha")
+                                  .replace(/[*#]/g, "")
+                                  .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}]/gu, "");
+            
             const u = new SpeechSynthesisUtterance(cleanText);
-            const voices = window.speechSynthesis.getVoices();
-            const pref = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Female"));
-            if(pref) u.voice = pref;
-            u.pitch = 1.3; u.rate = 0.95;
+            
+            // Hunting for the best Human Female Voice
+            const femaleVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Microsoft Zira") || v.name.includes("Female"));
+            
+            if(femaleVoice) u.voice = femaleVoice;
+            u.pitch = 1.35; // Higher pitch for "girly" feel
+            u.rate = 0.95;  // Natural human speed
             window.speechSynthesis.speak(u);
         }
 
-        // --- CORE BRAIN ---
+        // --- BRAIN LOGIC ---
         async function processResponse(text) {
             try {
                 const response = await fetch(CLOUDFLARE_URL, {
@@ -207,6 +229,15 @@
                 });
                 const data = await response.json();
                 let aiMsg = data.candidates[0].content.parts[0].text;
+
+                if (aiMsg.includes('[TRIGGER_BUILD:')) {
+                    const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
+                    aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
+                    addMsg("doa", aiMsg);
+                    setTimeout(() => { switchView('code'); startNeuralBuild(match[1], match[2]); }, 2000);
+                    return;
+                }
+                
                 addMsg("doa", aiMsg);
                 speak(aiMsg);
             } catch (e) { addMsg("doa", "Neural link fuzzy!"); }
@@ -215,7 +246,7 @@
         function addMsg(s, t) {
             const history = document.getElementById('chat-history');
             const d = document.createElement('div');
-            d.className = s === "user" ? "flex justify-end w-full" : "flex justify-start w-full";
+            d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
             d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-2 shadow-sm">${t}</div>`;
             history.appendChild(d);
             history.scrollTop = history.scrollHeight;
@@ -244,7 +275,7 @@
         }
 
         function updateHeader(p) {
-            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 ml-4">Logout</button></div>`;
+            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-4">Logout</button></div>`;
         }
 
         function toggleVoice() { 
@@ -267,8 +298,7 @@
 
         document.getElementById('send-btn').onclick = handleMessage;
         document.getElementById('user-input').onkeypress = (e) => { if(e.key==='Enter') handleMessage(); };
-        window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-
+        
         initApp();
     </script>
 </body>
