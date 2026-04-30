@@ -22,13 +22,8 @@
         #ticker-content { display: inline-block; animation: marquee 40s linear infinite; font-size: 9px; font-weight: 900; text-transform: uppercase; tracking-widest; color: #333; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-        .studio-dark { background: #0b0b0b; color: white; }
-        .stream-panel { background: #141414; border-right: 1px solid #222; }
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        #agent-window { transition: all 0.3s ease; transform: scale(0); opacity: 0; transform-origin: bottom right; }
-        #agent-window.active { transform: scale(1); opacity: 1; }
     </style>
 </head>
 <body class="text-gray-900">
@@ -40,7 +35,6 @@
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- 1. SIDEBAR -->
         <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-[60] relative">
             <div class="p-6 flex items-center justify-between">
                 <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="startNewChat()">DOA CALI</h1>
@@ -50,46 +44,31 @@
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
                 <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
-                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span></button>
                 <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
                 <button id="nav-laser" onclick="switchView('laser')" class="sidebar-item">🔫 <span>Laser Tag</span></button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
                 <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
-                <button onclick="document.getElementById('saved-tabs-box').classList.toggle('hidden')" class="sidebar-item flex justify-between"><span>📂 Saved Tabs</span> <span class="text-[8px]">⌄</span></button>
-                <div id="saved-tabs-box" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
-
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Creation</p>
-                <button id="nav-editor" onclick="switchView('editor')" class="sidebar-item">🎨 <span>Editor App</span></button>
-                <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
-                <button id="nav-music" onclick="switchView('music')" class="sidebar-item">🎵 <span>Music Lab</span></button>
-
+                
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Previously</p>
                 <div id="history-list" class="space-y-1 px-1"></div>
             </nav>
         </aside>
 
-        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-            
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <div id="auth-zone" class="flex gap-4">
-                    <button onclick="login()" class="hover:text-black transition">Login</button>
-                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
-                </div>
+                <button onclick="login()" class="hover:text-black">Login</button>
+                <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
             </header>
 
-            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
-                    <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
+                    <h1 class="text-6xl font-black mb-4 tracking-tighter">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
-                
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
-                
                 <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6"></div>
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
@@ -104,20 +83,14 @@
                 </div>
             </div>
 
-            <!-- VIEW: APP FACTORY -->
-            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
-                <div class="max-w-6xl mx-auto pb-32">
-                    <h2 class="text-5xl font-black italic mb-2 uppercase tracking-tighter">App Factory</h2>
-                    <p class="text-gray-400 text-[10px] font-black uppercase tracking-[0.4em] mb-12 border-b pb-6">24 Specialized Neural Tools</p>
-                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
-                </div>
-            </div>
+            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto"></div>
+            <div id="code-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto"></div>
 
-            <footer id="global-footer" class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-12">
+            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-12">
                 <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● New Budget App generated ● Doa Academy: 4,202 students online now ● [System] doaa Voice Synthesis Active ●</div></div>
+            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● New Budget App generated ● Dougha Voice Active ●</div></div>
         </main>
     </div>
 
@@ -132,13 +105,46 @@
         let currentChatId = null;
         let userProfile = null;
         let userMemory = { learned_facts: [] };
-        let voices = [];
         let selectedVoice = null;
 
-        // --- 1. VOICE ENGINE ---
+        // --- 1. LOCAL BRAIN DATA (FREE RESPONSES) ---
+        const MOOD_POOL = {
+            positive: ["love that — what would you like me to do for you", "amazing — how can I help", "splendid — what do you need"],
+            neutral: ["that’s fair — what would you like me to do for you", "understood — how can I help", "I hear you"],
+            negative: ["I’m sorry to hear that — how can I help", "that sounds rough — I'm here for you"]
+        };
+        const MOOD_INPUTS = {
+            positive: ["good", "great", "fine", "amazing", "awesome", "fantastic"],
+            neutral: ["okay", "ok", "alright", "it's going"],
+            negative: ["not good", "bad", "rough", "sad", "stressed"]
+        };
+        const GREETINGS = ["hi", "hey", "hello", "yo", "sup", "whats up"];
+
+        function getLocalResponse(input, isFirst) {
+            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoaa\b/gi, '').replace(/\bdoa\b/gi, '').trim();
+            
+            if (clean.includes("morning")) return "Good morning! Miracles are happening, how are you?";
+            if (clean.includes("afternoon")) return "Good afternoon! Exquisitely aligned today, how are things?";
+            
+            if (GREETINGS.includes(clean)) {
+                if (isFirst) return "hello — doing fantastic, how are you or how can I help you";
+                return "miraculously well — how are you or what do you need?";
+            }
+
+            for (const mood in MOOD_INPUTS) {
+                if (MOOD_INPUTS[mood].some(m => clean === m || clean.includes(m))) {
+                    return MOOD_POOL[mood][Math.floor(Math.random() * MOOD_POOL[mood].length)];
+                }
+            }
+
+            if (clean.includes("thank")) return "Thank you vehemently, have a harmonious day!";
+            return null;
+        }
+
+        // --- 2. VOICE ENGINE (doaa Phonetics) ---
         function loadVoices() {
-            voices = window.speechSynthesis.getVoices();
-            const names = ["Samantha","Aria","Zira","Google US English Female"];
+            const voices = window.speechSynthesis.getVoices();
+            const names = ["Samantha","Aria","Zira","Google US English Female","Female"];
             for(const n of names) {
                 const match = voices.find(v => v.name.includes(n));
                 if(match) { selectedVoice = match; break; }
@@ -157,95 +163,50 @@
             window.speechSynthesis.speak(u);
         }
 
-        // --- 2. FREE RESPONSE DATA ---
-        const MOOD_POOL = {
-            positive: ["love that — what would you like me to do for you", "amazing — how can I help", "splendid — what do you need", "magnificent — what can I do for you", "fabulous — go ahead"],
-            neutral: ["that’s fair — what would you like me to do for you", "understood — how can I help", "I hear you — what do you need", "steady is still good — go ahead", "okay — what can I do for you"],
-            negative: ["I’m sorry to hear that — how can I help", "that sounds rough — what would you like me to do for you", "I hear you — what do you need right now", "sorry it’s been like that — how can I help", "I’m here — what can I do for you"]
-        };
-
-        const MOOD_INPUTS = {
-            positive: ["good", "great", "fine", "amazing", "awesome", "fabulous", "fantastic", "incredible", "tremendous", "splendid", "marvelous", "wonderful", "excellent", "pretty good", "doing good", "doing great"],
-            neutral: ["okay", "ok", "alright", "all right", "not bad", "decent", "fine i guess", "it’s going", "its going", "hanging in there"],
-            negative: ["not good", "not well", "bad", "awful", "horrible", "terrible", "rough", "not great", "sad", "stressed", "tired", "exhausted", "overwhelmed"]
-        };
-
-        function getLocalResponse(input, isFirst) {
-            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').trim().replace(/\bdoaa\b/gi, '').replace(/\bdoa\b/gi, '');
-            
-            // Mirroring Specific Time
-            if (clean.includes("morning")) return "Good morning! Miracles are happening, how are you?";
-            if (clean.includes("afternoon")) return "Good afternoon! Exquisitely aligned today, how are things?";
-            if (clean.includes("evening")) return "Good evening! Everything is good, how can I help?";
-
-            // First Greeting Pool
-            if (isFirst && (clean === "hello" || clean === "hi" || clean === "hey")) {
-                const variants = ["hello — doing fantastic, how are you or how can I help you", "hi — everything is exponentially good, how are you or how can I help", "hey there — doing great, how are you or how can I assist"];
-                return variants[Math.floor(Math.random() * variants.length)];
-            }
-
-            // Mood Detection
-            for (const mood in MOOD_INPUTS) {
-                if (MOOD_INPUTS[mood].some(m => clean === m || clean.includes(m))) {
-                    return MOOD_POOL[mood][Math.floor(Math.random() * MOOD_POOL[mood].length)];
-                }
-            }
-
-            if (clean.includes("thank")) return "Thank you vehemently, have a harmonious day!";
-            if (clean.includes("there")) return "I’m right here, ready when you are.";
-
-            return null; // Go to Gemini
-        }
-
         // --- 3. CHAT ENGINE & PERSISTENCE ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
             if(!text) return;
 
-            if(!currentChatId) currentChatId = Date.now();
-
-            document.getElementById('hero-section').style.display = 'none';
             const hDiv = document.getElementById('chat-history');
+            document.getElementById('hero-section').style.display = 'none';
             hDiv.classList.remove('hidden');
             
+            const isFirst = (!currentChatId || hDiv.children.length === 0);
+            if(!currentChatId) currentChatId = Date.now();
+
             addBubble('user', text);
             input.value = "";
 
-            // Memory Check
-            if (text.toLowerCase().includes("remember") || text.toLowerCase().includes("actually")) {
-                const fact = text.replace(/remember|actually|doa|doaa/gi, "").trim();
-                userMemory.learned_facts.push({ fact, date: new Date().toISOString() });
-                if (userProfile) await _supabase.from('profiles').update({ memory: userMemory }).eq('id', userProfile.id);
-                const reply = "Got it! I've etched that into my memory vault. +10 Brain Points 🧠";
-                setTimeout(() => { addBubble('doa', reply); speak(reply); }, 500);
+            // Intercept with Local Brain
+            const local = getLocalResponse(text, isFirst);
+            if(local) {
+                setTimeout(() => { addBubble('doa', local); speak(local); }, 500);
                 return;
             }
 
-            const local = getLocalResponse(text, hDiv.children.length <= 1);
-            if(local) {
-                setTimeout(() => { addBubble('doa', local); speak(local); }, 500);
-            } else {
-                try {
-                    const res = await fetch(CLOUDFLARE_URL, { method:'POST', body: JSON.stringify({text: text}) });
-                    const data = await res.json();
-                    const aiText = data.candidates[0].content.parts[0].text;
-                    addBubble('doa', aiText); speak(aiText);
-                } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
-            }
+            // Fallback to Gemini
+            try {
+                const res = await fetch(CLOUDFLARE_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: text}) });
+                const data = await res.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+                addBubble('doa', aiText);
+                speak(aiText);
+            } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
         }
 
         function addBubble(role, text) {
             const h = document.getElementById('chat-history');
             const d = document.createElement('div');
             d.className = `flex ${role==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm">${text}</div>`;
+            d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${text}</div>`;
             h.appendChild(d); h.scrollTop = h.scrollHeight;
 
-            const existing = chatHistoryData.find(c => c.id === currentChatId);
-            if(existing) {
-                existing.messages = existing.messages || [];
-                existing.messages.push({ role, text });
+            const chat = chatHistoryData.find(c => c.id === currentChatId);
+            if(chat) {
+                chat.messages = chat.messages || [];
+                chat.messages.push({ role, text });
             } else {
                 chatHistoryData.unshift({ id: currentChatId, title: text.substring(0,20)+"...", messages: [{role, text}] });
             }
@@ -323,7 +284,7 @@
             if(target) target.classList.remove('hidden');
         }
 
-        window.onload = () => { renderHistory(); initApp(); };
+        window.onload = () => { renderHistory(); updateVoiceUI(); };
         document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleMessage(); });
     </script>
 </body>
