@@ -316,21 +316,14 @@
         ⚡ <span>Code Builder</span>
     </button>
     
-    <button id="nav-tabs" onclick="toggleSavedTabs()" class="sidebar-item text-gray-400 flex justify-between">
+ <button id="nav-tabs" onclick="toggleSavedTabs()" class="sidebar-item text-gray-400 flex justify-between">
     <span>📂 Saved Tabs</span> <span>⌄</span>
 </button>
 
-<div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2">
-    <!-- Saved apps will appear here -->
-    <p class="text-[10px] text-gray-400 italic">No saved projects yet</p>
+<!-- This is the ONLY container needed -->
+<div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[11px] text-gray-400 font-bold">
+    <p>No saved projects yet</p>
 </div>
-    
-    <!-- This div stays hidden until you toggle it -->
-    <div id="saved-tabs-list" class="hidden pl-8 space-y-2 py-2 text-[11px] text-gray-400 font-bold">
-        <!-- JS will populate this list -->
-        <p>No saved projects yet</p>
-    </div>
-</nav>
 
         <!-- MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
@@ -571,8 +564,15 @@
     function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
 
     initApp();
-</script>
-    </script>
+    
+ // PASTE YOUR FUNCTION HERE:
+    function toggleSavedTabs() {
+        const container = document.getElementById('saved-tabs-container');
+        container.classList.toggle('hidden');
+    }
+    
+initApp();
+</script> 
 </body>
 </html>
 
