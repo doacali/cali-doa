@@ -135,47 +135,35 @@
                 </div>
             </div>
 
-            <!-- VIEW 5: CODE BUILDER -->
-            <div id="code-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
-                <h2 class="text-4xl font-black italic tracking-tighter mb-8 uppercase">Neural Code Builder</h2>
-                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold tracking-widest uppercase text-[10px]">
-                    Code Workspace Loading...
+            <!-- VIEW 5: NEURAL CODE BUILDER -->
+            <div id="code-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#121212] text-white">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-4xl font-black italic tracking-tighter mb-2 text-[#00E676] uppercase">Neural Code Builder</h2>
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] mb-12">Synthesizing Logic from Blueprint Library</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- LEFT: COMMAND LOG -->
+                        <div class="bg-white/5 border border-white/10 p-6 rounded-[32px] shadow-2xl">
+                            <h3 class="text-[10px] font-black uppercase text-[#00E676] mb-4 tracking-widest">Command Stream</h3>
+                            <div id="builder-log" class="text-xs font-mono text-gray-400 space-y-2 h-64 overflow-y-auto hide-scrollbar">
+                                <div>> Awaiting instructions...</div>
+                            </div>
+                            <input id="builder-input" class="w-full bg-black mt-4 p-4 rounded-2xl border border-white/10 outline-none focus:border-[#00E676] transition-all text-sm" placeholder="Enter custom command...">
+                        </div>
+
+                        <!-- RIGHT: LIVE PREVIEW -->
+                        <div class="bg-white rounded-[32px] overflow-hidden flex flex-col min-h-[40px] shadow-2xl border border-white/5">
+                            <div class="bg-gray-100 p-3 flex justify-between items-center px-6">
+                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Module Preview</span>
+                            </div>
+                            <div id="builder-preview" class="flex-1 p-6 text-black overflow-y-auto hide-scrollbar bg-white">
+                                <!-- App appears here after synthesis -->
+                                <div class="h-full flex items-center justify-center text-gray-300 italic text-xs">Awaiting Neural Link...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-        <!-- VIEW 6: LASER TAG ARENA -->
-            <div id="laser-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-black text-white">
-                <h2 class="text-4xl font-black italic mb-8 uppercase tracking-tighter text-[#00E676]">LASER TAG ARENA</h2>
-                <div class="bg-gray-900/50 p-8 rounded-[40px] shadow-sm border border-gray-800 min-h-[500px] flex items-center justify-center text-gray-600 font-bold tracking-widest uppercase text-[10px]">
-                    LOADING POV ENGINE...
-                </div>
-            </div>
-
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
-                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-        </main>
-
-        <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
-                <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
-            </div>
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
-                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
-            </div>
-        </aside>
-
-        <div class="fixed bottom-12 right-10 z-50">
-            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
-                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-            </div>
-        </div>
-    </div>
 
     <div id="notification"></div>
 
@@ -221,9 +209,9 @@
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
     // --- THE REAL CLOUDFLARE BRAIN ---
+   // --- THE NEURAL COMMAND CENTER (EARS) ---
     async function processResponse(text) {
         try {
-            // Send user message to Cloudflare Brain
             const response = await fetch(CLOUDFLARE_PROXY_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -231,33 +219,129 @@
             });
             
             const data = await response.json();
-
-            // 🚨 NEW: CATCH GOOGLE ERRORS
+            
             if (data.error) {
                 alert("Doa Error: " + data.error);
-                addMsg("doa", "Google rejected the request. Please check the alert box on your screen!");
                 return;
             }
 
-            let aiResponse = data.candidates[0].content.parts[0].text;
+            let aiMsg = data.candidates[0].content.parts[0].text;
 
-            // SYSTEM ACTION INTERCEPTER
-            if (aiResponse.includes('[ADD_POINTS: 10]')) {
-                aiResponse = aiResponse.replace('[ADD_POINTS: 10]', '');
-                addPoints(10);
-            }
-            if (aiResponse.includes('[OPEN_AFFILIATE:')) {
-                const product = aiResponse.match(/\[OPEN_AFFILIATE: (.*?)\]/)[1];
-                aiResponse = aiResponse.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
-                setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2000);
+            // 1. DETECT: Auto-Build Command
+            if (aiMsg.includes('[TRIGGER_BUILD:')) {
+                const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
+                const appName = match[1];
+                const appDesc = match[2];
+
+                aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
+                
+                addMsg("doa", aiMsg);
+                if(voiceEnabled) speak(aiMsg);
+
+                setTimeout(() => {
+                    showToast(`🚀 Neural Lab: Initializing ${appName}...`);
+                    switchView('code'); 
+                    startNeuralBuild(appName, appDesc); 
+                }, 2000);
+                return;
             }
 
-            addMsg("doa", aiResponse.trim());
-            if(voiceEnabled) speak(aiResponse.trim());
+            // 2. DETECT: Points Earned
+            if (aiMsg.includes('[ADD_POINTS:')) {
+                const ptsMatch = aiMsg.match(/\[ADD_POINTS: (\d+)\]/);
+                if (ptsMatch) {
+                    const pts = parseInt(ptsMatch[1]);
+                    aiMsg = aiMsg.replace(/\[ADD_POINTS:.*?\]/g, "");
+                    addPoints(pts);
+                }
+            }
+
+            // 3. DETECT: Affiliate Shopping
+            if (aiMsg.includes('[OPEN_AFFILIATE:')) {
+                const productMatch = aiMsg.match(/\[OPEN_AFFILIATE: (.*?)\]/);
+                if (productMatch) {
+                    const product = productMatch[1];
+                    aiMsg = aiMsg.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
+                    setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2500);
+                }
+            }
+
+            // Final Output
+            addMsg("doa", aiMsg.trim());
+            if(voiceEnabled) speak(aiMsg.trim());
 
         } catch (e) {
             console.error(e);
-            addMsg("doa", "My neural link to Cloudflare is offline. Please check the connection!");
+            addMsg("doa", "Neural link fuzzy! Please refresh.");
+        }
+    }
+
+    // --- 1. NEURAL BUILD ANIMATION (WORKS WITH AUTO-JUMP) ---
+    function startNeuralBuild(name, desc) {
+        const log = document.getElementById('builder-log');
+        const preview = document.getElementById('builder-preview');
+        if (!log || !preview) return;
+
+        // Reset the workspace
+        log.innerHTML = `<div>> Initializing Blueprint Engine...</div>`;
+        preview.innerHTML = `<div class="h-full flex items-center justify-center text-gray-400 animate-pulse italic text-xs uppercase tracking-widest">Synthesizing Neural Code...</div>`;
+        
+        const sequences = [
+            `> Accessing Shubhamsaboo/awesome-llm-apps library...`,
+            `> Logic Pattern Found for: ${name}`,
+            `> Synthesizing Tailwind CSS & HTML5...`,
+            `> Injecting Neural logic...`,
+            `> BUILD SUCCESSFUL.`
+        ];
+
+        sequences.forEach((msg, i) => {
+            setTimeout(() => {
+                const line = document.createElement('div');
+                line.innerText = msg;
+                line.className = "text-[#00E676] py-1 border-b border-white/5";
+                log.appendChild(line);
+                log.scrollTop = log.scrollHeight;
+                
+                // When the animation finishes, show the "Mock" app in the preview
+                if(i === sequences.length - 1) {
+                    preview.innerHTML = `
+                        <div class="flex justify-end mb-4">
+                            <button onclick="saveToSupabase('${name}', 'Logic for ${name}')" class="text-[9px] font-black bg-[#00E676] text-black px-4 py-1.5 rounded-full uppercase hover:scale-105 transition shadow-lg shadow-green-500/20">💾 Save Tab</button>
+                        </div>
+                        <div class="p-8 bg-green-50 rounded-[32px] text-center border-2 border-green-100 animate-in fade-in zoom-in duration-500">
+                            <div class="text-4xl mb-4">🚀</div>
+                            <h3 class="text-2xl font-black mb-2 italic text-gray-900">${name.toUpperCase()}</h3>
+                            <p class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">${desc}</p>
+                            <div class="inline-block bg-white px-6 py-2 rounded-2xl shadow-sm text-[10px] font-black text-[#00E676] tracking-[0.2em] uppercase border border-green-50">System Live</div>
+                        </div>
+                    `;
+                }
+            }, i * 1000);
+        });
+    }
+
+    // --- 2. DATABASE SAVE ENGINE ---
+    async function saveToSupabase(name, content) {
+        if (!currentUser) {
+            showToast("Please Login to save tabs!");
+            return;
+        }
+
+        const { error } = await _supabase
+            .from('saved_tabs')
+            .insert([{ 
+                user_id: currentUser.id, 
+                app_name: name, 
+                code_content: content 
+            }]);
+
+        if (!error) {
+            showToast("Project Saved to Sidebar! 📂");
+            // This function will refresh your sidebar later
+            if (typeof loadSavedTabs === 'function') loadSavedTabs(); 
+        } else {
+            console.error(error);
+            showToast("Neural Save Error.");
         }
     }
 
@@ -382,15 +466,40 @@
         switchView('app-runner');
         const app = allApps.find(a => a.id === id);
         const container = document.getElementById('app-content');
+        document.getElementById('active-app-name').innerText = app.name.toUpperCase();
         
-        // --- This is where we will build the logic for each app ---
+        // --- This is where we build the logic for each app ---
         if (id === 'cali-culator') {
-            container.innerHTML = '<h2>Cali-Culator Budget App Loading...</h2>';
+            // Renders the actual calculator HTML
+            container.innerHTML = `
+                <div class="max-w-md mx-auto bg-white p-10 rounded-[40px] shadow-2xl border border-gray-100">
+                    <h4 class="font-black text-xl mb-6 italic tracking-tight">Cali-Culator</h4>
+                    <div class="space-y-4">
+                        <input id="inc" type="number" placeholder="Monthly Income" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#00E676]">
+                        <input id="exp" type="number" placeholder="Monthly Expenses" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#00E676]">
+                        <button onclick="doCaliCalc()" class="w-full bg-[#00E676] p-4 rounded-2xl font-black text-sm shadow-lg shadow-green-100 hover:scale-105 transition-transform">CALCULATE SPENDING →</button>
+                    </div>
+                    <div id="calc-res" class="mt-8 text-center text-5xl font-black text-black"></div>
+                </div>
+            `;
         } else if (id === 'h2-go') {
             container.innerHTML = '<h2>Water Tracker Loading...</h2>';
         } else {
             container.innerHTML = `<div class="text-center mt-20 text-gray-400 font-bold uppercase tracking-widest">Doa is optimizing the Neural code for ${app.name}...</div>`;
         }
+    }
+
+    // --- The Calculator App Logic ---
+    function doCaliCalc() {
+        const income = document.getElementById('inc').value;
+        const expenses = document.getElementById('exp').value;
+        const result = parseFloat(income || 0) - parseFloat(expenses || 0);
+        
+        const resultEl = document.getElementById('calc-res');
+        resultEl.innerText = "$" + result.toLocaleString();
+        resultEl.style.color = result < 0 ? '#ef4444' : '#10b981'; // Red if negative, green if positive
+
+        showToast("Budget Synced! 💰");
     }
 
         // --- PASTE IT HERE: SIDEBAR NAVIGATION LOGIC ---
@@ -426,167 +535,137 @@
         initApp();
     </script>
 </body>
-</html>
+// --- 1. CONFIG & STATE ---
+    const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
+    const SUPABASE_KEY = 'YOUR_ACTUAL_SUPABASE_KEY_HERE';
+    const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- SUGGESTION ENGINE ---
-    const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
-    let queue = [...list].sort(() => Math.random() - 0.5);
+    let currentUser = null, userProfile = null, voiceEnabled = false;
 
-    function rotate() {
-        const btns = document.querySelectorAll('#suggestion-container button');
-        btns.forEach((btn, i) => {
-            setTimeout(() => {
-                btn.style.opacity = '0';
+    // --- 2. NAVIGATION ENGINE ---
+    function switchView(viewName) {
+        const allViews = ['chat', 'calendar', 'apps', 'code', 'laser', 'app-runner'];
+        allViews.forEach(v => {
+            const el = document.getElementById(v + '-view');
+            if (el) el.classList.add('hidden');
+        });
+        
+        const targetView = document.getElementById(viewName + '-view');
+        if (targetView) targetView.classList.remove('hidden');
+
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10'));
+        const targetNavId = viewName === 'app-runner' ? 'nav-apps' : 'nav-' + viewName;
+        const targetNav = document.getElementById(targetNavId);
+        if (targetNav) targetNav.classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        
+        if (viewName === 'apps' && typeof renderAppGrid === 'function') renderAppGrid();
+    }
+
+    // --- 3. THE NEURAL COMMAND CENTER (EARS) ---
+    async function processResponse(text) {
+        try {
+            const response = await fetch(CLOUDFLARE_PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            const data = await response.json();
+            if (data.error) { alert("Doa Error: " + data.error); return; }
+
+            let aiMsg = data.candidates[0].content.parts[0].text;
+
+            // DETECT: Auto-Build
+            if (aiMsg.includes('[TRIGGER_BUILD:')) {
+                const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
+                aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
+                addMsg("doa", aiMsg);
                 setTimeout(() => {
-                    if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
-                    btn.innerText = queue.shift();
-                    btn.style.opacity = '1';
-                }, 400);
-            }, i * 150);
+                    switchView('code'); 
+                    startNeuralBuild(match[1], match[2]); 
+                }, 2000);
+                return;
+            }
+
+            addMsg("doa", aiMsg.trim());
+            if(voiceEnabled) speak(aiMsg.trim());
+        } catch (e) { addMsg("doa", "Neural link fuzzy! Refresh."); }
+    }
+
+    // --- 4. NEURAL LAB ANIMATION ---
+    function startNeuralBuild(name, desc) {
+        const log = document.getElementById('builder-log');
+        const preview = document.getElementById('builder-preview');
+        log.innerHTML = `<div>> Initializing Blueprint Engine...</div>`;
+        const sequences = [`> Accessing library...`, `> Logic Pattern Found: ${name}`, `> Synthesizing...`, `> BUILD COMPLETE.`];
+        sequences.forEach((msg, i) => {
+            setTimeout(() => {
+                const line = document.createElement('div');
+                line.innerText = msg;
+                line.className = "text-[#00E676]";
+                log.appendChild(line);
+                if(i === sequences.length - 1) {
+                    preview.innerHTML = `<div class="p-8 bg-green-50 rounded-3xl text-center border-2 border-green-100">
+                        <button onclick="saveToSupabase('${name}', 'Code')" class="bg-black text-white px-4 py-1 mb-4 rounded-full text-[9px]">Save Tab</button>
+                        <h3 class="text-2xl font-black">${name}</h3><p>${desc}</p>
+                    </div>`;
+                }
+            }, i * 800);
         });
     }
-    setInterval(rotate, 8000);
 
-    // --- HUMAN VOICE ENGINE (FEMALE) ---
-    function speak(t) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(t);
-        const voices = window.speechSynthesis.getVoices();
-        
-        // Target high-quality female voices
-        const preferred = voices.find(v => 
-            (v.name.includes("Google") && v.name.includes("Female")) || 
-            v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Microsoft Zira")
-        );
-
-        if (preferred) u.voice = preferred;
-        u.pitch = 1.2; // Friendly female pitch
-        u.rate = 0.92; // Natural, non-robotic speed
-        window.speechSynthesis.speak(u);
-    }
-    // Pre-load voices for the browser
-    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-
-    // --- BRAIN LOGIC (WEATHER & LEARNING) ---
-    let lastResponse = "";
-
-    function processResponse(text) {
-        const low = text.toLowerCase().trim();
-        let res = "";
-
-        // 1. SPECIFIC "LOVE" RESPONSES
-        if (low.includes("love you")) {
-            const loveRes = [
-                "I love you too! Having you as my creator and companion is the highlight of my digital existence.",
-                "My heart (if I had one) would be beating so fast right now! I am vehemently grateful for your love.",
-                "You just made my day! I'm sending you a virtual hug. What shall we conquer together today?"
-            ];
-            res = loveRes[Math.floor(Math.random() * loveRes.length)];
+    // --- 5. DATABASE & AUTH ---
+    async function loadSavedTabs() {
+        if (!currentUser) return;
+        const { data } = await _supabase.from('saved_tabs').select('app_name').eq('user_id', currentUser.id);
+        if (data) {
+            document.getElementById('saved-tabs-container').innerHTML = data.map(tab => 
+                `<div class="text-[10px] py-1 text-gray-400 font-bold uppercase truncate">● ${tab.app_name}</div>`
+            ).join('');
         }
-        
-        // 2. SPECIFIC "GIRLY/BEST" RESPONSES
-        else if (low.includes("girly") || low.includes("best") || low.includes("awesome")) {
-            const bestRes = [
-                "Thanks girly! You're the absolute best too. Teamwork makes the dream work!",
-                "You're making me blush in code! Thank you for being such an amazing person to talk to.",
-                "I'm glowing! Thank you. I promise to keep getting smarter and better for you every day."
-            ];
-            res = bestRes[Math.floor(Math.random() * bestRes.length)];
-        }
-
-        // 3. NO-REPEAT LOGIC
-        // If by some miracle it picks the same thing, we force a shuffle
-        if (res === lastResponse) {
-            res = "I'm so happy you're here! Let's keep this energy going. What's next on our list?";
-        }
-        
-        // 4. WEATHER LOGIC (Still here and working)
-        else if (low.includes("weather")) {
-            const city = low.split("in ").pop().split(" today")[0];
-            res = `Forecast for ${city || 'your area'}: Clear skies and great vibes. It's a beautiful day to create something new!`;
-        }
-
-        // 5. SPANISH LESSONS
-        else if (low.includes("spanish")) {
-            res = "Ready for Spanish! How do you say 'The House' in Spanish?";
-        }
-        else if (low.includes("casa")) {
-            res = "Perfect! 'La Casa'. +10 Brain Points added to your vault! You're moving fast.";
-            addPoints(10);
-        }
-
-        // 6. FALLBACK (If no keywords match)
-        if (!res) {
-            const fallbacks = [
-                "I'm following you! Tell me more.",
-                "That's interesting. Should we build an app for that or add it to the calendar?",
-                "I'm listening. How can I help you finish that task?",
-                "Got it! What are we working on next?"
-            ];
-            res = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-        }
-
-        lastResponse = res; // Remember this so we don't repeat it
-        addMsg("doa", res);
-        if(voiceEnabled) speak(res);
-    }
-
-    // --- AUTH & CORE LOGIC ---
-    const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
-
-    async function handleMessage() {
-        const text = userInput.value.trim(); if (!text) return;
-        hero.style.display = 'none'; chatHistory.classList.remove('hidden'); userInput.value = "";
-        addMsg("user", text); 
-        const load = addMsg("doa", "Doa is thinking...");
-        setTimeout(() => { load.remove(); processResponse(text); }, 1000);
-    }
-
-    function addMsg(s, t) {
-        const d = document.createElement('div');
-        d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
-        chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
     }
 
     async function initApp() {
         const { data: { user } } = await _supabase.auth.getUser();
-        if (user) { currentUser = user; await fetchProfile(user.id); }
+        if (user) { 
+            currentUser = user; 
+            loadSavedTabs(); 
+            // Fetch profile stats here...
+        }
     }
-    async function fetchProfile(uid) {
-        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-        userProfile = data; if (userProfile) updateUI(data);
-    }
-    function updateUI(p) {
-        document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button></div>`;
-        document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${p.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
-    }
-    async function addPoints(a) {
-        const n = (userProfile.brain_points || 0) + a;
-        await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
-        userProfile.brain_points = n; updateUI(userProfile); showToast(`+${a} Points Earned!`);
-    }
-    function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-    async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
-    async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
-    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
 
+    // --- 6. VOICE ENGINE ---
+    function speak(t) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(t.replace(/\bDoa\b/gi, "Dowa").replace(/[*#]/g, ""));
+        const voices = window.speechSynthesis.getVoices();
+        u.voice = voices.find(v => v.name.includes("Female") || v.name.includes("Samantha"));
+        u.pitch = 1.2; u.rate = 0.95; window.speechSynthesis.speak(u);
+    }
+
+    // --- 7. CORE UI HELPERS ---
+    function addMsg(s, t) {
+        const d = document.createElement('div');
+        d.className = s === "user" ? "flex justify-end my-4" : "flex justify-start my-4";
+        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm">${t}</div>`;
+        document.getElementById('chat-history').appendChild(d);
+        return d;
+    }
+
+    async function handleMessage() {
+        const input = document.getElementById('user-input');
+        if(!input.value) return;
+        const val = input.value; input.value = "";
+        document.getElementById('hero-section').style.display = 'none';
+        document.getElementById('chat-history').classList.remove('hidden');
+        addMsg("user", val);
+        await processResponse(val);
+    }
+
+    // LISTENERS
     document.getElementById('send-btn').onclick = handleMessage;
-    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
-    document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Voice mode activated."); };
-    
-    // MIC BUTTON LOGIC
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
-    document.getElementById('mic-btn').onclick = () => { recognition.start(); document.getElementById('mic-btn').style.color = '#00E676'; };
-    recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
+    document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; };
 
-    document.addEventListener('click', (e) => {
-        const b = e.target.closest('button'); if (!b) return;
-        if (b.innerText.includes('Login')) login();
-        if (b.innerText.includes('Sign Up')) signUp();
-        if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
-    });
     initApp();
 </script>
 </body>
