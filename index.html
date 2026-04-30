@@ -11,6 +11,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         
+        /* SIDEBAR ANIMATION */
         #main-sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; }
         #main-sidebar.collapsed { width: 0; padding: 0; border: none; overflow: hidden; opacity: 0; }
         
@@ -18,13 +19,20 @@
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
         .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
-        #ticker-wrap { white-space: nowrap; overflow: hidden; position: fixed; bottom: 0; width: 100%; background: #000; padding: 8px 0; z-index: 100; border-top: 1px solid #111; }
-        #ticker-content { display: inline-block; animation: marquee 40s linear infinite; font-size: 9px; font-weight: 900; text-transform: uppercase; tracking-widest; color: #333; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-
+        /* CHAT BUBBLES */
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* WORLD TICKER */
+        #ticker-wrap { white-space: nowrap; overflow: hidden; position: fixed; bottom: 0; width: 100%; background: #000; padding: 8px 0; z-index: 1000; border-top: 1px solid #111; }
+        #ticker-content { display: inline-block; animation: marquee 40s linear infinite; font-size: 9px; font-weight: 900; text-transform: uppercase; tracking-widest; color: #444; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        /* STUDIO UI */
+        .studio-bg { background: #0b0b0b; }
+        .stream-panel { background: #141414; border-right: 1px solid #222; }
+
+        /* VOICE TOGGLE UI */
         #voice-switch { transition: background-color 0.3s; }
         #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
@@ -49,11 +57,13 @@
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
                 <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
                 <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span></button>
-                <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
+                <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>Doa Apps</span></button>
                 <button id="nav-laser" onclick="switchView('laser')" class="sidebar-item">🔫 <span>Laser Tag</span></button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
                 <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
+                <button id="nav-editor" onclick="switchView('editor')" class="sidebar-item">🎨 <span>Editor App</span></button>
+                <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
                 
                 <button onclick="document.getElementById('saved-tabs-box').classList.toggle('hidden')" class="sidebar-item flex justify-between mt-4">
                     <span>📂 Saved Tabs</span> <span class="text-[8px]">⌄</span>
@@ -67,27 +77,33 @@
 
         <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
+            
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button onclick="login()" class="hover:text-black transition">Login</button>
-                <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
+                <div id="auth-zone" class="flex gap-4">
+                    <button onclick="login()" class="hover:text-black transition">Login</button>
+                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold transition hover:bg-[#00c565]">Sign Up</button>
+                </div>
             </header>
 
+            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
-                    <h1 class="text-6xl font-black mb-4 tracking-tighter">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
+                    <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
+                    <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto text-center">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
                 
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
                 
                 <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
+                    
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button id="send-btn" onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
+                        <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
                     </div>
 
+                    <!-- VOICE TOGGLE SWITCH -->
                     <div class="flex justify-end items-center gap-3 pr-2 mt-4">
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
                         <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
@@ -97,21 +113,30 @@
                 </div>
             </div>
 
-            <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto"></div>
-            <div id="code-view" class="view-container hidden flex-1 studio-dark p-10 overflow-y-auto"></div>
+            <!-- VIEW: APPS -->
+            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-4xl font-black italic mb-2 uppercase">App Factory</h2>
+                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32"></div>
+                </div>
+            </div>
 
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● New Budget App generated ● Doa Academy: 4,202 students online now ● Dougha Voice Active ●</div></div>
+            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-10">
+                <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
+                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
+            </footer>
+
+            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● Dougha Voice Engine Active ●</div></div>
         </main>
     </div>
 
     <script>
+        // --- CONFIGURATION ---
         const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-        
         let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
         let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-        let currentChatSession = [];
 
-        // --- 1. THE "DOUGHA" VOICE ENGINE (PRESERVED) ---
+        // --- 1. THE "DOUGHA" VOICE ENGINE (Fixed) ---
         let voices = [];
         let selectedVoice = null;
 
@@ -121,12 +146,45 @@
         }
 
         function pickFemaleVoice(voiceList) {
-            const femaleNames = ["Samantha","Karen","Moira","Tessa","Veena","Fiona","Victoria","Allison","Ava","Susan","Zoe","Microsoft Zira","Microsoft Aria","Microsoft Jenny","Google US English Female","Google UK English Female"];
+            // Priority list of known female voices across platforms
+            const femaleNames = [
+                "Samantha",               // macOS/iOS - best quality
+                "Karen",                  // macOS Australian
+                "Moira",                  // macOS Irish
+                "Tessa",                  // macOS South African
+                "Veena",                  // macOS Indian
+                "Fiona",                  // macOS Scottish
+                "Victoria",               // macOS
+                "Allison",                // macOS
+                "Ava",                    // macOS
+                "Susan",                  // macOS
+                "Zoe",                    // macOS
+                "Microsoft Zira",         // Windows Edge/Chrome
+                "Microsoft Aria",         // Windows Edge
+                "Microsoft Jenny",        // Windows Edge
+                "Google US English Female", // Chrome Android
+                "Google UK English Female",
+            ];
+
+            // 1. Try exact name match
             for (const name of femaleNames) {
                 const match = voiceList.find(v => v.name.includes(name));
                 if (match) return match;
             }
-            return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0] || null;
+
+            // 2. Try keyword scan (catches "female", "woman", etc.)
+            const femaleKeywords = ["female", "woman", "girl", "fiona", "aria", "zira", "jenny", "ava"];
+            const keywordMatch = voiceList.find(v =>
+                femaleKeywords.some(k => v.name.toLowerCase().includes(k))
+            );
+            if (keywordMatch) return keywordMatch;
+
+            // 3. Try any English voice as fallback
+            const englishVoice = voiceList.find(v => v.lang.startsWith("en"));
+            if (englishVoice) return englishVoice;
+
+            // 4. Absolute fallback
+            return voiceList[0] || null;
         }
 
         window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -135,54 +193,55 @@
         function speak(text) {
             if (!voiceActive) return;
             window.speechSynthesis.cancel();
-            const cleanText = text.replace(/\bDowa\b/gi, "DOUGH-wah").replace(/\bDoa\b/gi, "DOUGH-wah").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+
+            const cleanText = text
+                .replace(/\bDowa\b/gi, "DOUGH-wah")
+                .replace(/\bDoa\b/gi, "DOUGH-wah")
+                .replace(/([a-zA-Z])\1{2,}/g, "$1")
+                .replace(/[*#`_~]/g, "")
+                .replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
-            u.pitch = 1.2; u.rate = 0.92;
+            u.lang = "en-US";
+            u.pitch = 1.0;
+            u.rate = 0.95;
+            u.volume = 1.0;
             window.speechSynthesis.speak(u);
         }
 
         function toggleVoice() {
-            voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive);
+            voiceActive = !voiceActive;
+            localStorage.setItem('voice_active', voiceActive);
             selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
             updateVoiceUI();
-            if (voiceActive) speak("Live voice active. My name is Dough-wah.");
+            if (voiceActive) speak("Live voice active. My name is Doe-ah.");
         }
 
         function updateVoiceUI() {
             const knob = document.getElementById('voice-knob');
             const bg = document.getElementById('voice-switch');
-            if(knob && bg) {
-                knob.style.left = voiceActive ? "16px" : "2px";
-                bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-            }
+            knob.style.left = voiceActive ? "16px" : "2px";
+            bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
         }
 
-        // --- 2. CHAT & FULL SESSION RESTORATION ---
+        // --- 2. CHAT & HISTORY ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
-            if(!input.value.trim()) return;
-
+            const text = input.value.trim();
+            if(!text) return;
             document.getElementById('hero-section').style.display = 'none';
             document.getElementById('chat-history').classList.remove('hidden');
-            
-            const msg = input.value;
+            addBubble('user', text);
+            saveHistory(text);
             input.value = "";
-            
-            addBubble('user', msg);
-            currentChatSession.push({ sender: 'user', text: msg });
-
             try {
-                const res = await fetch(CLOUDFLARE_URL, { method:'POST', body:JSON.stringify({text:msg}) });
+                const res = await fetch(CLOUDFLARE_URL, { method:'POST', body:JSON.stringify({text:text}) });
                 const data = await res.json();
                 const aiText = data.candidates[0].content.parts[0].text;
-                
                 addBubble('doa', aiText);
-                currentChatSession.push({ sender: 'doa', text: aiText });
                 speak(aiText);
-                
-                saveToHistory(msg);
-            } catch(e) { addBubble('doa', "Neural Link Offline."); }
+            } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
         }
 
         function addBubble(s, t) {
@@ -193,55 +252,32 @@
             h.appendChild(d); h.scrollTop = h.scrollHeight;
         }
 
-        // --- 3. HISTORY MANAGER (RELOADS MESSAGES) ---
-        function saveToHistory(firstMsg) {
-            const title = firstMsg.substring(0, 20) + "...";
-            const existingIdx = chatHistoryData.findIndex(h => h.title === title);
-            const entry = { id: Date.now(), title, messages: [...currentChatSession] };
-
-            if(existingIdx !== -1) chatHistoryData[existingIdx].messages = [...currentChatSession];
-            else chatHistoryData.unshift(entry);
-
-            if(chatHistoryData.length > 10) chatHistoryData.pop();
+        function saveHistory(text) {
+            const title = text.length > 20 ? text.substring(0, 20) + "..." : text;
+            chatHistoryData.unshift({ id: Date.now(), title: title });
+            if(chatHistoryData.length > 8) chatHistoryData.pop();
             localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistoryList();
+            renderHistory();
         }
 
-        function loadChat(id) {
-            const session = chatHistoryData.find(c => c.id === id);
-            if(!session) return;
-            switchView('chat');
-            document.getElementById('hero-section').style.display = 'none';
-            const h = document.getElementById('chat-history');
-            h.innerHTML = ""; 
-            h.classList.remove('hidden');
-            session.messages.forEach(m => addBubble(m.sender, m.text));
-            currentChatSession = session.messages;
-        }
-
-        function renderHistoryList() {
+        function renderHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = chatHistoryData.map(i => `
-                <div class="flex justify-between group p-2 rounded-lg hover:bg-gray-50 transition">
-                    <p onclick="loadChat(${i.id})" class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black flex-1">${i.title}</p>
-                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs px-1">✕</button>
-                </div>`).join('');
+                <div class="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition">
+                    <p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p>
+                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-[10px] px-1">✕</button>
+                </div>
+            `).join('');
         }
 
         function deleteHistory(id) {
             chatHistoryData = chatHistoryData.filter(i => i.id !== id);
             localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistoryList();
+            renderHistory();
         }
 
-        // --- 4. NAVIGATION & UTILS ---
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            document.getElementById(v + '-view').classList.remove('hidden');
-            if(v === 'chat' && currentChatSession.length === 0) document.getElementById('hero-section').style.display = 'block';
-        }
-
-        function toggleSidebar() { 
+        // --- 3. UI UTILS ---
+        function toggleSidebar() {
             const sb = document.getElementById('main-sidebar');
             const btn = document.getElementById('open-sidebar-btn');
             sb.classList.toggle('collapsed');
@@ -249,8 +285,12 @@
             else btn.classList.add('hidden');
         }
 
-        window.onload = () => { renderHistoryList(); updateVoiceUI(); };
-        document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleMessage(); });
+        function switchView(v) {
+            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+            document.getElementById(v + '-view').classList.remove('hidden');
+        }
+
+        window.onload = () => { renderHistory(); updateVoiceUI(); };
     </script>
 </body>
 </html>
