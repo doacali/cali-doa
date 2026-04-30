@@ -156,14 +156,41 @@
         }
 
         // --- 2. LOCAL BRAIN (FREE RESPONSES) ---
-        const FIRST_VARIANTS = ["hello doing fantastic, how are you or how can I help you?", "hey doing great, how are you or what do you need?", "hi everything is exponentially good, how are you or how can I help?"];
-        
         function getLocalResponse(input, isFirst) {
-            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').trim().replace(/\bdoaa\b/gi, '').replace(/\bdoa\b/gi, '');
-            if (clean.includes("morning")) return "Good morning! Miracles are happening, how are you?";
-            if (isFirst && (clean === "hello" || clean === "hi" || clean === "hey")) return FIRST_VARIANTS[Math.floor(Math.random() * FIRST_VARIANTS.length)];
-            if (clean.includes("thank")) return "Thank you vehemently, have a harmonious day!";
-            return null;
+            // 1. Normalize: Lowercase, remove punctuation, remove names, trim spaces
+            const clean = input.toLowerCase()
+                .replace(/[^\w\s]/gi, '')
+                .replace(/\bdoaa\b/gi, '')
+                .replace(/\bdoa\b/gi, '')
+                .trim();
+
+            // 2. The Whitelist
+            const greetings = ["hi", "hey", "hello", "yo", "sup", "whats up"];
+            const isGreeting = greetings.some(g => clean.includes(g) || g === clean);
+            const isSmallTalk = ["good", "great", "bad", "okay", "thanks", "thank you", "morning", "afternoon"].some(s => clean.includes(s));
+
+            if (!isGreeting && !isSmallTalk) return null;
+
+            // 3. Logic: Time Mirroring
+            if (clean.includes("morning")) return "good morning miracles are happening, how are you?";
+            if (clean.includes("afternoon")) return "good afternoon exquisitely aligned today, how are things?";
+            if (clean.includes("evening")) return "good evening everything is good, how can I help?";
+
+            // 4. Logic: Initial Greetings
+            if (isFirst && isGreeting) {
+                const variants = [
+                    "hello doing fantastic, how are you or how can I help you?",
+                    "hi everything is exponentially good, how are you or how can I help?",
+                    "hey there doing great, how are you or how can I assist?"
+                ];
+                return variants[Math.floor(Math.random() * variants.length)];
+            }
+
+            // 5. Moods/Thanks
+            if (clean.includes("thank")) return "thank you vehemently, have a harmonious day!";
+            if (clean.includes("good") || clean.includes("great")) return "love that, what would you like me to do for you?";
+
+            return "miraculously well, how are you or what do you need?";
         }
 
         // --- 3. CHAT ENGINE & PERSISTENCE ---
@@ -184,17 +211,20 @@
             addBubble('user', text);
             input.value = "";
 
-            const local = getLocalResponse(text, h.children.length <= 1);
-            if(local) {
-                setTimeout(() => { addBubble('doa', local); speak(local); }, 500);
-            } else {
-                try {
-                    const res = await fetch(CLOUDFLARE_URL, { method:'POST', body: JSON.stringify({text: text}) });
-                    const data = await res.json();
-                    const aiText = data.candidates[0].content.parts[0].text;
-                    addBubble('doa', aiText); speak(aiText);
-                } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
+            const isFirst = h.children.length <= 1;
+            const local = getLocalResponse(text, isFirst);
+            if (local) {
+                addBubble('doa', local);
+                speak(local);
+                return;
             }
+
+            try {
+                const res = await fetch(CLOUDFLARE_URL, { method:'POST', body: JSON.stringify({text: text}) });
+                const data = await res.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+                addBubble('doa', aiText); speak(aiText);
+            } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
         }
 
         function addBubble(role, text) {
