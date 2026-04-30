@@ -195,6 +195,7 @@
             window.speechSynthesis.cancel();
 
             const cleanText = text
+                .replace(/\bDowa\b/gi, "Doe-ah")
                 .replace(/\bDoa\b/gi, "Doe-ah")
                 .replace(/[*#`_~]/g, "")
                 .replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
@@ -213,7 +214,7 @@
             localStorage.setItem('voice_active', voiceActive);
             selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
             updateVoiceUI();
-            if (voiceActive) speak("Live voice active. My name is Doa.");
+            if (voiceActive) speak("Live voice active. My name is Doe-ah.");
         }
 
         function updateVoiceUI() {
