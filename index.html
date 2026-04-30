@@ -123,6 +123,22 @@
                 </div>
             </div>
 
+            <!-- VIEW 4: CALENDAR -->
+            <div id="calendar-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
+                <h2 class="text-4xl font-black italic tracking-tighter mb-8 uppercase">My Calendar</h2>
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold tracking-widest uppercase text-[10px]">
+                    Calendar Interface Syncing...
+                </div>
+            </div>
+
+            <!-- VIEW 5: CODE BUILDER -->
+            <div id="code-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
+                <h2 class="text-4xl font-black italic tracking-tighter mb-8 uppercase">Neural Code Builder</h2>
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold tracking-widest uppercase text-[10px]">
+                    Code Workspace Loading...
+                </div>
+            </div>
+
             <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
                 <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
@@ -302,27 +318,32 @@
         // --- PASTE IT HERE: SIDEBAR NAVIGATION LOGIC ---
       // --- SIDEBAR NAVIGATION LOGIC ---
     function switchView(viewName) {
-        // 1. Hide all main views
-        document.getElementById('chat-view').classList.add('hidden');
-        document.getElementById('apps-view').classList.add('hidden');
-        document.getElementById('app-runner').classList.add('hidden');
+        // 1. Hide all views safely
+        const allViews = ['chat', 'calendar', 'apps', 'code', 'app-runner'];
+        allViews.forEach(v => {
+            const el = document.getElementById(v + '-view');
+            if (el) el.classList.add('hidden');
+        });
         
-        // 2. Show the requested view
-        document.getElementById(viewName + '-view').classList.remove('hidden');
+        // 2. Show requested view
+        const targetView = document.getElementById(viewName + '-view');
+        if (targetView) targetView.classList.remove('hidden');
 
-        // 3. Update sidebar active state
-        document.getElementById('nav-chat').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
-        document.getElementById('nav-calendar').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
-        document.getElementById('nav-apps').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
-        document.getElementById('nav-code').classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        // 3. Update sidebar active state safely
+        const allNavs = ['chat', 'calendar', 'apps', 'code'];
+        allNavs.forEach(n => {
+            const el = document.getElementById('nav-' + n);
+            if (el) el.classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        });
 
-        // Note: If viewName is 'app-runner', keep 'nav-apps' highlighted
-        const targetNav = viewName === 'app-runner' ? 'nav-apps' : 'nav-' + viewName;
-        document.getElementById(targetNav).classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        // App runner keeps 'apps' highlighted
+        const targetNavId = viewName === 'app-runner' ? 'nav-apps' : 'nav-' + viewName;
+        const targetNav = document.getElementById(targetNavId);
+        if (targetNav) targetNav.classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
         
         // 4. Trigger specific actions
         if (viewName === 'apps') {
-            renderAppGrid(); // We will write this function next!
+            if (typeof renderAppGrid === 'function') renderAppGrid();
         }
     }
         initApp();
