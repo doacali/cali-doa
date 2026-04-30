@@ -131,114 +131,141 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-        let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-        let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-        let voices = [];
+    // --- CONFIGURATION ---
+    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
+    let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
 
-        // --- 1. THE "DOUGHA" VOICE ENGINE ---
-        function loadVoices() { voices = window.speechSynthesis.getVoices(); }
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
-
-        function speak(text) {
-            if(!voiceActive) return;
-            window.speechSynthesis.cancel();
-            
-            // Phonetic Filter: Force "Dough-ah" and scrub markdown symbols
-            const cleanText = text.replace(/\bDoa\b/gi, "Dougha")
-                                  .replace(/[*#]/g, "")
-                                  .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}]/gu, "");
-            
-            const u = new SpeechSynthesisUtterance(cleanText);
-            const femaleVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Female"));
-            if(femaleVoice) u.voice = femaleVoice;
-            u.pitch = 1.35; 
-            u.rate = 0.95; 
-            window.speechSynthesis.speak(u);
+    // --- 1. THE HUMAN "DOUGHA" VOICE ENGINE (FIXED) ---
+    function speak(text) {
+        if(!voiceActive) return;
+        window.speechSynthesis.cancel(); // Clear any current speech
+        
+        // Clean text: Force "Dough-ah" pronunciation and remove markdown/emojis
+        const cleanText = text.replace(/\bDoa\b/gi, "Dougha")
+                              .replace(/[*#]/g, "")
+                              .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}]/gu, "");
+        
+        const u = new SpeechSynthesisUtterance(cleanText);
+        
+        // RE-FETCH VOICES: Some browsers need to check the list at the moment of speaking
+        const availableVoices = window.speechSynthesis.getVoices();
+        
+        // Target high-quality human female voices in order of preference
+        const femaleVoice = availableVoices.find(v => v.name.includes("Google US English Female")) || 
+                            availableVoices.find(v => v.name.includes("Samantha")) || 
+                            availableVoices.find(v => v.name.includes("Victoria")) ||
+                            availableVoices.find(v => v.name.includes("Microsoft Zira")) ||
+                            availableVoices.find(v => v.name.includes("Female"));
+        
+        if(femaleVoice) {
+            u.voice = femaleVoice;
         }
 
-        function toggleVoice() {
-            voiceActive = !voiceActive;
-            localStorage.setItem('voice_active', voiceActive);
-            updateVoiceUI();
-            if(voiceActive) speak("Live voice active. My name is Dougha.");
-        }
+        u.pitch = 1.5; // Set higher for a "girly" friendly tone
+        u.rate = 0.95;  // Natural human speed
+        u.volume = 1;
+        
+        window.speechSynthesis.speak(u);
+    }
 
-        function updateVoiceUI() {
-            const knob = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
+    // --- 2. UI HANDLERS ---
+    function toggleVoice() {
+        voiceActive = !voiceActive;
+        localStorage.setItem('voice_active', voiceActive);
+        updateVoiceUI();
+        if(voiceActive) speak("Live voice active. My name is Dougha.");
+    }
+
+    function updateVoiceUI() {
+        const knob = document.getElementById('voice-knob');
+        const bg = document.getElementById('voice-switch');
+        if(knob && bg) {
             knob.style.left = voiceActive ? "16px" : "2px";
             bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
         }
+    }
 
-        // --- 2. CHAT & HISTORY ---
-        async function handleMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if(!text) return;
-            document.getElementById('hero-section').style.display = 'none';
-            document.getElementById('chat-history').classList.remove('hidden');
-            addBubble('user', text);
-            saveHistory(text);
-            input.value = "";
-            try {
-                const res = await fetch(CLOUDFLARE_URL, { method:'POST', body:JSON.stringify({text:text}) });
-                const data = await res.json();
-                const aiText = data.candidates[0].content.parts[0].text;
-                addBubble('doa', aiText);
-                speak(aiText);
-            } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
+    // --- 3. CHAT ENGINE ---
+    async function handleMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value.trim();
+        if(!text) return;
+
+        document.getElementById('hero-section').style.display = 'none';
+        document.getElementById('chat-history').classList.remove('hidden');
+        
+        addBubble('user', text);
+        saveHistory(text);
+        input.value = "";
+
+        try {
+            const res = await fetch(CLOUDFLARE_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({text: text}) 
+            });
+            const data = await res.json();
+            const aiText = data.candidates[0].content.parts[0].text;
+            
+            addBubble('doa', aiText);
+            speak(aiText); // Trigger the female voice
+        } catch (e) {
+            addBubble('doa', "My neural link is fuzzy!");
         }
+    }
 
-        function addBubble(s, t) {
-            const h = document.getElementById('chat-history');
-            const d = document.createElement('div');
-            d.className = `flex ${s==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${s==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm">${t}</div>`;
-            h.appendChild(d); h.scrollTop = h.scrollHeight;
-        }
+    function addBubble(s, t) {
+        const h = document.getElementById('chat-history');
+        const d = document.createElement('div');
+        d.className = `flex ${s==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
+        d.innerHTML = `<div class="${s==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm">${t}</div>`;
+        h.appendChild(d); 
+        h.scrollTop = h.scrollHeight;
+    }
 
-        function saveHistory(text) {
-            const title = text.length > 20 ? text.substring(0, 20) + "..." : text;
-            chatHistoryData.unshift({ id: Date.now(), title: title });
-            if(chatHistoryData.length > 8) chatHistoryData.pop();
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
+    // --- 4. HISTORY & NAVIGATION ---
+    function saveHistory(text) {
+        const title = text.length > 20 ? text.substring(0, 20) + "..." : text;
+        chatHistoryData.unshift({ id: Date.now(), title: title });
+        if(chatHistoryData.length > 8) chatHistoryData.pop();
+        localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+        renderHistory();
+    }
 
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = chatHistoryData.map(i => `
-                <div class="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition">
-                    <p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p>
-                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-[10px] px-1">✕</button>
-                </div>
-            `).join('');
-        }
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        if(!list) return;
+        list.innerHTML = chatHistoryData.map(i => `
+            <div class="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition">
+                <p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p>
+                <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-[10px] px-1">✕</button>
+            </div>
+        `).join('');
+    }
 
-        function deleteHistory(id) {
-            chatHistoryData = chatHistoryData.filter(i => i.id !== id);
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
+    function deleteHistory(id) {
+        chatHistoryData = chatHistoryData.filter(i => i.id !== id);
+        localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+        renderHistory();
+    }
 
-        // --- 3. UI UTILS ---
-        function toggleSidebar() {
-            const sb = document.getElementById('main-sidebar');
-            const btn = document.getElementById('open-sidebar-btn');
-            sb.classList.toggle('collapsed');
-            if(sb.classList.contains('collapsed')) btn.classList.remove('hidden');
-            else btn.classList.add('hidden');
-        }
+    function toggleSidebar() {
+        const sb = document.getElementById('main-sidebar');
+        const btn = document.getElementById('open-sidebar-btn');
+        sb.classList.toggle('collapsed');
+        if(sb.classList.contains('collapsed')) btn.classList.remove('hidden');
+        else btn.classList.add('hidden');
+    }
 
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            document.getElementById(v + '-view').classList.remove('hidden');
-        }
+    function switchView(v) {
+        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+        const target = document.getElementById(v + '-view');
+        if(target) target.classList.remove('hidden');
+    }
 
-        window.onload = () => { renderHistory(); updateVoiceUI(); };
-    </script>
+    // Ensure voices are loaded by the browser on start
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+    window.onload = () => { renderHistory(); updateVoiceUI(); };
+</script>
 </body>
 </html>
