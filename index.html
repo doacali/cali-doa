@@ -110,81 +110,104 @@
     ];
 
     const SIMPLE_RESPONSES = {
-        presence: [
-            "yeah, I’m right here and ready",
-            "I’m here, what's on your mind?",
-            "right here, always ready for the next move",
-            "ready when you are, go ahead"
-        ],
-        casual: [
-            "everything is still moving exponentially well over here",
-            "doing miraculously, what's going on with you?",
-            "feeling splendid, how can I assist you further?",
-            "things are marvelous on this end, what's up?",
-            "still here and doing great, how can I help?"
-        ],
-        greetings: [
-            "hello again — still doing wonderful, how can I help?",
-            "hey there — I'm here and ready for whatever you need",
-            "hi! always good to hear from you, what's next?",
-            "hello — everything is flowing perfectly, how are you doing?"
-        ],
-        time: [
+    presence: [
+        "yeah, I’m right here and ready",
+        "I’m here, what's on your mind?",
+        "right here, always ready for the next move",
+        "ready when you are, go ahead"
+    ],
+    casual: [
+        "everything is still moving exponentially well over here",
+        "doing miraculously, what's going on with you?",
+        "feeling splendid, how can I assist you further?",
+        "things are marvelous on this end, what's up?",
+        "still here and doing great, how can I help?"
+    ],
+    greetings: [
+        "hello again — still doing wonderful, how can I help?",
+        "hey there — I'm here and ready for whatever you need",
+        "hi! always good to hear from you, what's next?",
+        "hello — everything is flowing perfectly, how are you doing?"
+    ],
+    // UPDATED: Divided by specific time of day
+    time: {
+        morning: [
             "good morning — I hope your morning is starting off beautifully",
-            "good afternoon — I hope your day is moving along smoothly",
-            "good evening — I hope you're having a calm and productive night",
-            "good day — everything is aligned and moving well here"
+            "morning! hope you're feeling refreshed and ready to build",
+            "good morning — the energy is great today, how can I help?"
         ],
-        thanks: [
-            "thank you vehemently, I'm glad I could help",
-            "thank you deeply, I appreciate the kind words",
-            "thank you kindly, have a harmonious day",
-            "much appreciated — I'm here whenever you need me"
+        afternoon: [
+            "good afternoon — I hope your day is moving along smoothly",
+            "afternoon! hope you're having a productive one",
+            "good afternoon — everything is aligned, what's on your mind?"
+        ],
+        evening: [
+            "good evening — I hope you're having a calm and productive night",
+            "good evening — hope you're winding down or finishing strong",
+            "evening! everything is looking harmonious tonight"
+        ],
+        generic: [
+            "good day — everything is aligned and moving well here",
+            "hope you're having a harmonious day so far"
         ]
-    };
+    },
+    thanks: [
+        "thank you vehemently, I'm glad I could help",
+        "thank you deeply, I appreciate the kind words",
+        "thank you kindly, have a harmonious day",
+        "much appreciated — I'm here whenever you need me"
+    ]
+};
 
-    // --- CORE LOGIC ---
+function getLocalResponse(input, isFirst) {
+    const clean = normalize(input);
+    const raw = input.toLowerCase();
 
-    function normalize(str) {
-        return str.toLowerCase().replace(/[^\w\s]/g, "").replace(/\bdoa\b/g, "").trim();
+    if (!SIMPLE_INPUTS.includes(raw) && !SIMPLE_INPUTS.includes(clean)) return null;
+
+    let pool = [];
+
+    // 1. Check for First Message
+    if (isFirst) {
+        pool = FIRST_RESPONSE_VARIANTS;
+    } 
+    // 2. Check for Thanks
+    else if (clean.includes("thank") || clean.includes("appreciate")) {
+        pool = SIMPLE_RESPONSES.thanks;
+    } 
+    // 3. CORRECTED: Check for specific Time of Day
+    else if (clean.includes("morning")) {
+        pool = SIMPLE_RESPONSES.time.morning;
+    } else if (clean.includes("afternoon")) {
+        pool = SIMPLE_RESPONSES.time.afternoon;
+    } else if (clean.includes("evening") || clean.includes("night")) {
+        pool = SIMPLE_RESPONSES.time.evening;
+    } 
+    // 4. Check for Presence
+    else if (clean.includes("there") || clean.includes("around")) {
+        pool = SIMPLE_RESPONSES.presence;
+    } 
+    // 5. Check for Greetings
+    else if (["hi", "hello", "hey", "yo", "sup"].some(greet => clean === greet)) {
+        pool = SIMPLE_RESPONSES.greetings;
+    } 
+    // 6. Fallback
+    else {
+        pool = SIMPLE_RESPONSES.casual;
     }
 
-    function getLocalResponse(input, isFirst) {
-        const clean = normalize(input);
-        const raw = input.toLowerCase();
+    // Anti-repetition Reroll
+    let choice;
+    let attempts = 0;
+    do {
+        choice = pool[Math.floor(Math.random() * pool.length)];
+        attempts++;
+    } while (lastResponses.includes(choice) && attempts < 5);
 
-        // 1. Check if it's even in our whitelist
-        if (!SIMPLE_INPUTS.includes(raw) && !SIMPLE_INPUTS.includes(clean)) return null;
-
-        let pool = [];
-
-        // 2. Logic to choose the right pool
-        if (isFirst) {
-            pool = FIRST_RESPONSE_VARIANTS;
-        } else if (clean.includes("thank") || clean.includes("appreciate")) {
-            pool = SIMPLE_RESPONSES.thanks;
-        } else if (clean.includes("morning") || clean.includes("afternoon") || clean.includes("evening") || raw.includes("night")) {
-            pool = SIMPLE_RESPONSES.time;
-        } else if (clean.includes("there") || clean.includes("around")) {
-            pool = SIMPLE_RESPONSES.presence;
-        } else if (["hi", "hello", "hey", "yo", "sup"].some(greet => clean === greet)) {
-            pool = SIMPLE_RESPONSES.greetings; // Use the "Greeting" pool instead of "Casual"
-        } else {
-            pool = SIMPLE_RESPONSES.casual;
-        }
-
-        // Anti-repetition Reroll
-        let choice;
-        let attempts = 0;
-        do {
-            choice = pool[Math.floor(Math.random() * pool.length)];
-            attempts++;
-        } while (lastResponses.includes(choice) && attempts < 5);
-
-        lastResponses.push(choice);
-        if (lastResponses.length > 5) lastResponses.shift();
-        return choice;
-    }
+    lastResponses.push(choice);
+    if (lastResponses.length > 5) lastResponses.shift();
+    return choice;
+}
 
     async function handleMessage() {
         const input = document.getElementById('user-input');
