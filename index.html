@@ -43,7 +43,11 @@
                 <button id="nav-apps" onclick="switchView('apps')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
                     📱 <span class="text-sm font-semibold">Doa Apps</span>
                 </button>
-                
+
+               <button id="nav-laser" onclick="switchView('laser')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+    🔫 <span class="text-sm font-semibold">Laser Tag Arena</span>
+</button>
+               
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
                 
                 <button id="nav-code" onclick="switchView('code')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
@@ -136,6 +140,14 @@
                 <h2 class="text-4xl font-black italic tracking-tighter mb-8 uppercase">Neural Code Builder</h2>
                 <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold tracking-widest uppercase text-[10px]">
                     Code Workspace Loading...
+                </div>
+            </div>
+
+        <!-- VIEW 6: LASER TAG ARENA -->
+            <div id="laser-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-black text-white">
+                <h2 class="text-4xl font-black italic mb-8 uppercase tracking-tighter text-[#00E676]">LASER TAG ARENA</h2>
+                <div class="bg-gray-900/50 p-8 rounded-[40px] shadow-sm border border-gray-800 min-h-[500px] flex items-center justify-center text-gray-600 font-bold tracking-widest uppercase text-[10px]">
+                    LOADING POV ENGINE...
                 </div>
             </div>
 
@@ -319,7 +331,7 @@
       // --- SIDEBAR NAVIGATION LOGIC ---
     function switchView(viewName) {
         // 1. Hide all views safely
-        const allViews = ['chat', 'calendar', 'apps', 'code', 'app-runner'];
+        const allViews = ['chat', 'calendar', 'apps', 'code', 'app-runner', 'laser'];
         allViews.forEach(v => {
             const el = document.getElementById(v + '-view');
             if (el) el.classList.add('hidden');
@@ -330,13 +342,12 @@
         if (targetView) targetView.classList.remove('hidden');
 
         // 3. Update sidebar active state safely
-        const allNavs = ['chat', 'calendar', 'apps', 'code'];
+        const allNavs = ['chat', 'calendar', 'apps', 'code', 'laser'];
         allNavs.forEach(n => {
             const el = document.getElementById('nav-' + n);
             if (el) el.classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
         });
 
-        // App runner keeps 'apps' highlighted
         const targetNavId = viewName === 'app-runner' ? 'nav-apps' : 'nav-' + viewName;
         const targetNav = document.getElementById(targetNavId);
         if (targetNav) targetNav.classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
