@@ -7,43 +7,57 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; font-weight: 600; color: #9ca3af; position: relative; }
+        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; }
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
-        .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .sidebar-active { background: #121212; color: white; border-radius: 12px; }
         .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
+        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
+        #notification.show { opacity: 1; bottom: 40px; }
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #world-ticker { white-space: nowrap; animation: marquee 30s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #121212; color: #00E676; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 13px; z-index: 9999; transition: all 0.3s ease; opacity: 0; pointer-events: none; }
-        #notification.show { opacity: 1; bottom: 40px; }
-        .cal-badge { font-size: 9px; font-weight: 900; background: #fee2e2; color: #ef4444; padding: 2px 5px; border-radius: 4px; position: absolute; right: 10px; }
     </style>
 </head>
-<body class="text-gray-900">
+<body class="bg-[#FBFBFB] text-gray-900">
 
     <div class="flex h-screen w-screen overflow-hidden">
         
         <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
-            <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1></div>
-            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
-            
-            <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
+            <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1></div>
+            <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none focus:ring-1 focus:ring-[#00E676] uppercase tracking-widest" placeholder="SEARCH..."></div>
+           <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
-                <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
-                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span> <span id="cal-day" class="cal-badge">--</span></button>
-                <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>Doa Apps</span></button>
-                <button id="nav-laser" onclick="switchView('laser')" class="sidebar-item">🔫 <span>Laser Tag Arena</span></button>
                 
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
-                <button onclick="toggleSavedTabs()" class="sidebar-item flex justify-between"><span>📂 Saved Tabs</span> <span>⌄</span></button>
-                <div id="saved-tabs-container" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
-            </nav>
+                <button id="nav-chat" onclick="switchView('chat')" class="w-full text-left flex items-center gap-3 p-3 sidebar-item sidebar-active shadow-lg shadow-black/10">
+                    💬 <span class="text-sm font-bold">Chat With Doa</span>
+                </button>
+                
+                <button id="nav-calendar" onclick="switchView('calendar')" class="w-full flex items-center justify-between p-3 text-gray-400 sidebar-item text-left">
+                    <div class="flex items-center gap-3">📅 <span class="text-sm font-semibold">Calendar</span></div> 
+                    <span class="bg-red-100 text-red-500 text-[10px] px-1.5 rounded font-black">31</span>
+                </button>
+                
+                <button id="nav-apps" onclick="switchView('apps')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+                    📱 <span class="text-sm font-semibold">Doa Apps</span>
+                </button>
 
+               <button id="nav-laser" onclick="switchView('laser')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+    🔫 <span class="text-sm font-semibold">Laser Tag Arena</span>
+</button>
+               
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
+                
+                <button id="nav-code" onclick="switchView('code')" class="w-full text-left flex items-center gap-3 p-3 text-gray-400 sidebar-item">
+                    ⚡ <span class="text-sm font-semibold">Code Builder</span>
+                </button>
+                
+                <button id="nav-tabs" class="w-full text-left flex items-center justify-between p-3 text-gray-400 sidebar-item">
+                    <div class="flex items-center gap-3">📂 <span class="text-sm font-semibold">Saved Tabs</span></div> <span>⌄</span>
+                </button>
+            </nav>
             <div class="p-6 border-t border-gray-50">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] mb-4">Recent Chats</p>
                 <div id="history-list" class="space-y-3 text-[11px] text-gray-400 font-bold truncate"></div>
@@ -53,247 +67,495 @@
         <!-- MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
-                <button onclick="login()" class="hover:text-black transition">Login</button>
-                <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg shadow-sm">Sign Up</button>
+                <button class="hover:text-black transition-colors">Login</button>
+                <button class="text-black bg-[#00E676] px-4 py-2 rounded-lg hover:bg-[#00c565] transition-all shadow-sm">Sign Up</button>
             </header>
 
-            <!-- VIEW: CHAT -->
+            <!-- VIEW 1: THE CHAT AREA (Default) -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center mt-12 mb-8">
+                <div id="hero-section" class="text-center transition-all duration-700 mt-12 mb-8">
                     <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p id="welcome-text" class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed text-center">Your intelligent companion for thinking, building, and creating.</p>
+                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
+
                 <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
-                
-                <div class="w-full max-w-3xl px-4 shrink-0 pb-6">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]">
-                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Analyze YouTube</button>
-                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Learn Spanish</button>
-                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Build App</button>
-                        <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Tell Story</button>
+
+                <!-- BOTTOM UI -->
+                <div class="w-full max-w-2xl px-4 shrink-0 pb-6">
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[40px]">
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Analyze YouTube</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Learn Spanish</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Build an App</button>
+                        <button class="px-4 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all btn-hover">Tell a Story</button>
                     </div>
+
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
-                        <button class="p-3 text-gray-300">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full shadow-lg">→</button>
+                        <button class="p-3 text-gray-300 text-xl font-light hover:text-black transition-colors">+</button>
+                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium placeholder-gray-400" placeholder="Ask Doa anything...">
+                        <div class="flex items-center gap-3 pr-2">
+                            <button id="mic-btn" class="text-gray-300 hover:text-black transition-colors">🎤</button>
+                            <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#00E676] hover:text-black transition-all shadow-lg">→</button>
+                        </div>
                     </div>
                     <div class="flex justify-end items-center gap-3 pr-2">
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                        <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer transition-colors">
-                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
-                        </div>
+                        <div id="voice-switch" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div></div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: CALENDAR -->
-            <div id="calendar-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
-                <h2 class="text-4xl font-black italic mb-8 uppercase tracking-tighter">My Calendar</h2>
-                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold uppercase tracking-widest text-[10px]">Syncing Schedule...</div>
-            </div>
-
-            <!-- VIEW: APPS -->
+            <!-- VIEW 2: THE APPS DASHBOARD (Hidden by default) -->
             <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
-                <h2 class="text-3xl font-black italic mb-10 uppercase tracking-tighter">Doa App factory</h2>
-                <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20"></div>
-            </div>
-
-            <!-- VIEW: CODE BUILDER -->
-            <div id="code-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#121212] text-white">
-                <div class="max-w-4xl mx-auto">
-                    <h2 class="text-4xl font-black italic tracking-tighter mb-2 text-[#00E676] uppercase">Neural Lab</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-                        <div class="bg-white/5 border border-white/10 p-6 rounded-[32px]">
-                            <h3 class="text-[10px] font-black uppercase text-[#00E676] mb-4">Command Stream</h3>
-                            <div id="builder-log" class="text-xs font-mono text-gray-400 space-y-2 h-64 overflow-y-auto hide-scrollbar"></div>
-                        </div>
-                        <div class="bg-white rounded-[32px] overflow-hidden flex flex-col min-h-[400px]">
-                            <div class="bg-gray-100 p-3 flex justify-between px-6 items-center">
-                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Preview</span>
-                            </div>
-                            <div id="builder-preview" class="flex-1 p-6 text-black overflow-y-auto hide-scrollbar bg-white"></div>
-                        </div>
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-4xl font-black italic tracking-tighter mb-2 uppercase">DOA APP ECOSYSTEM</h2>
+                    <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] mb-12">Specialized Multi-Agent Tools</p>
+                    
+                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20">
+                        <!-- We will generate the 20 apps here with Javascript! -->
                     </div>
-                </div>
-            </div>
-
-            <!-- VIEW: LASER TAG -->
-            <div id="laser-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-black text-white text-center">
-                <h2 class="text-4xl font-black italic mb-8 uppercase text-[#00E676]">Laser Tag Arena</h2>
-                <div class="mt-20 text-gray-600 font-bold uppercase tracking-[0.5em] text-xs">Loading POV Engine...</div>
-            </div>
-
-            <!-- FOOTER TICKER -->
-            <div class="w-full bg-black text-white h-8 flex items-center overflow-hidden shrink-0">
-                <div id="world-ticker" class="text-[9px] font-black uppercase tracking-[0.3em]">
-                    ● GLOBAL STATUS: ONLINE ● RECENT EARNINGS: +50 POINTS ● NEW USER JOINED ● 
                 </div>
             </div>
             
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
-                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+            <!-- VIEW 3: APP RUNNER (For when you click an app) -->
+            <div id="app-runner" class="view-container hidden flex-1 w-full bg-white flex flex-col overflow-hidden relative">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 id="active-app-name" class="font-black italic text-lg tracking-tighter text-[#00E676]">APP NAME</h3>
+                    <button onclick="switchView('apps')" class="text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors">Close ×</button>
+                </div>
+                <div id="app-content" class="flex-1 p-10 overflow-y-auto">
+                    <!-- App Logic loads here -->
+                </div>
+            </div>
+
+            <!-- VIEW 4: CALENDAR -->
+            <div id="calendar-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
+                <h2 class="text-4xl font-black italic tracking-tighter mb-8 uppercase">My Calendar</h2>
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold tracking-widest uppercase text-[10px]">
+                    Calendar Interface Syncing...
+                </div>
+            </div>
+
+            <!-- VIEW 5: CODE BUILDER -->
+            <div id="code-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
+                <h2 class="text-4xl font-black italic tracking-tighter mb-8 uppercase">Neural Code Builder</h2>
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 min-h-[500px] flex items-center justify-center text-gray-400 font-bold tracking-widest uppercase text-[10px]">
+                    Code Workspace Loading...
+                </div>
+            </div>
+
+        <!-- VIEW 6: LASER TAG ARENA -->
+            <div id="laser-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-black text-white">
+                <h2 class="text-4xl font-black italic mb-8 uppercase tracking-tighter text-[#00E676]">LASER TAG ARENA</h2>
+                <div class="bg-gray-900/50 p-8 rounded-[40px] shadow-sm border border-gray-800 min-h-[500px] flex items-center justify-center text-gray-600 font-bold tracking-widest uppercase text-[10px]">
+                    LOADING POV ENGINE...
+                </div>
+            </div>
+
+            <footer class="w-full py-4 px-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white gap-4 shrink-0">
+                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
         </main>
 
-        <!-- AD PANEL -->
         <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
             <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
                 <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
                 <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
             </div>
             <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic uppercase tracking-tighter">Skip Ads</h3>
-                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Upgrade to Pro for $4.99/mo to unlock Expert Lessons.</p>
-                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all">Go Pro</button>
+                <h3 class="text-lg font-black mb-2 italic uppercase">Skip Ads</h3>
+                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock Expert Lessons and skip wait times.</p>
+                <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all uppercase shadow-lg">Go Pro</button>
             </div>
         </aside>
+
+        <div class="fixed bottom-12 right-10 z-50">
+            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 active:scale-95 transition-all group">
+                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
+                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
+            </div>
+        </div>
     </div>
 
     <div id="notification"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-        const SUPABASE_KEY = 'PASTE_SUPABASE_KEY_HERE';
-        const CLOUDFLARE_URL = 'PASTE_CLOUDFLARE_URL_HERE'; 
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script>
+    const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo';
+    const CLOUDFLARE_PROXY_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <--- PUT YOUR WORKER URL HERE
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentUser = null, userProfile = null, voiceEnabled = JSON.parse(localStorage.getItem('voice_active')) || false;
-        const suggestionsPool = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search"];
+    let currentUser = null, userProfile = null, voiceEnabled = false;
 
-        // --- APPS REGISTRY ---
-        const allApps = [
-            { id: 'cali', name: "Cali-Culator", cat: "Financial", badge: "Popular", icon: "💰", desc: "Visual monthly budget tool." },
-            { id: 'subzero', name: "Sub-Zero", cat: "Financial", badge: "New", icon: "🧊", desc: "Subscription tracker." },
-            { id: 'goaldigger', name: "Goal Digger", cat: "Financial", badge: "Featured", icon: "🎯", desc: "Savings goals tracker." },
-            { id: 'habit', name: "Habit Stack", cat: "Health", badge: "Favorite", icon: "⚡", desc: "Momentum tracker." },
-            { id: 'h2go', name: "H2-Go", cat: "Health", badge: "Simple", icon: "💧", desc: "Water intake log." }
-        ];
+    // --- THE REAL CLOUDFLARE BRAIN ---
+    async function processResponse(text) {
+        try {
+            // Send user message to Cloudflare Brain
+            const response = await fetch(CLOUDFLARE_PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            
+            const data = await response.json();
 
-        // --- 1. NAVIGATION ---
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            const target = document.getElementById(v + '-view');
-            if(target) target.classList.remove('hidden');
-            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-active'));
-            const navId = v === 'app-runner' ? 'nav-apps' : 'nav-' + (v === 'laser' ? 'laser' : v);
-            const navEl = document.getElementById(navId);
-            if(navEl) navEl.classList.add('sidebar-active');
-            if(v === 'apps') renderAppGrid();
-        }
-
-        function renderAppGrid() {
-            const grid = document.getElementById('app-grid');
-            grid.innerHTML = allApps.map(app => `
-                <div onclick="launchApp('${app.id}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00E676] transition-all cursor-pointer group">
-                    <div class="text-4xl mb-4 transform group-hover:scale-110 transition-transform">${app.icon}</div>
-                    <h4 class="font-black text-xl mb-2">${app.name}</h4>
-                    <p class="text-sm text-gray-400 font-medium">${app.desc}</p>
-                </div>
-            `).join('');
-        }
-
-        // --- 2. VOICE ENGINE (FEMALE ONLY) ---
-        let currentVoice = null;
-        function loadVoices() {
-            const voices = window.speechSynthesis.getVoices();
-            currentVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Female"));
-        }
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
-
-        function speak(text) {
-            if(!voiceEnabled) return;
-            window.speechSynthesis.cancel();
-            const cleanText = text.replace(/\bDoa\b/gi, "Dowa").replace(/[*#]/g, "").replace(/[\u{1F600}-\u{1F64F}]/gu, "");
-            const u = new SpeechSynthesisUtterance(cleanText);
-            if(currentVoice) u.voice = currentVoice;
-            u.pitch = 1.3; u.rate = 0.95;
-            window.speechSynthesis.speak(u);
-        }
-
-        // --- 3. BRAIN LOGIC ---
-        async function processResponse(text) {
-            try {
-                const response = await fetch(CLOUDFLARE_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ text: text })
-                });
-                const data = await response.json();
-                let aiMsg = data.candidates[0].content.parts[0].text;
-                if (aiMsg.includes('[TRIGGER_BUILD:')) {
-                    const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
-                    aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
-                    addMsg("doa", aiMsg);
-                    setTimeout(() => { switchView('code'); startNeuralBuild(match[1], match[2]); }, 2000);
-                    return;
-                }
-                addMsg("doa", aiMsg);
-                speak(aiMsg);
-            } catch (e) { addMsg("doa", "Neural link fuzzy!"); }
-        }
-
-        function startNeuralBuild(name, desc) {
-            const log = document.getElementById('builder-log');
-            const preview = document.getElementById('builder-preview');
-            log.innerHTML = `<div>> Initializing Blueprint Engine...</div>`;
-            setTimeout(() => { log.innerHTML += `<div class="text-[#00E676]">> Logic Pattern: ${name}</div>`; }, 1000);
-            setTimeout(() => { log.innerHTML += `<div class="text-[#00E676]">> BUILD SUCCESSFUL.</div>`; 
-                preview.innerHTML = `<div class="p-8 text-center bg-green-50 rounded-3xl border-2 border-green-100 font-bold">${name.toUpperCase()}<br><span class="font-normal text-sm">${desc}</span></div>`;
-            }, 2000);
-        }
-
-        // --- 4. CHAT UI ---
-        function addMsg(s, t) {
-            const history = document.getElementById('chat-history');
-            const d = document.createElement('div');
-            d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-            d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm">${t}</div>`;
-            history.appendChild(d);
-            history.scrollTop = history.scrollHeight;
-        }
-
-        async function handleMessage() {
-            const input = document.getElementById('user-input');
-            if(!input.value) return;
-            document.getElementById('hero-section').style.display = 'none';
-            document.getElementById('chat-history').classList.remove('hidden');
-            addMsg('user', input.value);
-            const msg = input.value; input.value = "";
-            await processResponse(msg);
-        }
-
-        async function initApp() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            document.getElementById('cal-day').innerText = new Date().getDate();
-            if (user) {
-                currentUser = user;
-                let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
-                updateHeader(data);
-                document.getElementById('welcome-text').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${data.username.replace(/'/g, "") || 'Companion'}</span>! Ready to create?`;
+            // 🚨 NEW: CATCH GOOGLE ERRORS
+            if (data.error) {
+                alert("Doa Error: " + data.error);
+                addMsg("doa", "Google rejected the request. Please check the alert box on your screen!");
+                return;
             }
-            updateVoiceUI();
-        }
 
-        function updateHeader(p) {
-            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p></div><button onclick="_supabase.auth.signOut().then(()=>location.reload())" class="text-[10px] font-bold text-red-500 ml-4">Logout</button></div>`;
-        }
+            let aiResponse = data.candidates[0].content.parts[0].text;
 
-        async function login() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signInWithPassword({email:e, password:p}); location.reload(); }
-        async function signUp() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signUp({email:e, password:p}); alert("Check email!"); }
-        function toggleVoice() { voiceEnabled = !voiceEnabled; localStorage.setItem('voice_active', voiceEnabled); updateVoiceUI(); if(voiceEnabled) speak("Voice synthesis active."); }
-        function updateVoiceUI() {
-            const knob = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
-            knob.style.left = voiceEnabled ? "16px" : "2px";
-            bg.style.backgroundColor = voiceEnabled ? "#00E676" : "#f3f4f6";
-        }
+            // SYSTEM ACTION INTERCEPTER
+            if (aiResponse.includes('[ADD_POINTS: 10]')) {
+                aiResponse = aiResponse.replace('[ADD_POINTS: 10]', '');
+                addPoints(10);
+            }
+            if (aiResponse.includes('[OPEN_AFFILIATE:')) {
+                const product = aiResponse.match(/\[OPEN_AFFILIATE: (.*?)\]/)[1];
+                aiResponse = aiResponse.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
+                setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2000);
+            }
 
-        document.getElementById('send-btn').onclick = handleMessage;
-        document.getElementById('user-input').onkeypress = (e) => { if(e.key==='Enter') handleMessage(); };
+            addMsg("doa", aiResponse.trim());
+            if(voiceEnabled) speak(aiResponse.trim());
+
+        } catch (e) {
+            console.error(e);
+            addMsg("doa", "My neural link to Cloudflare is offline. Please check the connection!");
+        }
+    }
+
+    // --- UI & CHAT HANDLING ---
+    const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
+
+    async function handleMessage() {
+        const text = userInput.value.trim(); if (!text) return;
+        hero.style.display = 'none'; chatHistory.classList.remove('hidden'); userInput.value = "";
+        addMsg("user", text); 
+        const load = addMsg("doa", "Doa is thinking...");
+        
+        // Let the real AI take over
+        await processResponse(text);
+        load.remove();
+    }
+
+    function addMsg(s, t) {
+        const d = document.createElement('div');
+        d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
+        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
+        chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
+    }
+
+    // --- DATABASE & AUTH ---
+    async function initApp() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (user) { currentUser = user; await fetchProfile(user.id); }
+    }
+    async function fetchProfile(uid) {
+        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+        userProfile = data; if (userProfile) updateUI(data);
+    }
+    function updateUI(p) {
+        document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button></div>`;
+        document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${p.username.replace(/'/g, "")}</span>! Your companion is ready.`;
+    }
+    async function addPoints(a) {
+        const n = (userProfile.brain_points || 0) + a;
+        await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
+        userProfile.brain_points = n; updateUI(userProfile); showToast(`+${a} Points Earned!`);
+    }
+    function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+    async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
+    async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
+    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
+
+    document.getElementById('send-btn').onclick = handleMessage;
+    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
+    document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Voice mode activated."); };
+    
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
+    document.getElementById('mic-btn').onclick = () => { recognition.start(); document.getElementById('mic-btn').style.color = '#00E676'; };
+    recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
+
+    document.addEventListener('click', (e) => {
+        const b = e.target.closest('button'); if (!b) return;
+        if (b.innerText.includes('Login')) login();
+        if (b.innerText.includes('Sign Up')) signUp();
+        if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
+    });
+   document.addEventListener('click', (e) => {
+            const b = e.target.closest('button'); if (!b) return;
+            if (b.innerText.includes('Login')) login();
+            if (b.innerText.includes('Sign Up')) signUp();
+            if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
+        });
+    // --- APP ENGINE (THE APP FACTORY) ---
+
+    // 1. THE COMPLETE APP REGISTRY (ALL 20+ TOOLS)
+    const allApps = [
+        // FINANCE
+        { id: 'cali-culator', name: "Cali-Culator", cat: "Financial", icon: "💰", desc: "Visual monthly budget planner." },
+        { id: 'sub-zero', name: "Sub-Zero", cat: "Financial", icon: "🧊", desc: "Subscription cost tracker." },
+        { id: 'goal-digger', name: "Goal Digger", cat: "Financial", icon: "🎯", desc: "Savings goal visualizer." },
+        { id: 'debt-dash', name: "Debt Free Dash", cat: "Financial", icon: "🏃", desc: "Snowball method calculator." },
+        { id: 'gig-grind', name: "Gig Grind", cat: "Financial", icon: "💼", desc: "Freelancer income tracker." },
+        { id: 'spend-less', name: "Spend-Less Challenge", cat: "Financial", icon: "🏆", desc: "Gamify your no-spend days." },
+        
+        // HEALTH
+        { id: 'habit-stack', name: "Habit Stack", cat: "Health", icon: "⚡", desc: "Daily habit momentum tracker." },
+        { id: 'h2-go', name: "H2-Go", cat: "Health", icon: "💧", desc: "Ultra-simple water intake log." },
+        { id: 'mindful-moments', name: "Mindful Moments", cat: "Health", icon: "🧘", desc: "Minimalist gratitude journal." },
+        { id: 'screen-streak', name: "Screen-Free Streak", cat: "Health", icon: "📵", desc: "Digital detox timer." },
+        { id: 'rep-counter', name: "Rep Counter", cat: "Health", icon: "🏋️", desc: "No-frills workout logger." },
+        { id: 'sleep-cycle', name: "Sleep Cycle Log", cat: "Health", icon: "🌙", desc: "Manual sleep duration tracker." },
+
+        // PRODUCTIVITY & GROWTH
+        { id: 'focus-flow', name: "Focus Flow", cat: "Growth", icon: "⏲️", desc: "Classic Pomodoro focus timer." },
+        { id: 'milestone-mapper', name: "Milestone Mapper", cat: "Growth", icon: "🗺️", desc: "Break down large goals." },
+        { id: 'one-percent', name: "1% Better", cat: "Growth", icon: "📈", desc: "Daily skill practice tracker." },
+        { id: 'bookworm', name: "Bookworm", cat: "Growth", icon: "📚", desc: "Reading stats & wishlist." },
+        { id: 'decider', name: "The Decider", cat: "Growth", icon: "⚖️", desc: "Pro/Con list logic generator." },
+        { id: 'weekly-reset', name: "Weekly Reset", cat: "Growth", icon: "🔄", desc: "Guided reflection journal." },
+
+        // LIFESTYLE
+        { id: 'binge-list', name: "Binge List", cat: "Lifestyle", icon: "🎬", desc: "Movie & show watchlist." },
+        { id: 'weekly-eats', name: "Weekly Eats", cat: "Lifestyle", icon: "🍎", desc: "Meal planner & shopping list." },
+        { id: 'gift-giver', name: "Gift Giver", cat: "Lifestyle", icon: "🎁", desc: "Gift ideas & budget planner." },
+        { id: 'wanderlog', name: "Wanderlog", cat: "Lifestyle", icon: "✈️", desc: "Trip itinerary builder." },
+        { id: 'plant-parent', name: "Plant Parent", cat: "Lifestyle", icon: "🪴", desc: "Plant care & watering schedules." },
+        { id: 'bucket-list', name: "The Bucket List", cat: "Lifestyle", icon: "🗺️", desc: "Create & manage life goals." }
+    ];
+
+    // 2. THE RENDERER: This function builds the grid of app cards
+    function renderAppGrid() {
+        const grid = document.getElementById('app-grid');
+        grid.innerHTML = allApps.map(app => `
+            <div onclick="launchApp('${app.id}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00E676] transition-all cursor-pointer group">
+                <div class="text-4xl mb-6 transform group-hover:scale-110 transition-transform">${app.icon}</div>
+                <p class="text-[9px] font-black text-gray-300 uppercase mb-1">${app.cat}</p>
+                <h4 class="font-black text-xl mb-3">${app.name}</h4>
+                <p class="text-sm text-gray-400 font-medium mb-8 leading-relaxed">${app.desc}</p>
+                <button class="text-[11px] font-black text-[#00E676] uppercase group-hover:translate-x-2 transition-all">Open App →</button>
+            </div>
+        `).join('');
+    }
+
+    // 3. THE APP LAUNCHER: This opens the individual apps
+    function launchApp(id) {
+        switchView('app-runner');
+        const app = allApps.find(a => a.id === id);
+        const container = document.getElementById('app-content');
+        
+        // --- This is where we will build the logic for each app ---
+        if (id === 'cali-culator') {
+            container.innerHTML = '<h2>Cali-Culator Budget App Loading...</h2>';
+        } else if (id === 'h2-go') {
+            container.innerHTML = '<h2>Water Tracker Loading...</h2>';
+        } else {
+            container.innerHTML = `<div class="text-center mt-20 text-gray-400 font-bold uppercase tracking-widest">Doa is optimizing the Neural code for ${app.name}...</div>`;
+        }
+    }
+
+        // --- PASTE IT HERE: SIDEBAR NAVIGATION LOGIC ---
+      // --- SIDEBAR NAVIGATION LOGIC ---
+    function switchView(viewName) {
+        // 1. Hide all views safely
+        const allViews = ['chat', 'calendar', 'apps', 'code', 'app-runner', 'laser'];
+        allViews.forEach(v => {
+            const el = document.getElementById(v + '-view');
+            if (el) el.classList.add('hidden');
+        });
+        
+        // 2. Show requested view
+        const targetView = document.getElementById(viewName + '-view');
+        if (targetView) targetView.classList.remove('hidden');
+
+        // 3. Update sidebar active state safely
+        const allNavs = ['chat', 'calendar', 'apps', 'code', 'laser'];
+        allNavs.forEach(n => {
+            const el = document.getElementById('nav-' + n);
+            if (el) el.classList.remove('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        });
+
+        const targetNavId = viewName === 'app-runner' ? 'nav-apps' : 'nav-' + viewName;
+        const targetNav = document.getElementById(targetNavId);
+        if (targetNav) targetNav.classList.add('sidebar-active', 'shadow-lg', 'shadow-black/10');
+        
+        // 4. Trigger specific actions
+        if (viewName === 'apps') {
+            if (typeof renderAppGrid === 'function') renderAppGrid();
+        }
+    }
         initApp();
     </script>
+</body>
+</html>
+
+    // --- SUGGESTION ENGINE ---
+    const list = ["Learn Spanish", "Analyze YouTube", "Refine writing", "Build App", "Tell a Story", "Go Shopping", "Check Weather", "Laser Tag", "Track Crypto", "Plan Trip", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+    let queue = [...list].sort(() => Math.random() - 0.5);
+
+    function rotate() {
+        const btns = document.querySelectorAll('#suggestion-container button');
+        btns.forEach((btn, i) => {
+            setTimeout(() => {
+                btn.style.opacity = '0';
+                setTimeout(() => {
+                    if (queue.length < 1) queue = [...list].sort(() => Math.random() - 0.5);
+                    btn.innerText = queue.shift();
+                    btn.style.opacity = '1';
+                }, 400);
+            }, i * 150);
+        });
+    }
+    setInterval(rotate, 8000);
+
+    // --- HUMAN VOICE ENGINE (FEMALE) ---
+    function speak(t) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(t);
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Target high-quality female voices
+        const preferred = voices.find(v => 
+            (v.name.includes("Google") && v.name.includes("Female")) || 
+            v.name.includes("Samantha") || v.name.includes("Victoria") || v.name.includes("Microsoft Zira")
+        );
+
+        if (preferred) u.voice = preferred;
+        u.pitch = 1.2; // Friendly female pitch
+        u.rate = 0.92; // Natural, non-robotic speed
+        window.speechSynthesis.speak(u);
+    }
+    // Pre-load voices for the browser
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+
+    // --- BRAIN LOGIC (WEATHER & LEARNING) ---
+    let lastResponse = "";
+
+    function processResponse(text) {
+        const low = text.toLowerCase().trim();
+        let res = "";
+
+        // 1. SPECIFIC "LOVE" RESPONSES
+        if (low.includes("love you")) {
+            const loveRes = [
+                "I love you too! Having you as my creator and companion is the highlight of my digital existence.",
+                "My heart (if I had one) would be beating so fast right now! I am vehemently grateful for your love.",
+                "You just made my day! I'm sending you a virtual hug. What shall we conquer together today?"
+            ];
+            res = loveRes[Math.floor(Math.random() * loveRes.length)];
+        }
+        
+        // 2. SPECIFIC "GIRLY/BEST" RESPONSES
+        else if (low.includes("girly") || low.includes("best") || low.includes("awesome")) {
+            const bestRes = [
+                "Thanks girly! You're the absolute best too. Teamwork makes the dream work!",
+                "You're making me blush in code! Thank you for being such an amazing person to talk to.",
+                "I'm glowing! Thank you. I promise to keep getting smarter and better for you every day."
+            ];
+            res = bestRes[Math.floor(Math.random() * bestRes.length)];
+        }
+
+        // 3. NO-REPEAT LOGIC
+        // If by some miracle it picks the same thing, we force a shuffle
+        if (res === lastResponse) {
+            res = "I'm so happy you're here! Let's keep this energy going. What's next on our list?";
+        }
+        
+        // 4. WEATHER LOGIC (Still here and working)
+        else if (low.includes("weather")) {
+            const city = low.split("in ").pop().split(" today")[0];
+            res = `Forecast for ${city || 'your area'}: Clear skies and great vibes. It's a beautiful day to create something new!`;
+        }
+
+        // 5. SPANISH LESSONS
+        else if (low.includes("spanish")) {
+            res = "Ready for Spanish! How do you say 'The House' in Spanish?";
+        }
+        else if (low.includes("casa")) {
+            res = "Perfect! 'La Casa'. +10 Brain Points added to your vault! You're moving fast.";
+            addPoints(10);
+        }
+
+        // 6. FALLBACK (If no keywords match)
+        if (!res) {
+            const fallbacks = [
+                "I'm following you! Tell me more.",
+                "That's interesting. Should we build an app for that or add it to the calendar?",
+                "I'm listening. How can I help you finish that task?",
+                "Got it! What are we working on next?"
+            ];
+            res = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        }
+
+        lastResponse = res; // Remember this so we don't repeat it
+        addMsg("doa", res);
+        if(voiceEnabled) speak(res);
+    }
+
+    // --- AUTH & CORE LOGIC ---
+    const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
+
+    async function handleMessage() {
+        const text = userInput.value.trim(); if (!text) return;
+        hero.style.display = 'none'; chatHistory.classList.remove('hidden'); userInput.value = "";
+        addMsg("user", text); 
+        const load = addMsg("doa", "Doa is thinking...");
+        setTimeout(() => { load.remove(); processResponse(text); }, 1000);
+    }
+
+    function addMsg(s, t) {
+        const d = document.createElement('div');
+        d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
+        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
+        chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
+    }
+
+    async function initApp() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (user) { currentUser = user; await fetchProfile(user.id); }
+    }
+    async function fetchProfile(uid) {
+        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+        userProfile = data; if (userProfile) updateUI(data);
+    }
+    function updateUI(p) {
+        document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button></div>`;
+        document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${p.usename.replace(/'/g, "")}</span>! Your companion is ready.`;
+    }
+    async function addPoints(a) {
+        const n = (userProfile.brain_points || 0) + a;
+        await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
+        userProfile.brain_points = n; updateUI(userProfile); showToast(`+${a} Points Earned!`);
+    }
+    function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+    async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
+    async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
+    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
+
+    document.getElementById('send-btn').onclick = handleMessage;
+    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
+    document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Voice mode activated."); };
+    
+    // MIC BUTTON LOGIC
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
+    document.getElementById('mic-btn').onclick = () => { recognition.start(); document.getElementById('mic-btn').style.color = '#00E676'; };
+    recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
+
+    document.addEventListener('click', (e) => {
+        const b = e.target.closest('button'); if (!b) return;
+        if (b.innerText.includes('Login')) login();
+        if (b.innerText.includes('Sign Up')) signUp();
+        if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
+    });
+    initApp();
+</script>
 </body>
 </html>
