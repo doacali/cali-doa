@@ -32,6 +32,27 @@
         /* MIC LISTENING PULSE */
         #mic-btn.listening { color: #00E676; animation: micPulse 1s ease-in-out infinite; }
         @keyframes micPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+
+        /* ── CHAT LAYOUT (ChatGPT-style) ── */
+        #chat-view { display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Hero: animated slide-up on first message */
+        #hero-section { transition: all 0.5s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0; }
+        #hero-section.chat-started { margin-top: 12px !important; margin-bottom: 4px !important; }
+        #hero-section.chat-started h1 { font-size: 1.4rem !important; line-height: 1.2 !important; }
+        #hero-section.chat-started #welcome-text { display: none; }
+
+        /* Chat history: flex-grow fills remaining height, self-scrolls */
+        #chat-history { flex: 1 1 auto; min-height: 0; overflow-y: auto; scroll-behavior: smooth; }
+
+        /* Thin scrollbar that shrinks as content grows */
+        #chat-history::-webkit-scrollbar { width: 3px; }
+        #chat-history::-webkit-scrollbar-track { background: transparent; }
+        #chat-history::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+        #chat-history::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* Input area: never overlaps ticker */
+        #chat-input-wrap { flex-shrink: 0; padding-bottom: 52px; }
     </style>
 </head>
 <body class="text-gray-900">
@@ -76,16 +97,20 @@
                 <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
             </header>
 
-            <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
-                <div id="hero-section" class="text-center mt-12 mb-8">
+            <div id="chat-view" class="view-container flex-1 w-full flex flex-col overflow-hidden">
+
+                <!-- HERO: slides up and compresses when first message is sent -->
+                <div id="hero-section" class="text-center mt-16 mb-10 px-10">
                     <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
-                
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
-                
-                <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
+
+                <!-- CHAT HISTORY: grows upward, scrollbar thins as content fills -->
+                <div id="chat-history" class="w-full max-w-3xl mx-auto px-6 space-y-4 py-4 hidden"></div>
+
+                <!-- INPUT BAR: stays pinned at bottom, never clips under ticker -->
+                <div id="chat-input-wrap" class="w-full max-w-3xl mx-auto px-4 mt-auto">
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-3 min-h-[36px]"></div>
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center gap-1">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
@@ -97,7 +122,7 @@
                         </button>
                         <button id="send-btn" onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
                     </div>
-                    <div class="flex justify-end items-center gap-3 pr-2 mt-4">
+                    <div class="flex justify-end items-center gap-3 pr-2 mt-3 mb-1">
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
                         <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
                             <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
@@ -112,7 +137,31 @@
             <div id="editor-view" class="view-container hidden flex-1 p-10 overflow-y-auto"></div>
             <div id="code-view" class="view-container hidden flex-1 p-10 overflow-y-auto"></div>
 
-            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-12">
+            <!-- VIEW: LASER TAG ARENA -->
+            <div id="laser-view" class="view-container hidden flex-1 w-full h-full bg-black relative overflow-hidden">
+                <!-- The 3D Rendering Screen -->
+                <canvas id="laser-canvas" class="w-full h-full block"></canvas>
+
+                <!-- UI Overlay -->
+                <div class="absolute top-10 left-10 text-[#00E676] font-black italic uppercase tracking-tighter pointer-events-none">
+                    <p class="text-2xl">Arena Beta</p>
+                    <p class="text-sm mt-1">Tags: <span id="tag-count">0</span></p>
+                    <p class="text-sm">World Rank: #<span id="world-rank">--</span></p>
+                    <p class="text-[10px] opacity-40 mt-1">WASD to move &bull; Click to shoot</p>
+                </div>
+
+                <!-- Crosshair -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-6 h-6 border-2 border-[#00E676]/40 rounded-full flex items-center justify-center">
+                        <div class="w-1 h-1 bg-[#00E676] rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- Toast -->
+                <div id="laser-toast" class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#00E676] text-black text-xs font-black uppercase tracking-widest px-5 py-2 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+            </div>
+
+            <footer class="w-full py-2 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20">
                 <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
@@ -233,7 +282,7 @@
                 chatHistoryData.unshift({ id: currentChatId, title: text.substring(0, 20) + "...", messages: [] });
             }
 
-            document.getElementById('hero-section').style.display = 'none';
+            document.getElementById('hero-section').classList.add('chat-started');
             const h = document.getElementById('chat-history');
             h.classList.remove('hidden');
             
@@ -332,7 +381,7 @@
             const chat = chatHistoryData.find(i => i.id === id);
             if(!chat) return;
             currentChatId = id;
-            document.getElementById('hero-section').style.display = 'none';
+            document.getElementById('hero-section').classList.add('chat-started');
             const h = document.getElementById('chat-history');
             h.classList.remove('hidden');
             h.innerHTML = "";
@@ -360,7 +409,7 @@
             currentChatId = null;
             document.getElementById('chat-history').innerHTML = "";
             document.getElementById('chat-history').classList.add('hidden');
-            document.getElementById('hero-section').style.display = 'block';
+            document.getElementById('hero-section').classList.remove('chat-started');
             renderHistory();
         }
 
@@ -371,9 +420,281 @@
         }
 
         function switchView(v) {
+            // Stop/start laser game on tab change
+            gameActive = (v === 'laser');
             document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
             document.getElementById(v + '-view').classList.remove('hidden');
+            if (v === 'laser') initLaserTag();
         }
+
+
+        // ========================================================
+        // --- LASER TAG ENGINE (Phase 9 + 10) ---
+        // ========================================================
+        const TILE_SIZE = 64;
+        const MAP = [
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,1],
+            [1,0,1,0,0,0,0,1,0,1],
+            [1,0,1,0,0,0,0,1,0,1],
+            [1,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,1,1,0,0,0,1],
+            [1,0,0,0,1,1,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        let player = { x: 150, y: 150, dir: 0, speed: 0 };
+        let gameActive = false;
+        let keys = {};
+        let bots = [
+            { x: 400, y: 400, alive: true, id: 1 },
+            { x: 200, y: 500, alive: true, id: 2 },
+            { x: 500, y: 200, alive: true, id: 3 }
+        ];
+        let playerStats = { tags: 0, rank: 0 };
+        let laserBeamActive = false;
+        let laserBeamTimer = null;
+
+        function initLaserTag() {
+            const canvas = document.getElementById('laser-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            // Reset bots each session
+            bots = [
+                { x: 400, y: 400, alive: true, id: 1 },
+                { x: 200, y: 500, alive: true, id: 2 },
+                { x: 500, y: 200, alive: true, id: 3 }
+            ];
+
+            function resize() {
+                canvas.width = canvas.clientWidth || canvas.offsetWidth;
+                canvas.height = canvas.clientHeight || canvas.offsetHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            function gameLoop() {
+                if (!gameActive) return;
+                updatePlayer();
+                drawArena(ctx, canvas);
+                requestAnimationFrame(gameLoop);
+            }
+            gameLoop();
+        }
+
+        function updatePlayer() {
+            // Rotation with A/D
+            if (keys['a'] || keys['ArrowLeft'])  player.dir -= 0.06;
+            if (keys['d'] || keys['ArrowRight']) player.dir += 0.06;
+
+            // Forward/back speed with W/S
+            let spd = 0;
+            if (keys['w'] || keys['ArrowUp'])   spd = 3.5;
+            if (keys['s'] || keys['ArrowDown']) spd = -3.5;
+
+            let nextX = player.x + Math.cos(player.dir) * spd;
+            let nextY = player.y + Math.sin(player.dir) * spd;
+
+            // Collision check with padding
+            const pad = 10;
+            const mapX = Math.floor(nextX / TILE_SIZE);
+            const mapY = Math.floor(nextY / TILE_SIZE);
+            if (mapY >= 0 && mapY < MAP.length && mapX >= 0 && mapX < MAP[0].length) {
+                if (MAP[mapY][mapX] === 0) {
+                    player.x = nextX;
+                    player.y = nextY;
+                }
+            }
+
+            const posEl = document.getElementById('player-pos');
+            if (posEl) posEl.innerText = `X: ${Math.round(player.x)} Y: ${Math.round(player.y)}`;
+        }
+
+        function drawArena(ctx, canvas) {
+            const w = canvas.width;
+            const h = canvas.height;
+            if (!w || !h) return;
+
+            // Floor & Ceiling
+            ctx.fillStyle = "#030303"; ctx.fillRect(0, 0, w, h/2);
+            ctx.fillStyle = "#080808"; ctx.fillRect(0, h/2, w, h/2);
+
+            // Floor grid shimmer
+            ctx.strokeStyle = "rgba(0,230,118,0.03)";
+            ctx.lineWidth = 1;
+            for (let y = h/2; y < h; y += 20) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            }
+
+            // Raycasting
+            const FOV = Math.PI / 3;
+            const STEP = FOV / w;
+
+            for (let i = 0; i < w; i++) {
+                let rayAngle = (player.dir - FOV/2) + (i * STEP);
+                let distance = 0;
+                let hit = false;
+
+                while (!hit && distance < 900) {
+                    distance += 2;
+                    let tx = player.x + Math.cos(rayAngle) * distance;
+                    let ty = player.y + Math.sin(rayAngle) * distance;
+                    let mx = Math.floor(tx / TILE_SIZE);
+                    let my = Math.floor(ty / TILE_SIZE);
+                    if (my >= 0 && my < MAP.length && mx >= 0 && mx < MAP[0].length) {
+                        if (MAP[my][mx] === 1) hit = true;
+                    } else {
+                        hit = true;
+                    }
+                }
+
+                // Fisheye fix
+                let correctedDist = distance * Math.cos(rayAngle - player.dir);
+                let wallHeight = Math.min((TILE_SIZE * h) / correctedDist, h);
+
+                // Wall color: green-tinted with distance shading
+                let brightness = Math.max(0, Math.min(255, 255 - (distance / 3.5)));
+                ctx.fillStyle = `rgb(0, ${Math.floor(brightness * 0.85)}, ${Math.floor(brightness * 0.35)})`;
+                ctx.fillRect(i, (h - wallHeight) / 2, 1, wallHeight);
+            }
+
+            // Draw bots as sprites
+            bots.forEach(bot => {
+                if (!bot.alive) return;
+                let dx = bot.x - player.x;
+                let dy = bot.y - player.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                let angleToBot = Math.atan2(dy, dx);
+                let angleDiff = angleToBot - player.dir;
+                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                while (angleDiff > Math.PI)  angleDiff -= Math.PI * 2;
+
+                const FOV = Math.PI / 3;
+                if (Math.abs(angleDiff) < FOV / 2 && dist < 700) {
+                    let screenX = w/2 + (angleDiff / (FOV/2)) * (w/2);
+                    let spriteH = Math.min((TILE_SIZE * h) / dist, h * 0.8);
+                    let spriteW = spriteH * 0.5;
+                    // Bot body
+                    ctx.fillStyle = "#ff4444";
+                    ctx.fillRect(screenX - spriteW/2, (h - spriteH)/2, spriteW, spriteH * 0.7);
+                    // Bot head
+                    ctx.fillStyle = "#ff8888";
+                    ctx.beginPath();
+                    ctx.arc(screenX, (h - spriteH)/2, spriteW * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            // Laser beam flash
+            if (laserBeamActive) {
+                ctx.strokeStyle = "#00E676";
+                ctx.lineWidth = 3;
+                ctx.shadowColor = "#00E676";
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.moveTo(w/2, h);
+                ctx.lineTo(w/2, h/2);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // --- SHOOTING ---
+        function fireLaser() {
+            if (!gameActive) return;
+
+            // Flash beam
+            laserBeamActive = true;
+            clearTimeout(laserBeamTimer);
+            laserBeamTimer = setTimeout(() => { laserBeamActive = false; }, 120);
+
+            // Hit detection
+            bots.forEach(bot => {
+                if (!bot.alive) return;
+                let dx = bot.x - player.x;
+                let dy = bot.y - player.y;
+                let angleToBot = Math.atan2(dy, dx);
+                let diff = player.dir - angleToBot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI)  diff -= Math.PI * 2;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (Math.abs(diff) < 0.12 && dist < 450) {
+                    tagBot(bot);
+                }
+            });
+        }
+
+        async function tagBot(bot) {
+            bot.alive = false;
+            playerStats.tags++;
+            updateLaserUI();
+            showLaserToast("Target Tagged! +10 Points 🔫");
+            speak("miraculous shot — ranking updated", true);
+
+            // Respawn bot after 5s
+            setTimeout(() => {
+                bot.alive = true;
+                bot.x = 100 + Math.random() * 450;
+                bot.y = 100 + Math.random() * 450;
+            }, 5000);
+
+            await syncScore();
+        }
+
+        async function syncScore() {
+            // Supabase sync (when userProfile is connected)
+            if (typeof userProfile === 'undefined' || !userProfile) {
+                playerStats.rank = "Local";
+                updateLaserUI();
+                return;
+            }
+            try {
+                await _supabase.from('leaderboard').upsert({
+                    user_id: userProfile.id,
+                    total_tags: playerStats.tags
+                });
+                const { count, error } = await _supabase
+                    .from('leaderboard')
+                    .select('*', { count: 'exact', head: true })
+                    .gt('total_tags', playerStats.tags);
+                if (!error) {
+                    playerStats.rank = count + 1;
+                    updateLaserUI();
+                }
+            } catch(e) {
+                console.log('Supabase sync skipped:', e.message);
+            }
+        }
+
+        function updateLaserUI() {
+            const tc = document.getElementById('tag-count');
+            const wr = document.getElementById('world-rank');
+            if (tc) tc.innerText = playerStats.tags;
+            if (wr) wr.innerText = playerStats.rank || '--';
+        }
+
+        function showLaserToast(msg) {
+            const toast = document.getElementById('laser-toast');
+            if (!toast) return;
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+        }
+
+        // --- CONTROLS ---
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ' && gameActive) { e.preventDefault(); fireLaser(); }
+        });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        window.addEventListener('mousedown', (e) => {
+            if (!gameActive) return;
+            const canvas = document.getElementById('laser-canvas');
+            if (canvas && canvas.contains(e.target)) fireLaser();
+        });
 
         window.onload = () => { renderHistory(); updateVoiceUI(); };
         document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleMessage(); });
