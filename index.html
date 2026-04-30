@@ -35,14 +35,12 @@
 </head>
 <body class="text-gray-900">
 
-    <!-- RE-OPEN SIDEBAR TRIGGER -->
     <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-110 transition">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- 1. SIDEBAR -->
         <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-[60] relative">
             <div class="p-6 flex items-center justify-between">
                 <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="startNewChat()">DOA CALI</h1>
@@ -51,56 +49,39 @@
             
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
-                <button id="nav-chat" onclick="startNewChat(); switchView('chat')" class="sidebar-item sidebar-active">💬 <span>New Chat</span></button>
-                <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span></button>
+                <button id="nav-chat" onclick="startNewChat()" class="sidebar-item sidebar-active">💬 <span>New Chat</span></button>
                 <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>Doa Apps</span></button>
-                <button id="nav-laser" onclick="switchView('laser')" class="sidebar-item">🔫 <span>Laser Tag</span></button>
-                
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-8 mb-2">Workspace</p>
-                <button id="nav-code" onclick="switchView('code')" class="sidebar-item">⚡ <span>Code Builder</span></button>
-                <button id="nav-editor" onclick="switchView('editor')" class="sidebar-item">🎨 <span>Editor App</span></button>
-                <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
                 
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Recent Chats</p>
-                <div id="history-list" class="space-y-1 px-1">
-                    <!-- History injected here -->
-                </div>
+                <div id="history-list" class="space-y-1 px-1"></div>
             </nav>
         </aside>
 
-        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-            
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
                 <div id="auth-zone" class="flex gap-4">
-                    <button onclick="login()" class="hover:text-black transition">Login</button>
-                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold transition hover:bg-[#00c565]">Sign Up</button>
+                    <button class="hover:text-black transition">Login</button>
+                    <button class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold uppercase">Sign Up</button>
                 </div>
             </header>
 
-            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
                     <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto text-center">Your intelligent companion for thinking, building, and creating.</p>
+                    <p class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Think, build, and create with your Neural OS.</p>
                 </div>
                 
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden">
-                    <!-- Bubbles injected here -->
-                </div>
+                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
                 
                 <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
-                    
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
+                    <div class="bg-white border border-gray-200 shadow-sm rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors flex items-center justify-center">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </button>
                     </div>
 
-                    <!-- VOICE TOGGLE SWITCH -->
                     <div class="flex justify-end items-center gap-3 pr-2 mt-4">
                         <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
                         <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
@@ -110,223 +91,52 @@
                 </div>
             </div>
 
-            <!-- VIEW: APPS (Placeholder) -->
-            <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
-                <div class="max-w-6xl mx-auto">
-                    <h2 class="text-4xl font-black italic mb-2 uppercase">App Factory</h2>
-                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32">
-                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                            <div class="text-3xl mb-4">🎨</div>
-                            <h3 class="font-bold text-lg">Image Gen</h3>
-                            <p class="text-gray-400 text-sm">Create visuals from text.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 mb-10">
-                <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
-                <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
-            </footer>
-
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● doaa Voice Engine Active ●</div></div>
+            <div id="ticker-wrap"><div id="ticker-content">Neural Vault Active ● My name is doaa ● Miracles are happening ● Storage Persistence Online ●</div></div>
         </main>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- 1. CONFIGURATION ---
         const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
         let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
         let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-        let voices = [];
+        let currentChatId = null; 
         let selectedVoice = null;
+        let voices = [];
 
-        // --- 1. THE "doaa" PREMIUM VOICE ENGINE (LOCKED) ---
+        // --- 2. PREMIUM VOICE ENGINE (doaa) ---
         function loadVoices() {
             voices = window.speechSynthesis.getVoices();
-            selectedVoice = pickFemaleVoice(voices);
-        }
-
-        function pickFemaleVoice(voiceList) {
-            const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Allison", "Ava", "Susan", "Zoe", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female", "Google UK English Female"];
-            for (const name of femaleNames) {
-                const match = voiceList.find(v => v.name.includes(name));
-                if (match) return match;
+            const priority = ["Samantha","Aria","Zira","Jenny","Google US English Female","Female"];
+            for (const n of priority) {
+                const match = voices.find(v => v.name.includes(n));
+                if (match) { selectedVoice = match; break; }
             }
-            const femaleKeywords = ["female", "woman", "girl", "fiona", "aria", "zira", "jenny", "ava"];
-            const keywordMatch = voiceList.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
-            if (keywordMatch) return keywordMatch;
-            return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0] || null;
         }
-
         window.speechSynthesis.onvoiceschanged = loadVoices;
         loadVoices();
 
         function speak(text) {
             if (!voiceActive) return;
             window.speechSynthesis.cancel();
-            // Phonetic fix & Clean-up
-            const cleanText = text.replace(/\bDoa\b/gi, "doaa").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+            const cleanText = text.replace(/\bDoa\b/gi, "doaa").replace(/\bDougha\b/gi, "doaa").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
-            u.pitch = 1.2; 
-            u.rate = 0.92; 
+            u.pitch = 1.2; u.rate = 0.92;
             window.speechSynthesis.speak(u);
         }
 
-        // --- 2. LOCAL RESPONSE SYSTEM (TIME AWARE) ---
-        const SIMPLE_INPUTS = ["hi", "hey", "hello", "yo", "sup", "morning", "afternoon", "evening", "night", "you there", "whats up", "how are you", "thanks", "thank you", "appreciate"];
-        const TIME_STATES = {
-            morning: ["smooth start", "calm and steady", "everything is aligned"],
-            afternoon: ["steady", "everything’s moving well", "on track"],
-            evening: ["winding down clean", "everything’s in place", "settled"],
-            night: ["quiet and clear", "everything is calm"]
-        };
-
+        // --- 3. LOCAL RESPONSE ENGINE (FREE) ---
         function getLocalResponse(input, isFirst) {
-            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/gi, '').trim();
-            if (!SIMPLE_INPUTS.some(s => clean.includes(s))) return null;
-
-            const hour = new Date().getHours();
-            const timeTone = (hour >= 5 && hour < 12) ? "morning" : (hour >= 12 && hour < 17) ? "afternoon" : (hour >= 17 && hour < 22) ? "evening" : "night";
-
-            // PRIORITY 1: Strictly mirror user's time-specific greeting
+            const clean = input.toLowerCase().replace(/[^\w\s]/gi, '').trim();
             if (clean.includes("morning")) return "Good morning! Miracles are happening, how are you?";
-            if (clean.includes("afternoon")) return "Good afternoon! Exquisitely aligned today, how are things?";
-            if (clean.includes("evening")) return "Good evening! Everything is good, how are you or how can I help?";
-            if (clean.includes("night")) return "Good night! Rest well so we can build more tomorrow.";
-
-            // PRIORITY 2: First interaction of the session
-            if (isFirst) {
-                const state = TIME_STATES[timeTone][Math.floor(Math.random() * TIME_STATES[timeTone].length)];
-                const greeting = (timeTone === "night") ? "Evening" : `Good ${timeTone}`;
-                return `${greeting} — ${state}, how are you or how can I assist?`;
-            }
-
-            // PRIORITY 3: Functional intents
-            if (clean.includes("thank")) return "Thank you vehemently, have a harmonious day!";
-            if (clean.includes("there")) return "I’m right here, ready when you are.";
-
-            return "Everything is exponentially good, what's on your mind?";
+            if (isFirst && (clean === "hello" || clean === "hi" || clean === "hey")) return "Hi — everything is exponentially good, how are you or how can I help?";
+            if (clean.includes("thank")) return "You're very welcome, have a harmonious day!";
+            return null;
         }
 
-        // --- 3. MAIN ENGINE ---
+        // --- 4. MAIN CHAT & PERSISTENCE ---
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
             if(!text) return;
-
-            document.getElementById('hero-section').style.display = 'none';
-            const historyDiv = document.getElementById('chat-history');
-            historyDiv.classList.remove('hidden');
-            
-            addBubble('user', text);
-            input.value = "";
-
-            const isFirst = historyDiv.children.length <= 1;
-            const localAnswer = getLocalResponse(text, isFirst);
-
-            if (localAnswer) {
-                setTimeout(() => {
-                    addBubble('doa', localAnswer);
-                    speak(localAnswer);
-                    saveHistory(text);
-                }, 500);
-                return;
-            }
-
-            try {
-                const res = await fetch(CLOUDFLARE_URL, { 
-                    method:'POST', 
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text}) 
-                });
-                const data = await res.json();
-                const aiText = data.candidates[0].content.parts[0].text;
-                addBubble('doa', aiText);
-                speak(aiText);
-                saveHistory(text);
-            } catch(e) {
-                addBubble('doa', "Neural link fuzzy! Check your connection.");
-            }
-        }
-
-        function addBubble(s, t) {
-            const h = document.getElementById('chat-history');
-            const d = document.createElement('div');
-            d.className = `flex ${s==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${s==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${t}</div>`;
-            h.appendChild(d); h.scrollTop = h.scrollHeight;
-        }
-
-        function saveHistory(text) {
-            const title = text.length > 20 ? text.substring(0, 20) + "..." : text;
-            chatHistoryData.unshift({ id: Date.now(), title: title });
-            if(chatHistoryData.length > 10) chatHistoryData.pop();
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            if(!list) return;
-            list.innerHTML = chatHistoryData.map(i => `
-                <div class="flex justify-between group p-2 rounded-lg hover:bg-gray-50 transition">
-                    <p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p>
-                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs px-1">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function deleteHistory(id) {
-            chatHistoryData = chatHistoryData.filter(i => i.id !== id);
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
-
-        function startNewChat() {
-            document.getElementById('chat-history').innerHTML = "";
-            document.getElementById('chat-history').classList.add('hidden');
-            document.getElementById('hero-section').style.display = 'block';
-        }
-
-        function toggleSidebar() {
-            document.getElementById('main-sidebar').classList.toggle('collapsed');
-            document.getElementById('open-sidebar-btn').classList.toggle('hidden');
-        }
-
-        function toggleVoice() {
-            voiceActive = !voiceActive;
-            localStorage.setItem('voice_active', voiceActive);
-            selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
-            const knob = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
-            if(knob) knob.style.left = voiceActive ? "16px" : "2px";
-            if(bg) bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-            if(voiceActive) speak("Live voice active. My name is doaa.");
-        }
-
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            const target = document.getElementById(v + '-view');
-            if(target) target.classList.remove('hidden');
-        }
-
-        function login() { console.log("Login clicked"); }
-        function signUp() { console.log("Sign up clicked"); }
-
-        window.onload = () => { 
-            renderHistory(); 
-            loadVoices();
-            const knob = document.getElementById('voice-knob');
-            const bg = document.getElementById('voice-switch');
-            if(knob) knob.style.left = voiceActive ? "16px" : "2px";
-            if(bg) bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-        };
-
-        document.getElementById('user-input').addEventListener('keypress', (e) => { 
-            if(e.key === 'Enter') handleMessage(); 
-        });
-    </script>
-</body>
-</html>
