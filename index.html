@@ -26,7 +26,7 @@
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- 1. SIDEBAR -->
+        <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0">
             <div class="p-6"><h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1></div>
             <div class="px-4 mb-4"><input class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 pl-4 text-[11px] font-bold outline-none uppercase tracking-widest" placeholder="SEARCH..."></div>
@@ -50,10 +50,8 @@
             </div>
         </aside>
 
-        <!-- 2. MAIN WORKSPACE -->
+        <!-- MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-            
-            <!-- GLOBAL HEADER -->
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
                 <button onclick="login()" class="hover:text-black transition">Login</button>
                 <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg shadow-sm">Sign Up</button>
@@ -74,7 +72,7 @@
                         <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Build App</button>
                         <button class="px-5 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold shadow-sm hover:border-[#00E676] transition-all">Tell Story</button>
                     </div>
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2">
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center mb-2 focus-within:border-[#00E676] transition-colors">
                         <button class="p-3 text-gray-300">+</button>
                         <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
                         <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full shadow-lg">→</button>
@@ -128,7 +126,7 @@
             <!-- FOOTER TICKER -->
             <div class="w-full bg-black text-white h-8 flex items-center overflow-hidden shrink-0">
                 <div id="world-ticker" class="text-[9px] font-black uppercase tracking-[0.3em]">
-                    ● GLOBAL STATUS: ONLINE ● RECENT EARNINGS: +50 POINTS ● NEW USER JOINED IN SACRAMENTO ● 
+                    ● GLOBAL STATUS: ONLINE ● RECENT EARNINGS: +50 POINTS ● NEW USER JOINED ● 
                 </div>
             </div>
             
@@ -138,10 +136,10 @@
             </footer>
         </main>
 
-        <!-- 3. RIGHT AD PANEL -->
+        <!-- AD PANEL -->
         <aside class="w-72 bg-[#F9F9F9] border-l border-gray-50 flex flex-col p-6 h-full shrink-0">
             <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-6 flex flex-col items-center justify-center p-6 text-center shadow-sm">
-                <p class="text-[10px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
+                <p class="text-[9px] font-black text-gray-200 tracking-[0.5em] uppercase mb-4">Ad Space</p>
                 <div class="w-12 h-12 bg-gray-50 rounded-full"></div>
             </div>
             <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 text-center">
@@ -150,14 +148,6 @@
                 <button class="w-full bg-black text-white py-3 rounded-xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all">Go Pro</button>
             </div>
         </aside>
-        
-        <!-- FLOATING AGENT -->
-        <div onclick="switchView('chat')" class="fixed bottom-12 right-10 z-50 cursor-pointer hover:scale-110 active:scale-95 transition-all group">
-            <div class="w-14 h-14 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center border-4 border-white">
-                <div class="text-[8px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
-                <div class="text-[6px] font-black text-white tracking-widest leading-none mt-0.5 opacity-50 uppercase">Agent</div>
-            </div>
-        </div>
     </div>
 
     <div id="notification"></div>
@@ -170,9 +160,18 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null, userProfile = null, voiceEnabled = JSON.parse(localStorage.getItem('voice_active')) || false;
-        const suggestionsPool = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+        const suggestionsPool = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search"];
 
-        // --- 1. NAVIGATION ENGINE ---
+        // --- APPS REGISTRY ---
+        const allApps = [
+            { id: 'cali', name: "Cali-Culator", cat: "Financial", badge: "Popular", icon: "💰", desc: "Visual monthly budget tool." },
+            { id: 'subzero', name: "Sub-Zero", cat: "Financial", badge: "New", icon: "🧊", desc: "Subscription tracker." },
+            { id: 'goaldigger', name: "Goal Digger", cat: "Financial", badge: "Featured", icon: "🎯", desc: "Savings goals tracker." },
+            { id: 'habit', name: "Habit Stack", cat: "Health", badge: "Favorite", icon: "⚡", desc: "Momentum tracker." },
+            { id: 'h2go', name: "H2-Go", cat: "Health", badge: "Simple", icon: "💧", desc: "Water intake log." }
+        ];
+
+        // --- 1. NAVIGATION ---
         function switchView(v) {
             document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
             const target = document.getElementById(v + '-view');
@@ -183,31 +182,38 @@
             if(navEl) navEl.classList.add('sidebar-active');
             if(v === 'apps') renderAppGrid();
         }
-        function toggleSavedTabs() { document.getElementById('saved-tabs-container').classList.toggle('hidden'); }
 
-        // --- 2. VOICE ENGINE (DOWA FIX) ---
+        function renderAppGrid() {
+            const grid = document.getElementById('app-grid');
+            grid.innerHTML = allApps.map(app => `
+                <div onclick="launchApp('${app.id}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00E676] transition-all cursor-pointer group">
+                    <div class="text-4xl mb-4 transform group-hover:scale-110 transition-transform">${app.icon}</div>
+                    <h4 class="font-black text-xl mb-2">${app.name}</h4>
+                    <p class="text-sm text-gray-400 font-medium">${app.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- 2. VOICE ENGINE (FEMALE ONLY) ---
+        let currentVoice = null;
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            currentVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Female"));
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+
         function speak(text) {
+            if(!voiceEnabled) return;
             window.speechSynthesis.cancel();
-            const cleanText = text.replace(/\bDoa\b/gi, "Dowa").replace(/[*#]/g, "").replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}]/gu, "");
+            const cleanText = text.replace(/\bDoa\b/gi, "Dowa").replace(/[*#]/g, "").replace(/[\u{1F600}-\u{1F64F}]/gu, "");
             const u = new SpeechSynthesisUtterance(cleanText);
-            const pref = window.speechSynthesis.getVoices().find(v => v.name.includes("Samantha") || v.name.includes("Google") || v.name.includes("Female"));
-            if(pref) u.voice = pref; u.pitch = 1.25; u.rate = 0.95; window.speechSynthesis.speak(u);
+            if(currentVoice) u.voice = currentVoice;
+            u.pitch = 1.3; u.rate = 0.95;
+            window.speechSynthesis.speak(u);
         }
 
-        // --- 3. SUGGESTIONS ---
-        function rotateSuggestions() {
-            const btns = document.querySelectorAll('#suggestion-container button');
-            const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5);
-            btns.forEach((btn, i) => {
-                setTimeout(() => {
-                    btn.style.opacity = '0';
-                    setTimeout(() => { btn.innerText = shuffled[i]; btn.style.opacity = '1'; }, 500);
-                }, i * 150);
-            });
-        }
-        setInterval(rotateSuggestions, 7000);
-
-        // --- 4. BRAIN LOGIC ---
+        // --- 3. BRAIN LOGIC ---
         async function processResponse(text) {
             try {
                 const response = await fetch(CLOUDFLARE_URL, {
@@ -217,7 +223,6 @@
                 });
                 const data = await response.json();
                 let aiMsg = data.candidates[0].content.parts[0].text;
-
                 if (aiMsg.includes('[TRIGGER_BUILD:')) {
                     const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
                     aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
@@ -225,32 +230,22 @@
                     setTimeout(() => { switchView('code'); startNeuralBuild(match[1], match[2]); }, 2000);
                     return;
                 }
-                
                 addMsg("doa", aiMsg);
-                if(voiceEnabled) speak(aiMsg);
+                speak(aiMsg);
             } catch (e) { addMsg("doa", "Neural link fuzzy!"); }
         }
 
-        // --- 5. NEURAL LAB ---
         function startNeuralBuild(name, desc) {
             const log = document.getElementById('builder-log');
             const preview = document.getElementById('builder-preview');
             log.innerHTML = `<div>> Initializing Blueprint Engine...</div>`;
-            const seq = [`> Logic Pattern: ${name}`, `> Synthesizing components...`, `> BUILD SUCCESSFUL.`];
-            seq.forEach((m, i) => {
-                setTimeout(() => {
-                    const line = document.createElement('div'); line.innerText = m; line.className = "text-[#00E676]"; log.appendChild(line);
-                    if(i === seq.length - 1) {
-                        preview.innerHTML = `<div class="p-8 bg-green-50 rounded-[32px] text-center border-2 border-green-100">
-                            <h3 class="text-2xl font-black mb-2 italic">${name.toUpperCase()}</h3><p class="text-sm text-gray-500 mb-6">${desc}</p>
-                            <button onclick="saveToSupabase('${name}', 'Code')" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-black uppercase">💾 Save Tab</button>
-                        </div>`;
-                    }
-                }, i * 800);
-            });
+            setTimeout(() => { log.innerHTML += `<div class="text-[#00E676]">> Logic Pattern: ${name}</div>`; }, 1000);
+            setTimeout(() => { log.innerHTML += `<div class="text-[#00E676]">> BUILD SUCCESSFUL.</div>`; 
+                preview.innerHTML = `<div class="p-8 text-center bg-green-50 rounded-3xl border-2 border-green-100 font-bold">${name.toUpperCase()}<br><span class="font-normal text-sm">${desc}</span></div>`;
+            }, 2000);
         }
 
-        // --- 6. UI & AUTH ---
+        // --- 4. CHAT UI ---
         function addMsg(s, t) {
             const history = document.getElementById('chat-history');
             const d = document.createElement('div');
@@ -277,35 +272,27 @@
                 currentUser = user;
                 let { data } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
                 updateHeader(data);
-                document.getElementById('welcome-text').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${data.username.replace(/'/g, "")}</span>! Ready to create?`;
+                document.getElementById('welcome-text').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${data.username.replace(/'/g, "") || 'Companion'}</span>! Ready to create?`;
             }
-            rotateSuggestions();
             updateVoiceUI();
         }
 
         function updateHeader(p) {
-            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6 text-right"><div><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest ml-4">Logout</button></div>`;
+            document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p></div><button onclick="_supabase.auth.signOut().then(()=>location.reload())" class="text-[10px] font-bold text-red-500 ml-4">Logout</button></div>`;
         }
 
         async function login() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signInWithPassword({email:e, password:p}); location.reload(); }
         async function signUp() { const e = prompt("Email:"), p = prompt("Password:"); await _supabase.auth.signUp({email:e, password:p}); alert("Check email!"); }
-        async function logout() { await _supabase.auth.signOut(); location.reload(); }
-        function toggleVoice() { voiceEnabled = !voiceEnabled; localStorage.setItem('voice_active', voiceEnabled); updateVoiceUI(); if(voiceEnabled) speak("Voice synthesis active. My name is Doa."); }
+        function toggleVoice() { voiceEnabled = !voiceEnabled; localStorage.setItem('voice_active', voiceEnabled); updateVoiceUI(); if(voiceEnabled) speak("Voice synthesis active."); }
         function updateVoiceUI() {
             const knob = document.getElementById('voice-knob');
             const bg = document.getElementById('voice-switch');
             knob.style.left = voiceEnabled ? "16px" : "2px";
             bg.style.backgroundColor = voiceEnabled ? "#00E676" : "#f3f4f6";
         }
-        function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
         document.getElementById('send-btn').onclick = handleMessage;
         document.getElementById('user-input').onkeypress = (e) => { if(e.key==='Enter') handleMessage(); };
-        document.addEventListener('click', (e) => {
-            const b = e.target.closest('#suggestion-container button');
-            if(b) { document.getElementById('user-input').value = b.innerText; handleMessage(); }
-        });
-
         initApp();
     </script>
 </body>
