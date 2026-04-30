@@ -28,10 +28,6 @@
         #ticker-content { display: inline-block; animation: marquee 40s linear infinite; font-size: 9px; font-weight: 900; text-transform: uppercase; tracking-widest; color: #444; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-        /* STUDIO UI */
-        .studio-bg { background: #0b0b0b; }
-        .stream-panel { background: #141414; border-right: 1px solid #222; }
-
         /* VOICE TOGGLE UI */
         #voice-switch { transition: background-color 0.3s; }
         #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -49,13 +45,13 @@
         <!-- 1. SIDEBAR -->
         <aside id="main-sidebar" class="bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-[60] relative">
             <div class="p-6 flex items-center justify-between">
-                <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1>
+                <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="startNewChat()">DOA CALI</h1>
                 <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-[9px] font-black uppercase">Hide</button>
             </div>
             
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
                 <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mb-2">Main Hub</p>
-                <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
+                <button id="nav-chat" onclick="startNewChat(); switchView('chat')" class="sidebar-item sidebar-active">💬 <span>New Chat</span></button>
                 <button id="nav-calendar" onclick="switchView('calendar')" class="sidebar-item">📅 <span>Calendar</span></button>
                 <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>Doa Apps</span></button>
                 <button id="nav-laser" onclick="switchView('laser')" class="sidebar-item">🔫 <span>Laser Tag</span></button>
@@ -65,13 +61,10 @@
                 <button id="nav-editor" onclick="switchView('editor')" class="sidebar-item">🎨 <span>Editor App</span></button>
                 <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
                 
-                <button onclick="document.getElementById('saved-tabs-box').classList.toggle('hidden')" class="sidebar-item flex justify-between mt-4">
-                    <span>📂 Saved Tabs</span> <span class="text-[8px]">⌄</span>
-                </button>
-                <div id="saved-tabs-box" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
-
-                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Previously</p>
-                <div id="history-list" class="space-y-1 px-1"></div>
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Recent Chats</p>
+                <div id="history-list" class="space-y-1 px-1">
+                    <!-- History injected here -->
+                </div>
             </nav>
         </aside>
 
@@ -92,15 +85,19 @@
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto text-center">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
                 
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden"></div>
+                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-6 hidden">
+                    <!-- Bubbles injected here -->
+                </div>
                 
                 <div class="w-full max-w-3xl px-4 shrink-0 pb-20">
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
                     
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
+                        <input id="user-input" onkeydown="if(event.key==='Enter') handleMessage()" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
+                        <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors flex items-center justify-center">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
                     </div>
 
                     <!-- VOICE TOGGLE SWITCH -->
@@ -113,11 +110,17 @@
                 </div>
             </div>
 
-            <!-- VIEW: APPS -->
+            <!-- VIEW: APPS (Placeholder) -->
             <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
                 <div class="max-w-6xl mx-auto">
                     <h2 class="text-4xl font-black italic mb-2 uppercase">App Factory</h2>
-                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32"></div>
+                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32">
+                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                            <div class="text-3xl mb-4">🎨</div>
+                            <h3 class="font-bold text-lg">Image Gen</h3>
+                            <p class="text-gray-400 text-sm">Create visuals from text.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -134,9 +137,12 @@
         // --- CONFIGURATION ---
         const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
         let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
+        
+        // Data structure: [{ id, title, messages: [{role, text}] }]
         let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
+        let currentChatId = null; 
 
-        // --- 1. THE "DOUGHA" VOICE ENGINE (Fixed) ---
+        // --- 1. THE VOICE ENGINE ---
         let voices = [];
         let selectedVoice = null;
 
@@ -146,76 +152,34 @@
         }
 
         function pickFemaleVoice(voiceList) {
-            // Priority list of known female voices across platforms
-            const femaleNames = [
-                "Samantha",               // macOS/iOS - best quality
-                "Karen",                  // macOS Australian
-                "Moira",                  // macOS Irish
-                "Tessa",                  // macOS South African
-                "Veena",                  // macOS Indian
-                "Fiona",                  // macOS Scottish
-                "Victoria",               // macOS
-                "Allison",                // macOS
-                "Ava",                    // macOS
-                "Susan",                  // macOS
-                "Zoe",                    // macOS
-                "Microsoft Zira",         // Windows Edge/Chrome
-                "Microsoft Aria",         // Windows Edge
-                "Microsoft Jenny",        // Windows Edge
-                "Google US English Female", // Chrome Android
-                "Google UK English Female",
-            ];
-
-            // 1. Try exact name match
+            const femaleNames = ["Samantha", "Aria", "Jenny", "Zira", "Victoria", "Google US English"];
             for (const name of femaleNames) {
                 const match = voiceList.find(v => v.name.includes(name));
                 if (match) return match;
             }
-
-            // 2. Try keyword scan (catches "female", "woman", etc.)
-            const femaleKeywords = ["female", "woman", "girl", "fiona", "aria", "zira", "jenny", "ava"];
-            const keywordMatch = voiceList.find(v =>
-                femaleKeywords.some(k => v.name.toLowerCase().includes(k))
-            );
-            if (keywordMatch) return keywordMatch;
-
-            // 3. Try any English voice as fallback
-            const englishVoice = voiceList.find(v => v.lang.startsWith("en"));
-            if (englishVoice) return englishVoice;
-
-            // 4. Absolute fallback
-            return voiceList[0] || null;
+            return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0];
         }
 
         window.speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
 
         function speak(text) {
             if (!voiceActive) return;
             window.speechSynthesis.cancel();
-
             const cleanText = text
-                .replace(/\bDowa\b/gi, "DOUGH-wah")
                 .replace(/\bDoa\b/gi, "DOUGH-wah")
-                .replace(/([a-zA-Z])\1{2,}/g, "$1")
-                .replace(/[*#`_~]/g, "")
-                .replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+                .replace(/[*#`_~]/g, "");
 
             const u = new SpeechSynthesisUtterance(cleanText);
             if (selectedVoice) u.voice = selectedVoice;
-            u.lang = "en-US";
-            u.pitch = 1.0;
             u.rate = 0.95;
-            u.volume = 1.0;
             window.speechSynthesis.speak(u);
         }
 
         function toggleVoice() {
             voiceActive = !voiceActive;
             localStorage.setItem('voice_active', voiceActive);
-            selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
             updateVoiceUI();
-            if (voiceActive) speak("Live voice active. My name is Doe-ah.");
+            if (voiceActive) speak("Live voice active.");
         }
 
         function updateVoiceUI() {
@@ -225,58 +189,123 @@
             bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
         }
 
-        // --- 2. CHAT & HISTORY ---
+        // --- 2. CHAT LOGIC ---
+
         async function handleMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
             if(!text) return;
+
+            // UI Setup
             document.getElementById('hero-section').style.display = 'none';
             document.getElementById('chat-history').classList.remove('hidden');
+            
+            // 1. Add User Bubble
             addBubble('user', text);
-            saveHistory(text);
             input.value = "";
+
+            // 2. Manage History State
+            if (currentChatId === null) {
+                currentChatId = Date.now();
+                chatHistoryData.unshift({
+                    id: currentChatId,
+                    title: text.substring(0, 25) + (text.length > 25 ? "..." : ""),
+                    messages: [{ role: 'user', text: text }]
+                });
+            } else {
+                const chat = chatHistoryData.find(c => c.id === currentChatId);
+                if (chat) chat.messages.push({ role: 'user', text: text });
+            }
+
+            renderHistory();
+            saveToLocalStorage();
+
+            // 3. Fetch AI Response
             try {
-                const res = await fetch(CLOUDFLARE_URL, { method:'POST', body:JSON.stringify({text:text}) });
+                const res = await fetch(CLOUDFLARE_URL, { 
+                    method:'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body:JSON.stringify({text:text}) 
+                });
                 const data = await res.json();
                 const aiText = data.candidates[0].content.parts[0].text;
+                
                 addBubble('doa', aiText);
                 speak(aiText);
-            } catch(e) { addBubble('doa', "Neural Link fuzzy!"); }
+
+                // Update History Data
+                const chat = chatHistoryData.find(c => c.id === currentChatId);
+                if (chat) chat.messages.push({ role: 'doa', text: aiText });
+                saveToLocalStorage();
+
+            } catch(e) { 
+                addBubble('doa', "Connection to Cali Link fuzzy. Try again!"); 
+            }
         }
 
-        function addBubble(s, t) {
+        function addBubble(role, text) {
             const h = document.getElementById('chat-history');
             const d = document.createElement('div');
-            d.className = `flex ${s==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${s==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm">${t}</div>`;
-            h.appendChild(d); h.scrollTop = h.scrollHeight;
+            d.className = `flex ${role==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
+            d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${text}</div>`;
+            h.appendChild(d); 
+            h.scrollTop = h.scrollHeight;
         }
 
-        function saveHistory(text) {
-            const title = text.length > 20 ? text.substring(0, 20) + "..." : text;
-            chatHistoryData.unshift({ id: Date.now(), title: title });
-            if(chatHistoryData.length > 8) chatHistoryData.pop();
+        // --- 3. PERSISTENCE & UI ---
+
+        function saveToLocalStorage() {
             localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
         }
 
         function renderHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = chatHistoryData.map(i => `
-                <div class="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition">
-                    <p class="text-[11px] text-gray-400 font-bold truncate cursor-pointer hover:text-black">${i.title}</p>
-                    <button onclick="deleteHistory(${i.id})" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-[10px] px-1">✕</button>
+                <div class="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition ${currentChatId === i.id ? 'bg-gray-50' : ''}">
+                    <p onclick="loadChat(${i.id})" class="text-[11px] ${currentChatId === i.id ? 'text-black font-black' : 'text-gray-400'} font-bold truncate cursor-pointer hover:text-black flex-1">
+                        ${i.title}
+                    </p>
+                    <button onclick="deleteHistory(${i.id}, event)" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 text-[10px] px-1 transition">✕</button>
                 </div>
             `).join('');
         }
 
-        function deleteHistory(id) {
-            chatHistoryData = chatHistoryData.filter(i => i.id !== id);
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+        function loadChat(id) {
+            const chat = chatHistoryData.find(i => i.id === id);
+            if (!chat) return;
+
+            currentChatId = id;
+            switchView('chat'); 
+
+            document.getElementById('hero-section').style.display = 'none';
+            const historyDiv = document.getElementById('chat-history');
+            historyDiv.classList.remove('hidden');
+            historyDiv.innerHTML = ""; // Clear screen
+
+            // Rebuild bubbles from data
+            chat.messages.forEach(msg => {
+                addBubble(msg.role, msg.text);
+            });
+
             renderHistory();
         }
 
-        // --- 3. UI UTILS ---
+        function startNewChat() {
+            currentChatId = null;
+            document.getElementById('chat-history').innerHTML = "";
+            document.getElementById('chat-history').classList.add('hidden');
+            document.getElementById('hero-section').style.display = 'block';
+            renderHistory();
+        }
+
+        function deleteHistory(id, event) {
+            event.stopPropagation(); 
+            chatHistoryData = chatHistoryData.filter(i => i.id !== id);
+            if (currentChatId === id) startNewChat();
+            saveToLocalStorage();
+            renderHistory();
+        }
+
         function toggleSidebar() {
             const sb = document.getElementById('main-sidebar');
             const btn = document.getElementById('open-sidebar-btn');
@@ -290,7 +319,11 @@
             document.getElementById(v + '-view').classList.remove('hidden');
         }
 
-        window.onload = () => { renderHistory(); updateVoiceUI(); };
+        window.onload = () => { 
+            loadVoices();
+            renderHistory(); 
+            updateVoiceUI(); 
+        };
     </script>
 </body>
 </html>
