@@ -382,15 +382,40 @@
         switchView('app-runner');
         const app = allApps.find(a => a.id === id);
         const container = document.getElementById('app-content');
+        document.getElementById('active-app-name').innerText = app.name.toUpperCase();
         
-        // --- This is where we will build the logic for each app ---
+        // --- This is where we build the logic for each app ---
         if (id === 'cali-culator') {
-            container.innerHTML = '<h2>Cali-Culator Budget App Loading...</h2>';
+            // Renders the actual calculator HTML
+            container.innerHTML = `
+                <div class="max-w-md mx-auto bg-white p-10 rounded-[40px] shadow-2xl border border-gray-100">
+                    <h4 class="font-black text-xl mb-6 italic tracking-tight">Cali-Culator</h4>
+                    <div class="space-y-4">
+                        <input id="inc" type="number" placeholder="Monthly Income" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#00E676]">
+                        <input id="exp" type="number" placeholder="Monthly Expenses" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#00E676]">
+                        <button onclick="doCaliCalc()" class="w-full bg-[#00E676] p-4 rounded-2xl font-black text-sm shadow-lg shadow-green-100 hover:scale-105 transition-transform">CALCULATE SPENDING →</button>
+                    </div>
+                    <div id="calc-res" class="mt-8 text-center text-5xl font-black text-black"></div>
+                </div>
+            `;
         } else if (id === 'h2-go') {
             container.innerHTML = '<h2>Water Tracker Loading...</h2>';
         } else {
             container.innerHTML = `<div class="text-center mt-20 text-gray-400 font-bold uppercase tracking-widest">Doa is optimizing the Neural code for ${app.name}...</div>`;
         }
+    }
+
+    // --- The Calculator App Logic ---
+    function doCaliCalc() {
+        const income = document.getElementById('inc').value;
+        const expenses = document.getElementById('exp').value;
+        const result = parseFloat(income || 0) - parseFloat(expenses || 0);
+        
+        const resultEl = document.getElementById('calc-res');
+        resultEl.innerText = "$" + result.toLocaleString();
+        resultEl.style.color = result < 0 ? '#ef4444' : '#10b981'; // Red if negative, green if positive
+
+        showToast("Budget Synced! 💰");
     }
 
         // --- PASTE IT HERE: SIDEBAR NAVIGATION LOGIC ---
