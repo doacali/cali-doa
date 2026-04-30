@@ -221,9 +221,9 @@
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
     // --- THE REAL CLOUDFLARE BRAIN ---
+    // --- THE NEURAL COMMAND CENTER (EARS) ---
     async function processResponse(text) {
         try {
-            // Send user message to Cloudflare Brain
             const response = await fetch(CLOUDFLARE_PROXY_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -231,165 +231,129 @@
             });
             
             const data = await response.json();
-
-            // 🚨 NEW: CATCH GOOGLE ERRORS
+            
             if (data.error) {
                 alert("Doa Error: " + data.error);
-                addMsg("doa", "Google rejected the request. Please check the alert box on your screen!");
                 return;
             }
 
-            let aiResponse = data.candidates[0].content.parts[0].text;
+            let aiMsg = data.candidates[0].content.parts[0].text;
 
-            // SYSTEM ACTION INTERCEPTER
-            if (aiResponse.includes('[ADD_POINTS: 10]')) {
-                aiResponse = aiResponse.replace('[ADD_POINTS: 10]', '');
-                addPoints(10);
-            }
-            if (aiResponse.includes('[OPEN_AFFILIATE:')) {
-                const product = aiResponse.match(/\[OPEN_AFFILIATE: (.*?)\]/)[1];
-                aiResponse = aiResponse.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
-                setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2000);
+            // 1. DETECT: Auto-Build Command
+            if (aiMsg.includes('[TRIGGER_BUILD:')) {
+                const match = aiMsg.match(/\[TRIGGER_BUILD: (.*?) \| (.*?)\]/);
+                const appName = match[1];
+                const appDesc = match[2];
+
+                aiMsg = aiMsg.replace(/\[TRIGGER_BUILD:.*?\]/g, "");
+                
+                addMsg("doa", aiMsg);
+                if(voiceEnabled) speak(aiMsg);
+
+                setTimeout(() => {
+                    showToast(`🚀 Neural Lab: Initializing ${appName}...`);
+                    switchView('code'); 
+                    startNeuralBuild(appName, appDesc); 
+                }, 2000);
+                return;
             }
 
-            addMsg("doa", aiResponse.trim());
-            if(voiceEnabled) speak(aiResponse.trim());
+            // 2. DETECT: Points Earned
+            if (aiMsg.includes('[ADD_POINTS:')) {
+                const ptsMatch = aiMsg.match(/\[ADD_POINTS: (\d+)\]/);
+                if (ptsMatch) {
+                    const pts = parseInt(ptsMatch[1]);
+                    aiMsg = aiMsg.replace(/\[ADD_POINTS:.*?\]/g, "");
+                    addPoints(pts);
+                }
+            }
+
+            // 3. DETECT: Affiliate Shopping
+            if (aiMsg.includes('[OPEN_AFFILIATE:')) {
+                const productMatch = aiMsg.match(/\[OPEN_AFFILIATE: (.*?)\]/);
+                if (productMatch) {
+                    const product = productMatch[1];
+                    aiMsg = aiMsg.replace(/\[OPEN_AFFILIATE: .*?\]/, '');
+                    setTimeout(() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(product)}&tag=CALIDOA-20`, '_blank'), 2500);
+                }
+            }
+
+            // Final Output
+            addMsg("doa", aiMsg.trim());
+            if(voiceEnabled) speak(aiMsg.trim());
 
         } catch (e) {
             console.error(e);
-            addMsg("doa", "My neural link to Cloudflare is offline. Please check the connection!");
+            addMsg("doa", "Neural link fuzzy! Please refresh.");
         }
     }
 
-    // --- UI & CHAT HANDLING ---
-    const chatHistory = document.getElementById('chat-history'), hero = document.getElementById('hero-section'), userInput = document.getElementById('user-input');
+    // --- 1. NEURAL BUILD ANIMATION (WORKS WITH AUTO-JUMP) ---
+    function startNeuralBuild(name, desc) {
+        const log = document.getElementById('builder-log');
+        const preview = document.getElementById('builder-preview');
+        if (!log || !preview) return;
 
-    async function handleMessage() {
-        const text = userInput.value.trim(); if (!text) return;
-        hero.style.display = 'none'; chatHistory.classList.remove('hidden'); userInput.value = "";
-        addMsg("user", text); 
-        const load = addMsg("doa", "Doa is thinking...");
+        // Reset the workspace
+        log.innerHTML = `<div>> Initializing Blueprint Engine...</div>`;
+        preview.innerHTML = `<div class="h-full flex items-center justify-center text-gray-400 animate-pulse italic text-xs uppercase tracking-widest">Synthesizing Neural Code...</div>`;
         
-        // Let the real AI take over
-        await processResponse(text);
-        load.remove();
-    }
+        const sequences = [
+            `> Accessing Shubhamsaboo/awesome-llm-apps library...`,
+            `> Logic Pattern Found for: ${name}`,
+            `> Synthesizing Tailwind CSS & HTML5...`,
+            `> Injecting Neural logic...`,
+            `> BUILD SUCCESSFUL.`
+        ];
 
-    function addMsg(s, t) {
-        const d = document.createElement('div');
-        d.className = s === "user" ? "flex justify-end w-full chat-bubble" : "flex justify-start w-full chat-bubble";
-        d.innerHTML = `<div class="${s === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'} p-4 rounded-3xl max-w-md text-sm font-medium shadow-sm">${t}</div>`;
-        chatHistory.appendChild(d); chatHistory.scrollTop = chatHistory.scrollHeight; return d;
-    }
-
-    // --- DATABASE & AUTH ---
-    async function initApp() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (user) { currentUser = user; await fetchProfile(user.id); }
-    }
-    async function fetchProfile(uid) {
-        let { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-        userProfile = data; if (userProfile) updateUI(data);
-    }
-    function updateUI(p) {
-        document.getElementById('main-header').innerHTML = `<div class="flex items-center gap-6"><div class="text-right"><p class="text-black font-black text-sm">🧠 ${p.brain_points}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Points</p></div><div class="text-right"><p class="text-black font-black text-sm">💎 ${p.credits}</p><p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Credits</p></div><button onclick="logout()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition uppercase tracking-widest">Logout</button></div>`;
-        document.querySelector('#hero-section p').innerHTML = `Welcome back, <span class="text-[#00E676] font-bold">${p.username.replace(/'/g, "")}</span>! Your companion is ready.`;
-    }
-    async function addPoints(a) {
-        const n = (userProfile.brain_points || 0) + a;
-        await _supabase.from('profiles').update({ brain_points: n }).eq('id', currentUser.id);
-        userProfile.brain_points = n; updateUI(userProfile); showToast(`+${a} Points Earned!`);
-    }
-    function showToast(m) { const t = document.getElementById('notification'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-    async function login() { const e = prompt("Email:"), p = prompt("Password:"); const { error } = await _supabase.auth.signInWithPassword({ email:e, password:p }); if (error) alert(error.message); else window.location.reload(); }
-    async function signUp() { const e = prompt("Email:"), p = prompt("Password (6+):"); const { error } = await _supabase.auth.signUp({ email:e, password:p }); alert(error ? error.message : "Check email for link!"); }
-    function logout() { _supabase.auth.signOut().then(() => window.location.reload()); }
-
-    document.getElementById('send-btn').onclick = handleMessage;
-    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
-    document.getElementById('voice-switch').onclick = () => { voiceEnabled = !voiceEnabled; document.getElementById('voice-knob').style.left = voiceEnabled ? '16px' : '2px'; document.getElementById('voice-switch').style.backgroundColor = voiceEnabled ? '#00E676' : '#f3f4f6'; if(voiceEnabled) speak("Voice mode activated."); };
-    
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; handleMessage(); };
-    document.getElementById('mic-btn').onclick = () => { recognition.start(); document.getElementById('mic-btn').style.color = '#00E676'; };
-    recognition.onend = () => { document.getElementById('mic-btn').style.color = ''; };
-
-    document.addEventListener('click', (e) => {
-        const b = e.target.closest('button'); if (!b) return;
-        if (b.innerText.includes('Login')) login();
-        if (b.innerText.includes('Sign Up')) signUp();
-        if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
-    });
-   document.addEventListener('click', (e) => {
-            const b = e.target.closest('button'); if (!b) return;
-            if (b.innerText.includes('Login')) login();
-            if (b.innerText.includes('Sign Up')) signUp();
-            if (b.closest('#suggestion-container')) { userInput.value = b.innerText; handleMessage(); }
+        sequences.forEach((msg, i) => {
+            setTimeout(() => {
+                const line = document.createElement('div');
+                line.innerText = msg;
+                line.className = "text-[#00E676] py-1 border-b border-white/5";
+                log.appendChild(line);
+                log.scrollTop = log.scrollHeight;
+                
+                // When the animation finishes, show the "Mock" app in the preview
+                if(i === sequences.length - 1) {
+                    preview.innerHTML = `
+                        <div class="flex justify-end mb-4">
+                            <button onclick="saveToSupabase('${name}', 'Logic for ${name}')" class="text-[9px] font-black bg-[#00E676] text-black px-4 py-1.5 rounded-full uppercase hover:scale-105 transition shadow-lg shadow-green-500/20">💾 Save Tab</button>
+                        </div>
+                        <div class="p-8 bg-green-50 rounded-[32px] text-center border-2 border-green-100 animate-in fade-in zoom-in duration-500">
+                            <div class="text-4xl mb-4">🚀</div>
+                            <h3 class="text-2xl font-black mb-2 italic text-gray-900">${name.toUpperCase()}</h3>
+                            <p class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">${desc}</p>
+                            <div class="inline-block bg-white px-6 py-2 rounded-2xl shadow-sm text-[10px] font-black text-[#00E676] tracking-[0.2em] uppercase border border-green-50">System Live</div>
+                        </div>
+                    `;
+                }
+            }, i * 1000);
         });
-    // --- APP ENGINE (THE APP FACTORY) ---
-
-    // 1. THE COMPLETE APP REGISTRY (ALL 20+ TOOLS)
-    const allApps = [
-        // FINANCE
-        { id: 'cali-culator', name: "Cali-Culator", cat: "Financial", icon: "💰", desc: "Visual monthly budget planner." },
-        { id: 'sub-zero', name: "Sub-Zero", cat: "Financial", icon: "🧊", desc: "Subscription cost tracker." },
-        { id: 'goal-digger', name: "Goal Digger", cat: "Financial", icon: "🎯", desc: "Savings goal visualizer." },
-        { id: 'debt-dash', name: "Debt Free Dash", cat: "Financial", icon: "🏃", desc: "Snowball method calculator." },
-        { id: 'gig-grind', name: "Gig Grind", cat: "Financial", icon: "💼", desc: "Freelancer income tracker." },
-        { id: 'spend-less', name: "Spend-Less Challenge", cat: "Financial", icon: "🏆", desc: "Gamify your no-spend days." },
-        
-        // HEALTH
-        { id: 'habit-stack', name: "Habit Stack", cat: "Health", icon: "⚡", desc: "Daily habit momentum tracker." },
-        { id: 'h2-go', name: "H2-Go", cat: "Health", icon: "💧", desc: "Ultra-simple water intake log." },
-        { id: 'mindful-moments', name: "Mindful Moments", cat: "Health", icon: "🧘", desc: "Minimalist gratitude journal." },
-        { id: 'screen-streak', name: "Screen-Free Streak", cat: "Health", icon: "📵", desc: "Digital detox timer." },
-        { id: 'rep-counter', name: "Rep Counter", cat: "Health", icon: "🏋️", desc: "No-frills workout logger." },
-        { id: 'sleep-cycle', name: "Sleep Cycle Log", cat: "Health", icon: "🌙", desc: "Manual sleep duration tracker." },
-
-        // PRODUCTIVITY & GROWTH
-        { id: 'focus-flow', name: "Focus Flow", cat: "Growth", icon: "⏲️", desc: "Classic Pomodoro focus timer." },
-        { id: 'milestone-mapper', name: "Milestone Mapper", cat: "Growth", icon: "🗺️", desc: "Break down large goals." },
-        { id: 'one-percent', name: "1% Better", cat: "Growth", icon: "📈", desc: "Daily skill practice tracker." },
-        { id: 'bookworm', name: "Bookworm", cat: "Growth", icon: "📚", desc: "Reading stats & wishlist." },
-        { id: 'decider', name: "The Decider", cat: "Growth", icon: "⚖️", desc: "Pro/Con list logic generator." },
-        { id: 'weekly-reset', name: "Weekly Reset", cat: "Growth", icon: "🔄", desc: "Guided reflection journal." },
-
-        // LIFESTYLE
-        { id: 'binge-list', name: "Binge List", cat: "Lifestyle", icon: "🎬", desc: "Movie & show watchlist." },
-        { id: 'weekly-eats', name: "Weekly Eats", cat: "Lifestyle", icon: "🍎", desc: "Meal planner & shopping list." },
-        { id: 'gift-giver', name: "Gift Giver", cat: "Lifestyle", icon: "🎁", desc: "Gift ideas & budget planner." },
-        { id: 'wanderlog', name: "Wanderlog", cat: "Lifestyle", icon: "✈️", desc: "Trip itinerary builder." },
-        { id: 'plant-parent', name: "Plant Parent", cat: "Lifestyle", icon: "🪴", desc: "Plant care & watering schedules." },
-        { id: 'bucket-list', name: "The Bucket List", cat: "Lifestyle", icon: "🗺️", desc: "Create & manage life goals." }
-    ];
-
-    // 2. THE RENDERER: This function builds the grid of app cards
-    function renderAppGrid() {
-        const grid = document.getElementById('app-grid');
-        grid.innerHTML = allApps.map(app => `
-            <div onclick="launchApp('${app.id}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00E676] transition-all cursor-pointer group">
-                <div class="text-4xl mb-6 transform group-hover:scale-110 transition-transform">${app.icon}</div>
-                <p class="text-[9px] font-black text-gray-300 uppercase mb-1">${app.cat}</p>
-                <h4 class="font-black text-xl mb-3">${app.name}</h4>
-                <p class="text-sm text-gray-400 font-medium mb-8 leading-relaxed">${app.desc}</p>
-                <button class="text-[11px] font-black text-[#00E676] uppercase group-hover:translate-x-2 transition-all">Open App →</button>
-            </div>
-        `).join('');
     }
 
-    // 3. THE APP LAUNCHER: This opens the individual apps
-    function launchApp(id) {
-        switchView('app-runner');
-        const app = allApps.find(a => a.id === id);
-        const container = document.getElementById('app-content');
-        
-        // --- This is where we will build the logic for each app ---
-        if (id === 'cali-culator') {
-            container.innerHTML = '<h2>Cali-Culator Budget App Loading...</h2>';
-        } else if (id === 'h2-go') {
-            container.innerHTML = '<h2>Water Tracker Loading...</h2>';
+    // --- 2. DATABASE SAVE ENGINE ---
+    async function saveToSupabase(name, content) {
+        if (!currentUser) {
+            showToast("Please Login to save tabs!");
+            return;
+        }
+
+        const { error } = await _supabase
+            .from('saved_tabs')
+            .insert([{ 
+                user_id: currentUser.id, 
+                app_name: name, 
+                code_content: content 
+            }]);
+
+        if (!error) {
+            showToast("Project Saved to Sidebar! 📂");
+            // This function will refresh your sidebar later
+            if (typeof loadSavedTabs === 'function') loadSavedTabs(); 
         } else {
-            container.innerHTML = `<div class="text-center mt-20 text-gray-400 font-bold uppercase tracking-widest">Doa is optimizing the Neural code for ${app.name}...</div>`;
+            console.error(error);
+            showToast("Neural Save Error.");
         }
     }
 
