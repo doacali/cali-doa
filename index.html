@@ -3,43 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cali Doa | Intelligent Operating System</title>
+    <title>Cali Doa | AI Operating System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/fabric"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #FBFBFB; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; font-weight: 600; color: #9ca3af; position: relative; }
+        .sidebar-item { transition: all 0.2s ease; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; font-weight: 600; color: #9ca3af; position: relative; font-size: 13px; }
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
         .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .view-container { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .hero-heading { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.05em; font-weight: 800; }
         
         /* AD PANEL SLIDE */
-        #ad-panel { transition: transform 0.5s ease; }
+        #ad-panel { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .ad-hidden { transform: translateX(100%); }
-        
-        /* WORLD TICKER */
-        #ticker-wrap { white-space: nowrap; overflow: hidden; position: fixed; bottom: 40px; width: 100%; background: white; border-top: 1px solid #f3f4f6; padding: 5px 0; z-index: 40; }
-        #ticker-content { display: inline-block; animation: marquee 40s linear infinite; font-[8px] font-black uppercase tracking-[0.2em] text-gray-300; }
+
+        /* WORLD TICKER - FIXED AT VERY BOTTOM */
+        #ticker-wrap { white-space: nowrap; overflow: hidden; position: fixed; bottom: 0; width: 100%; background: #121212; padding: 6px 0; z-index: 1000; border-top: 1px solid #222; }
+        #ticker-content { display: inline-block; animation: marquee 35s linear infinite; font-size: 9px; font-weight: 900; uppercase; tracking-widest; color: #555; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        /* CODE BUILDER UI */
+        .studio-dark { background: #0b0b0b; color: white; }
+        .stream-panel { background: #141414; border-right: 1px solid #222; }
 
         /* AGENT WIDGET */
         #agent-chat { transition: all 0.3s ease; transform: scale(0); opacity: 0; transform-origin: bottom right; }
         #agent-chat.active { transform: scale(1); opacity: 1; }
+
+        .app-card { background: white; border: 1px solid #f1f5f9; padding: 24px; border-radius: 32px; transition: all 0.3s ease; }
+        .app-card:hover { border-color: #00E676; box-shadow: 0 20px 40px -10px rgba(0,230,118,0.1); }
     </style>
 </head>
 <body class="text-gray-900">
 
     <div class="flex h-screen w-screen overflow-hidden">
         
-        <!-- SIDEBAR -->
+        <!-- 1. SIDEBAR -->
         <aside id="main-sidebar" class="w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0 z-50 transition-all duration-300">
             <div class="p-6 flex items-center justify-between">
                 <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1>
-                <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black">←</button>
+                <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-xs font-bold uppercase tracking-widest">Hide</button>
             </div>
             
             <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
@@ -55,150 +60,185 @@
                 <button id="nav-generator" onclick="switchView('generator')" class="sidebar-item">🎥 <span>Generator</span></button>
                 <button id="nav-music" onclick="switchView('music')" class="sidebar-item">🎵 <span>Music Lab</span></button>
                 
-                <button onclick="document.getElementById('saved-tabs').classList.toggle('hidden')" class="sidebar-item flex justify-between mt-4">
-                    <span>📂 Saved Tabs</span> <span>⌄</span>
+                <button onclick="document.getElementById('saved-tabs-box').classList.toggle('hidden')" class="sidebar-item flex justify-between mt-4">
+                    <span>📂 Saved Tabs</span> <span class="text-[8px]">⌄</span>
                 </button>
-                <div id="saved-tabs" class="hidden ml-8 space-y-2 border-l-2 border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
+                <div id="saved-tabs-box" class="hidden ml-8 space-y-2 border-l border-gray-50 pl-4 py-2 text-[10px] text-gray-400 font-bold uppercase truncate"></div>
+
+                <!-- RESTORED PREVIOUSLY LABEL -->
+                <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.2em] px-2 mt-10 mb-3">Previously</p>
+                <div id="history-list" class="space-y-3 px-2 text-[11px] text-gray-400 font-bold truncate">
+                    <p class="hover:text-black cursor-pointer transition">Create a budget bot...</p>
+                    <p class="hover:text-black cursor-pointer transition">Analyze youtube transcript...</p>
+                </div>
             </nav>
         </aside>
 
-        <!-- MAIN WORKSPACE -->
+        <!-- 2. MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
             
+            <!-- HEADER -->
             <header id="main-header" class="w-full p-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 shrink-0">
                 <div id="auth-zone" class="flex gap-4">
                     <button onclick="login()" class="hover:text-black transition">Login</button>
-                    <button onclick="signUp()" class="text-black bg-[#00E676] px-4 py-2 rounded-lg shadow-sm">Sign Up</button>
+                    <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-lg shadow-sm font-bold">Sign Up</button>
                 </div>
             </header>
 
-            <!-- CHAT VIEW -->
+            <!-- VIEW: CHAT -->
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-start px-10 overflow-hidden">
                 <div id="hero-section" class="text-center mt-12 mb-8">
-                    <h1 class="hero-heading mb-4">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
-                    <p class="text-gray-400 text-base md:text-lg font-medium max-w-2xl mx-auto text-center">Your intelligent companion for thinking, building, and creating.</p>
+                    <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
+                    <p class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
-                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden"></div>
+                <div id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto hide-scrollbar space-y-6 py-4 hidden border-b border-gray-50"></div>
                 
-                <div class="w-full max-w-3xl px-4 shrink-0 pb-12">
-                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6 min-h-[45px]"></div>
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2 flex items-center">
+                <!-- INPUT AREA -->
+                <div class="w-full max-w-3xl px-4 shrink-0 pb-16">
+                    <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center">
                         <button class="p-3 text-gray-300">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
-                        <button id="send-btn" class="bg-black text-white w-9 h-9 rounded-full shadow-lg">→</button>
+                        <input id="user-input" class="flex-1 p-2 outline-none text-[15px] font-medium" placeholder="Ask Doa anything...">
+                        <button id="send-btn" class="bg-black text-white w-10 h-10 rounded-full shadow-lg">→</button>
                     </div>
                 </div>
             </div>
 
-            <!-- APPS VIEW -->
+            <!-- VIEW: APPS FACTORY (FULL LIST) -->
             <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto bg-[#FBFBFB]">
-                <h2 class="text-4xl font-black italic mb-2 uppercase">App Factory</h2>
-                <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20"></div>
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-5xl font-black italic mb-2 uppercase tracking-tighter">App Factory</h2>
+                    <p class="text-gray-400 text-[10px] font-black uppercase tracking-[0.4em] mb-12 border-b pb-6">24 Specialized Neural Tools</p>
+                    <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-24"></div>
+                </div>
             </div>
 
-            <!-- CODE BUILDER (AI STUDIO STYLE) -->
-            <div id="code-view" class="view-container hidden flex-1 w-full bg-[#121212] text-white flex flex-col">
-                <div class="p-6 border-b border-white/10 flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <button onclick="toggleSidebar()" class="p-2 hover:bg-white/5 rounded-lg">←</button>
-                        <h2 class="text-xl font-black italic text-[#00E676] uppercase">Neural Lab</h2>
+            <!-- VIEW: CODE BUILDER (STUDIO DESIGN) -->
+            <div id="code-view" class="view-container hidden flex-1 w-full studio-dark flex flex-col">
+                <div class="p-5 border-b border-white/5 flex justify-between items-center bg-[#0b0b0b]">
+                    <div class="flex items-center gap-6">
+                        <button onclick="toggleSidebar()" class="text-gray-500 hover:text-[#00E676] text-sm">◀ Open Sidebar</button>
+                        <h2 class="text-lg font-black italic text-[#00E676] uppercase tracking-tighter">Cali Doa Studio</h2>
                     </div>
-                    <button class="bg-[#00E676] text-black text-[10px] font-black px-4 py-2 rounded-full">PUBLISH APP</button>
+                    <div class="flex gap-4">
+                        <span class="text-[9px] font-black text-gray-600 uppercase tracking-widest mt-2">v3.0 Neural Engine</span>
+                        <button class="bg-[#00E676] text-black text-[10px] font-black px-6 py-2 rounded-full hover:scale-105 transition">GENERATE THIS APP</button>
+                    </div>
                 </div>
                 <div class="flex-1 flex overflow-hidden">
-                    <div class="w-1/3 border-r border-white/10 p-6 flex flex-col">
-                        <span class="text-[9px] font-black text-gray-500 uppercase mb-4 tracking-widest">Thought Stream</span>
-                        <div id="builder-log" class="flex-1 font-mono text-xs text-gray-400 space-y-2 overflow-y-auto"></div>
+                    <!-- Stream Panel -->
+                    <div class="w-1/3 stream-panel p-6 flex flex-col overflow-hidden">
+                        <span class="text-[9px] font-black text-gray-500 uppercase mb-4 tracking-[0.2em]">Neural Command Stream</span>
+                        <div id="builder-log" class="flex-1 font-mono text-[11px] text-[#00E676]/60 space-y-3 overflow-y-auto hide-scrollbar"></div>
                     </div>
-                    <div class="flex-1 bg-white p-8 overflow-y-auto" id="builder-preview">
-                        <div class="h-full flex items-center justify-center text-gray-200 uppercase font-black tracking-widest italic">Live Neural Preview</div>
+                    <!-- White Preview Panel -->
+                    <div class="flex-1 bg-white p-8 relative overflow-y-auto" id="builder-preview">
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+                            <span class="text-[10vw] font-black uppercase italic">Cali Doa</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TICKER -->
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● Doa Academy: 4,202 students online now ●</div></div>
-
-            <footer class="w-full py-4 px-8 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
-                <div class="flex gap-8"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+            <!-- FOOTER -->
+            <footer id="global-footer" class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white z-20 mb-8">
+                <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
+
+            <!-- WORLD TICKER -->
+            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● Doa Academy: 4,202 students online now ● [System] Dougha Voice Synthesis Active ● User_442 just upgraded to PRO ●</div></div>
+
         </main>
 
         <!-- RIGHT AD PANEL -->
-        <aside id="ad-panel" class="w-72 bg-[#F9F9F9] border-l border-gray-100 flex flex-col p-6 h-full shrink-0 relative">
-            <button onclick="toggleAd()" id="ad-close-btn" class="absolute top-4 left-[-40px] bg-white border border-gray-100 p-2 rounded-full shadow-md z-[60]">×</button>
-            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[32px] mb-8 flex items-center justify-center text-[10px] text-gray-200 font-bold tracking-widest uppercase">Ad Space</div>
-            <div class="bg-white p-8 rounded-[40px] shadow-xl border border-gray-100 text-center">
-                <h3 class="text-lg font-black mb-2 italic">SKIP ADS</h3>
-                <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Unlock HD generations and remove the 10-minute headache.</p>
-                <button class="w-full bg-black text-white py-4 rounded-2xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all shadow-lg uppercase">Go Pro - $4.99</button>
+        <aside id="ad-panel" class="w-80 bg-[#F9F9F9] border-l border-gray-100 flex flex-col p-6 h-full shrink-0 relative z-50">
+            <button onclick="toggleAd()" class="absolute top-1/2 left-[-20px] bg-white border border-gray-100 w-10 h-10 rounded-full shadow-lg flex items-center justify-center font-bold hover:scale-110 transition">✕</button>
+            <div class="w-full aspect-[4/5] bg-white border border-gray-100 rounded-[40px] mb-8 flex items-center justify-center text-[10px] text-gray-300 font-bold tracking-widest uppercase">Ad Content</div>
+            <div class="bg-white p-8 rounded-[40px] shadow-xl border border-gray-100 text-center relative overflow-hidden">
+                <h3 class="text-xl font-black mb-3 italic tracking-tighter uppercase">Skip Ads</h3>
+                <p class="text-[11px] text-gray-400 mb-8 leading-relaxed font-medium">Upgrade to Pro for $4.99/mo to unlock high-definition neural tools and zero wait times.</p>
+                <button class="w-full bg-black text-white py-4 rounded-2xl font-black text-xs hover:bg-[#00E676] hover:text-black transition-all shadow-lg uppercase tracking-widest">Go Pro - $4.99</button>
             </div>
         </aside>
 
     </div>
 
-    <!-- AGENT WIDGET -->
-    <div class="fixed bottom-10 right-10 z-[100] flex flex-col items-end">
-        <div id="agent-chat" class="w-72 h-96 bg-white rounded-[32px] shadow-2xl border border-gray-100 mb-4 flex flex-col overflow-hidden">
-            <div class="bg-black p-4 flex justify-between items-center text-white">
+    <!-- FLOATING AGENT WIDGET -->
+    <div class="fixed bottom-10 right-10 z-[1001] flex flex-col items-end">
+        <div id="agent-chat" class="w-80 h-[450px] bg-white rounded-[40px] shadow-2xl border border-gray-100 mb-5 flex flex-col overflow-hidden">
+            <div class="bg-black p-5 flex justify-between items-center text-white">
                 <span class="text-xs font-black italic tracking-widest text-[#00E676]">DOA AGENT</span>
-                <button onclick="toggleAgent()" class="text-xs">×</button>
+                <button onclick="toggleAgent()" class="text-xs font-bold">×</button>
             </div>
-            <div id="agent-messages" class="flex-1 p-4 text-[11px] overflow-y-auto bg-gray-50">Hello! I'm your dedicated agent. Need something specific?</div>
-            <div class="p-3 border-t flex gap-2">
-                <input id="agent-input" class="flex-1 text-[10px] outline-none bg-gray-100 p-2 rounded-xl" placeholder="Tell Doa to...">
-                <button id="agent-send" class="bg-black text-white px-3 rounded-xl">→</button>
+            <div id="agent-messages" class="flex-1 p-5 text-[12px] overflow-y-auto bg-gray-50 leading-relaxed">
+                Hello! I am your proactive agent. I can handle tasks while you explore. What's on your mind?
+            </div>
+            <div class="p-4 border-t flex gap-2">
+                <input id="agent-input" class="flex-1 text-[11px] outline-none bg-gray-100 p-3 rounded-2xl" placeholder="Speak to agent...">
+                <button id="agent-send" class="bg-[#00E676] text-black w-10 h-10 rounded-2xl font-bold">↑</button>
             </div>
         </div>
-        <div onclick="toggleAgent()" class="w-16 h-16 bg-[#121212] rounded-full shadow-2xl flex items-center justify-center cursor-pointer border-4 border-white hover:scale-110 transition group">
-            <div class="text-[9px] font-black italic text-[#00E676] leading-none">DOA</div>
+        <div onclick="toggleAgent()" class="w-16 h-16 bg-[#121212] rounded-full shadow-2xl flex flex-col items-center justify-center cursor-pointer border-4 border-white hover:scale-110 transition group">
+            <div class="text-[9px] font-black italic text-[#00E676] tracking-tighter leading-none">DOA</div>
+            <div class="text-[7px] font-black text-white tracking-widest leading-none mt-1 opacity-50 uppercase">Agent</div>
         </div>
     </div>
 
     <!-- AD HEADACHE POPUP -->
-    <div id="ad-headache" class="fixed inset-0 bg-black/90 z-[99999] hidden flex items-center justify-center p-6">
-        <div class="bg-white p-12 rounded-[48px] max-w-md w-full text-center">
-            <h2 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Ad Headache? 🤯</h2>
-            <p class="text-gray-400 text-sm mb-10">Free members wait 30 seconds every 10 minutes. Skip this forever with Pro.</p>
-            <div id="ad-timer" class="text-5xl font-black mb-10 text-[#00E676]">30</div>
-            <button id="ad-skip-btn" class="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl font-black cursor-not-allowed uppercase">Please Wait...</button>
+    <div id="ad-headache" class="fixed inset-0 bg-black/95 z-[99999] hidden flex items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white p-12 rounded-[50px] max-w-md w-full text-center shadow-2xl border border-gray-100">
+            <h2 class="text-4xl font-black italic mb-4 tracking-tighter uppercase">Ad Headache? 🤯</h2>
+            <p class="text-gray-500 text-sm mb-10 leading-relaxed font-medium">Free members wait 30 seconds every 10 minutes. Skip this forever and unlock neural tools with Pro.</p>
+            <div id="ad-timer" class="text-6xl font-black mb-12 text-[#00E676]">30</div>
+            <button id="ad-skip-btn" class="w-full bg-gray-100 text-gray-400 py-5 rounded-2xl font-black cursor-not-allowed uppercase tracking-widest">Processing Ad...</button>
         </div>
     </div>
 
-    <div id="notification"></div>
-
     <script>
         const SUPABASE_URL = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co';
-        const SUPABASE_KEY = 'PASTE_YOUR_KEY_HERE';
-        const CLOUDFLARE_URL = 'PASTE_YOUR_WORKER_URL_HERE';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_KEY = 'PASTE_KEY';
+        const CLOUDFLARE_URL = 'PASTE_URL';
 
-        let voiceActive = false, userProfile = null;
-
-        // --- 1. THE 24 APP REGISTRY ---
+        // --- FULL 24-APP REGISTRY ---
         const apps = [
-            { id: 'cali', name: "Cali-Culator", cat: "Financial", badge: "Popular", desc: "A simple, visual monthly budget tool. Input income and expenses to see a donut chart of your spending." },
-            { id: 'subzero', name: "Sub-Zero", cat: "Financial", badge: "New", desc: "Track recurring subscriptions and calculate monthly/annual costs to identify potential savings." },
-            { id: 'goal', name: "Goal Digger", cat: "Financial", badge: "Featured", desc: "Set savings goals and target dates. Visualize progress and see exactly how much to save weekly." },
-            { id: 'habit', name: "Daily Habit Stack", cat: "Health", badge: "Fan Favorite", desc: "Build momentum by stacking positive habits and tracking daily streaks in a clean interface." },
-            { id: 'h2go', name: "H2-Go Water Tracker", cat: "Health", badge: "Simple", desc: "Ultra-simple daily water intake tracking. Tap to fill your virtual bottle and hit hydration goals." },
-            { id: 'mindful', name: "Mindful Moments", cat: "Health", badge: "Wellness", desc: "A minimalist gratitude and mood journal. Three simple daily prompts to keep you grounded." },
-            { id: 'focus', name: "Focus Flow Timer", cat: "Growth", badge: "Focus", desc: "Classic Pomodoro timer for 25-minute focus intervals. Track your daily sessions and productivity." },
-            { id: 'plant', name: "Plant Parent", cat: "Lifestyle", badge: "Nature", desc: "Track watering schedules, sunlight needs, and fertilization for all your house plants." }
-            // ... (Rest of 24 added in final script rendering)
+            { name: "Cali-Culator", cat: "Financial", badge: "Most Popular", desc: "A simple, visual monthly budget tool. Input income and expenses to see a donut chart of your spending." },
+            { name: "Sub-Zero", cat: "Financial", badge: "New", desc: "Track recurring subscriptions and calculate monthly/annual costs to identify potential savings." },
+            { name: "Goal Digger", cat: "Financial", badge: "Featured", desc: "Set savings goals and target dates. Visualize progress and see exactly how much to save weekly." },
+            { name: "Debt Free Dash", cat: "Financial", badge: "Essential", desc: "Choose between Snowball or Avalanche methods to strategically pay off multiple debts efficiently." },
+            { name: "Gig Grind Tracker", cat: "Financial", badge: "Hustle", desc: "Separate business finances from personal ones with this simple income and expense tracker for freelancers." },
+            { name: "Spend-Less Challenge", cat: "Financial", badge: "Gamified", desc: "Gamify your 'No-Spend' challenges. Track successful days and build streaks of essential-only spending." },
+            { name: "Daily Habit Stack", cat: "Health", badge: "Fan Favorite", desc: "Build momentum by stacking positive habits and tracking daily streaks in a clean interface." },
+            { name: "H2-Go Water Tracker", cat: "Health", badge: "Simple", desc: "Ultra-simple daily water intake tracking. Tap to fill your virtual bottle and hit your hydration goals." },
+            { name: "Mindful Moments", cat: "Health", badge: "Wellness", desc: "A minimalist gratitude and mood journal. Three simple daily prompts to keep you grounded." },
+            { name: "Screen-Free Streak", cat: "Health", badge: "Detox", desc: "Start a digital detox timer and track your total screen-free time per week to improve focus." },
+            { name: "Rep Counter Log", cat: "Health", badge: "Fitness", desc: "No-frills fitness tracking. Log exercises, sets, reps, and weight to monitor your progress." },
+            { name: "Sleep Cycle Log", cat: "Health", badge: "Rest", desc: "Manual sleep tracker. Input bedtime and wake-up time to calculate duration and weekly trends." },
+            { name: "Focus Flow Timer", cat: "Growth", badge: "Focus", desc: "Classic Pomodoro timer for 25-minute focus intervals. Track your daily sessions and productivity." },
+            { name: "Milestone Mapper", cat: "Growth", badge: "Planning", desc: "Break down large goals into smaller, actionable milestones and tasks to ensure project success." },
+            { name: "1% Better Skill", cat: "Growth", badge: "Growth", desc: "Define a skill, commit to daily practice time, and track your journey to mastery." },
+            { name: "Bookworm Tracker", cat: "Growth", badge: "Reading", desc: "Manage your reading list, rate finished books, and view your annual reading statistics." },
+            { name: "The Decider", cat: "Growth", badge: "Clarity", desc: "Digital tool to help make clear decisions. List pros and cons to gain clarity and overcome analysis paralysis." },
+            { name: "The Weekly Reset", cat: "Growth", badge: "Reflection", desc: "Structured weekly review tool with prompts for wins, lessons learned, and priorities." },
+            { name: "Binge List Tracker", cat: "Lifestyle", badge: "Entertainment", desc: "Your personal watchlist for movies and TV shows. Mark as watched and give simple ratings." },
+            { name: "Weekly Eats Planner", cat: "Lifestyle", badge: "Kitchen", desc: "Drag-and-drop weekly meal planning with an auto-generated shopping list feature." },
+            { name: "Gift Giver Planner", cat: "Lifestyle", badge: "Social", desc: "Track birthday and holiday gift ideas, budgets, and purchase status for everyone." },
+            { name: "Wanderlog Builder", cat: "Lifestyle", badge: "Travel", desc: "Create day-by-day itineraries for your trips, including flights, hotels, and plans." },
+            { name: "Plant Parent Care", cat: "Lifestyle", badge: "Nature", desc: "Track watering schedules, sunlight needs, and fertilization for all your house plants." },
+            { name: "Bucket List Builder", cat: "Lifestyle", badge: "Dreams", desc: "Create and manage your life's bucket list. Add goals, check them off, and add photos." }
         ];
 
-        // --- 2. ENDLESS SUGGESTION LOOP ---
-        const prompts = ["Learn Spanish", "Analyze YouTube", "Build an App", "Tell a Story", "Go Shopping", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+        // --- ENDLESS PROMPT LOOP (4 Buttons, No Repeats) ---
+        const promptOptions = ["Write Email", "Recipe Search", "Math Help", "Workout Plan", "Analyze YouTube", "Learn Spanish", "Build an App", "Tell a Story", "Code Python", "Marketing Plan", "Financial Tip", "Logo Design", "Travel Plan", "Summarize Doc"];
         function shufflePrompts() {
             const container = document.getElementById('suggestion-container');
-            const set = prompts.sort(() => 0.5 - Math.random()).slice(0, 4);
-            container.innerHTML = set.map(p => `<button onclick="runPrompt('${p}')" class="px-5 py-2 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">${p}</button>`).join('');
+            const shuffled = promptOptions.sort(() => 0.5 - Math.random());
+            container.innerHTML = shuffled.slice(0, 4).map(p => `<button onclick="document.getElementById('user-input').value='${p}'" class="px-5 py-2.5 bg-white border border-gray-100 rounded-full text-[11px] font-bold shadow-sm hover:border-[#00E676] transition-all">${p}</button>`).join('');
         }
-        setInterval(shufflePrompts, 7000); shufflePrompts();
+        setInterval(shufflePrompts, 5000); 
+        shufflePrompts();
 
-        // --- 3. VIEW CONTROLLER ---
+        // --- CORE NAVIGATION ---
         function switchView(v) {
             document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
             document.getElementById(v + '-view').classList.remove('hidden');
@@ -210,17 +250,22 @@
         function renderApps() {
             const grid = document.getElementById('app-grid');
             grid.innerHTML = apps.map(a => `
-                <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group">
-                    <p class="text-[9px] font-black text-[#00E676] uppercase mb-1">${a.badge}</p>
-                    <h4 class="font-black text-xl mb-3 uppercase tracking-tighter italic">${a.name}</h4>
+                <div class="app-card group">
+                    <p class="text-[8px] font-black text-[#00E676] uppercase mb-1 tracking-widest">${a.badge}</p>
+                    <h4 class="font-black text-lg mb-3 uppercase tracking-tighter italic">${a.name}</h4>
                     <p class="text-[11px] text-gray-400 font-medium mb-8 leading-relaxed">${a.desc}</p>
-                    <button onclick="launchNeuralBuild('${a.name}')" class="text-[10px] font-black bg-black text-white px-6 py-2 rounded-full uppercase">Generate This App</button>
+                    <button onclick="switchView('code');" class="w-full text-center text-[9px] font-black bg-black text-white py-3 rounded-2xl uppercase tracking-[0.2em] group-hover:bg-[#00E676] group-hover:text-black transition-all">Generate This App</button>
                 </div>
             `).join('');
         }
 
-        // --- 4. AD HEADACHE TIMER ---
-        let adInterval = setInterval(() => {
+        // --- UI UTILS ---
+        function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('w-0'); document.getElementById('main-sidebar').classList.toggle('opacity-0'); }
+        function toggleAd() { document.getElementById('ad-panel').classList.toggle('ad-hidden'); }
+        function toggleAgent() { document.getElementById('agent-chat').classList.toggle('active'); }
+
+        // --- AD HEADACHE POPUP LOGIC ---
+        let headacheTrigger = setInterval(() => {
             const modal = document.getElementById('ad-headache');
             modal.classList.remove('hidden');
             let count = 30;
@@ -229,23 +274,15 @@
                 count--; document.getElementById('ad-timer').innerText = count;
                 if(count <= 0) {
                     clearInterval(timer);
-                    btn.innerText = "CLOSE AD"; btn.classList.replace('bg-gray-100', 'bg-[#00E676]');
+                    btn.innerText = "CLOSE HEADACHE"; 
+                    btn.classList.replace('bg-gray-100', 'bg-[#00E676]');
                     btn.classList.replace('text-gray-400', 'text-black');
                     btn.classList.replace('cursor-not-allowed', 'cursor-pointer');
                     btn.onclick = () => modal.classList.add('hidden');
                 }
             }, 1000);
-        }, 600000); // 10 minutes
+        }, 600000); // Trigger every 10 mins
 
-        // --- 5. UI UTILS ---
-        function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('w-0'); }
-        function toggleAd() { document.getElementById('ad-panel').classList.toggle('ad-hidden'); }
-        function toggleAgent() { document.getElementById('agent-chat').classList.toggle('active'); }
-        
-        function runPrompt(p) { document.getElementById('user-input').value = p; }
-
-        // Start initialization
-        window.onload = shufflePrompts;
     </script>
 </body>
 </html>
