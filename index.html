@@ -36,19 +36,24 @@
         /* ── CHAT LAYOUT (ChatGPT-style) ── */
         #chat-view { display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Hero: animated slide-up on first message */
-        #hero-section { transition: all 0.5s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0; }
-        #hero-section.chat-started { margin-top: 12px !important; margin-bottom: 4px !important; }
-        #hero-section.chat-started h1 { font-size: 1.4rem !important; line-height: 1.2 !important; }
-        #hero-section.chat-started #welcome-text { display: none; }
+        /* Hero: fully hidden when chat starts */
+        #hero-section { transition: all 0.45s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0; overflow: hidden; }
+        #hero-section.chat-started { max-height: 0 !important; margin: 0 !important; padding: 0 !important; opacity: 0; }
 
         /* Chat history: flex-grow fills remaining height, self-scrolls */
-        #chat-history { flex: 1 1 auto; min-height: 0; overflow-y: auto; scroll-behavior: smooth; }
-
-        /* Thin scrollbar that shrinks as content grows */
-        #chat-history::-webkit-scrollbar { width: 3px; }
+        /* scrollbar sits on far-right edge of viewport, 6px wide */
+        #chat-history {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            /* extend scroll area to page edge */
+            margin-right: -24px;
+            padding-right: 24px;
+        }
+        #chat-history::-webkit-scrollbar { width: 6px; }
         #chat-history::-webkit-scrollbar-track { background: transparent; }
-        #chat-history::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+        #chat-history::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
         #chat-history::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
         /* Input area: never overlaps ticker */
@@ -99,8 +104,8 @@
 
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col overflow-hidden">
 
-                <!-- HERO: slides up and compresses when first message is sent -->
-                <div id="hero-section" class="text-center mt-16 mb-10 px-10">
+                <!-- HERO: fades/collapses fully when chat starts -->
+                <div id="hero-section" class="text-center px-10" style="margin-top: clamp(32px, 10vh, 80px); margin-bottom: clamp(16px, 4vh, 40px);">
                     <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
@@ -110,6 +115,13 @@
 
                 <!-- INPUT BAR: stays pinned at bottom, never clips under ticker -->
                 <div id="chat-input-wrap" class="w-full max-w-3xl mx-auto px-4 mt-auto">
+                    <!-- Live Voice toggle above input -->
+                    <div class="flex items-center gap-3 mb-3 px-1">
+                        <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
+                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
+                        </div>
+                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
+                    </div>
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-3 min-h-[36px]"></div>
                     <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center gap-1">
                         <button class="p-3 text-gray-300">+</button>
@@ -121,12 +133,6 @@
                             </svg>
                         </button>
                         <button id="send-btn" onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
-                    </div>
-                    <div class="flex justify-end items-center gap-3 pr-2 mt-3 mb-1">
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                        <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
-                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -161,7 +167,7 @@
                 <div id="laser-toast" class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#00E676] text-black text-xs font-black uppercase tracking-widest px-5 py-2 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none"></div>
             </div>
 
-            <footer class="w-full py-2 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20">
+            <footer class="w-full py-4 px-10 border-t border-gray-100 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20">
                 <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
@@ -411,6 +417,11 @@
             document.getElementById('chat-history').classList.add('hidden');
             document.getElementById('hero-section').classList.remove('chat-started');
             renderHistory();
+            // Switch to chat view if not already there, but DON'T force away from other pages
+            const chatView = document.getElementById('chat-view');
+            if (!chatView || chatView.classList.contains('hidden')) {
+                switchView('chat');
+            }
         }
 
         function toggleSidebar() { 
@@ -425,6 +436,10 @@
             document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
             document.getElementById(v + '-view').classList.remove('hidden');
             if (v === 'laser') initLaserTag();
+            // Update active nav highlight
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
+            const navBtn = document.getElementById('nav-' + v);
+            if (navBtn) navBtn.classList.add('sidebar-active');
         }
 
 
