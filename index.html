@@ -85,229 +85,254 @@
         </main>
     </div>
 
-    <script>
-        // --- CONSTANTS & DATA ---
-        const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-        let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-        let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
-        let currentChatId = null;
-        let lastResponses = []; // Anti-repetition queue
+   <script>
+    // --- CONSTANTS & DATA ---
+    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
+    let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
+    let currentChatId = null;
+    let lastResponses = [];
 
-        const SIMPLE_INPUTS = ["hi","hey","hello","yo","sup","hi doa","hey doa","hello doa","good morning","good morning doa","morning","morning doa","good afternoon","good afternoon doa","afternoon","afternoon doa","good evening","good evening doa","evening","evening doa","good night","good night doa","you there","are you there","you around","are you around","whats up","what's up","whats up doa","what's up doa","how are you","how are you doing","how you doing","hows it going","how's it going","hows it going doa","how's it going doa","how are things","hows everything","how's everything","thanks","thank you","thanks doa","thank you doa","appreciate it","much appreciated"];
+    const SIMPLE_INPUTS = ["hi","hey","hello","yo","sup","hi doa","hey doa","hello doa","good morning","good morning doa","morning","morning doa","good afternoon","good afternoon doa","afternoon","afternoon doa","good evening","good evening doa","evening","evening doa","good night","good night doa","you there","are you there","you around","are you around","whats up","what's up","whats up doa","what's up doa","how are you","how are you doing","how you doing","hows it going","how's it going","hows it going doa","how's it going doa","how are things","hows everything","how's everything","thanks","thank you","thanks doa","thank you doa","appreciate it","much appreciated"];
 
-        const FIRST_RESPONSE_VARIANTS = [
-            "hello — doing fantastic, how are you or how can I help you",
-            "hey — doing great, how are you or what do you need",
-            "hi — everything is exponentially good, how are you or how can I help",
-            "good morning — doing fantastic, how are you or how can I help",
-            "good afternoon — doing great, how are you or what do you need",
-            "good evening — everything’s good, how are you or how can I help",
-            "hello — doing fantastic, how are you or what can I do for you",
-            "hey there — doing great, how are you or how can I assist",
-            "hi there — everything’s good, how are you or what do you need",
-            "hello — miraculously well, how are you or how can I help you",
-            "hey — splendid, how are you or what can I help with",
-            "hi — marvelous, how are you or what do you need",
-            "hello — magnificent, how are you or how can I help you",
-            "hey — sublime, how are you or what can I do for you",
-            "hi — radiantly so, how are you or how can I assist",
-            "hello — exuberant, how are you or what do you need",
-            "hey — positively electric, how are you or how can I help",
-            "hi — boundlessly brilliant, how are you or what can I do",
-            "hello — majestically aligned, how are you or how can I help you",
-            "hey — exquisitely executed, how are you or what do you need",
-            "hi — resplendent, how are you or how can I assist",
-            "hello — luxurious, how are you or what can I help with",
-            "hey — spectacular, how are you or how can I help",
-            "hi — enthralling, how are you or what do you need",
-            "hello — doing great, how are you or how can I help",
-            "hey — everything’s good, how are you or what do you need",
-            "hi — doing well, how are you or how can I help",
-            "hello — all good here, how are you or what can I do for you",
-            "hey — smooth so far, how are you or how can I assist",
-            "hi — steady, how are you or what do you need"
-        ];
+    const FIRST_RESPONSE_VARIANTS = [
+        "hello — doing fantastic, how are you or how can I help you",
+        "hey — doing great, how are you or what do you need",
+        "hi — everything is exponentially good, how are you or how can I help",
+        "hello — miraculously well, how are you or how can I help you",
+        "hey — splendid, how are you or what can I help with",
+        "hi — marvelous, how are you or what do you need",
+        "hello — magnificent, how are you or how can I help you",
+        "hi — radiantly so, how are you or how can I assist",
+        "hello — exuberant, how are you or what do you need",
+        "hey — positively electric, how are you or how can I help",
+        "hi — boundlessly brilliant, how are you or what can I do"
+    ];
 
-        const SIMPLE_RESPONSES = {
-            presence: ["yeah, I’m here", "I’m here", "right here", "ready when you are", "go ahead"],
-            casual: ["what’s up", "everything is exponentially good", "miraculously", "splendid", "marvelous"],
-            time: ["good morning", "good afternoon", "good evening", "have a calm day", "have a harmonious day"],
-            thanks: ["thank you vehemently", "thank you deeply", "thank you kindly", "much appreciated", "have a harmonious day"]
-        };
+    const SIMPLE_RESPONSES = {
+        presence: [
+            "yeah, I’m right here and ready",
+            "I’m here, what's on your mind?",
+            "right here, always ready for the next move",
+            "ready when you are, go ahead"
+        ],
+        casual: [
+            "everything is still moving exponentially well over here",
+            "doing miraculously, what's going on with you?",
+            "feeling splendid, how can I assist you further?",
+            "things are marvelous on this end, what's up?",
+            "still here and doing great, how can I help?"
+        ],
+        greetings: [
+            "hello again — still doing wonderful, how can I help?",
+            "hey there — I'm here and ready for whatever you need",
+            "hi! always good to hear from you, what's next?",
+            "hello — everything is flowing perfectly, how are you doing?"
+        ],
+        time: [
+            "good morning — I hope your morning is starting off beautifully",
+            "good afternoon — I hope your day is moving along smoothly",
+            "good evening — I hope you're having a calm and productive night",
+            "good day — everything is aligned and moving well here"
+        ],
+        thanks: [
+            "thank you vehemently, I'm glad I could help",
+            "thank you deeply, I appreciate the kind words",
+            "thank you kindly, have a harmonious day",
+            "much appreciated — I'm here whenever you need me"
+        ]
+    };
 
-        // --- CORE LOGIC ---
+    // --- CORE LOGIC ---
 
-        function normalize(str) {
-            return str.toLowerCase().replace(/[^\w\s]/g, "").replace(/\bdoa\b/g, "").trim();
+    function normalize(str) {
+        return str.toLowerCase().replace(/[^\w\s]/g, "").replace(/\bdoa\b/g, "").trim();
+    }
+
+    function getLocalResponse(input, isFirst) {
+        const clean = normalize(input);
+        const raw = input.toLowerCase();
+
+        // 1. Check if it's even in our whitelist
+        if (!SIMPLE_INPUTS.includes(raw) && !SIMPLE_INPUTS.includes(clean)) return null;
+
+        let pool = [];
+
+        // 2. Logic to choose the right pool
+        if (isFirst) {
+            pool = FIRST_RESPONSE_VARIANTS;
+        } else if (clean.includes("thank") || clean.includes("appreciate")) {
+            pool = SIMPLE_RESPONSES.thanks;
+        } else if (clean.includes("morning") || clean.includes("afternoon") || clean.includes("evening") || raw.includes("night")) {
+            pool = SIMPLE_RESPONSES.time;
+        } else if (clean.includes("there") || clean.includes("around")) {
+            pool = SIMPLE_RESPONSES.presence;
+        } else if (["hi", "hello", "hey", "yo", "sup"].some(greet => clean === greet)) {
+            pool = SIMPLE_RESPONSES.greetings; // Use the "Greeting" pool instead of "Casual"
+        } else {
+            pool = SIMPLE_RESPONSES.casual;
         }
 
-        function getLocalResponse(input, isFirst) {
-            const clean = normalize(input);
-            if (!SIMPLE_INPUTS.includes(clean) && !SIMPLE_INPUTS.includes(normalize(input))) return null;
+        // Anti-repetition Reroll
+        let choice;
+        let attempts = 0;
+        do {
+            choice = pool[Math.floor(Math.random() * pool.length)];
+            attempts++;
+        } while (lastResponses.includes(choice) && attempts < 5);
 
-            let pool = [];
-            if (isFirst) {
-                pool = FIRST_RESPONSE_VARIANTS;
-            } else if (clean.includes("thank") || clean.includes("appreciate")) {
-                pool = SIMPLE_RESPONSES.thanks;
-            } else if (["morning", "afternoon", "evening", "night"].some(t => clean.includes(t))) {
-                pool = SIMPLE_RESPONSES.time;
-            } else if (clean.includes("there") || clean.includes("around")) {
-                pool = SIMPLE_RESPONSES.presence;
-            } else {
-                pool = SIMPLE_RESPONSES.casual;
+        lastResponses.push(choice);
+        if (lastResponses.length > 5) lastResponses.shift();
+        return choice;
+    }
+
+    async function handleMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value.trim();
+        if(!text) return;
+
+        document.getElementById('hero-section').style.display = 'none';
+        document.getElementById('chat-history').classList.remove('hidden');
+        addBubble('user', text);
+        input.value = "";
+
+        let isFirst = (currentChatId === null);
+        if (isFirst) {
+            currentChatId = Date.now();
+            chatHistoryData.unshift({ 
+                id: currentChatId, 
+                title: text.substring(0, 25) + (text.length > 25 ? "..." : ""), 
+                messages: [] 
+            });
+        }
+        
+        const chat = chatHistoryData.find(c => c.id === currentChatId);
+        chat.messages.push({ role: 'user', text: text });
+
+        // Check Local Brain first
+        const localReply = getLocalResponse(text, isFirst);
+        
+        if (localReply) {
+            setTimeout(() => {
+                addBubble('doa', localReply);
+                speak(localReply);
+                chat.messages.push({ role: 'doa', text: localReply });
+                saveAndRender();
+            }, 400); // Small delay to feel natural
+        } else {
+            // Fallback to Gemini API
+            try {
+                const res = await fetch(CLOUDFLARE_URL, { 
+                    method:'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body:JSON.stringify({text:text}) 
+                });
+                const data = await res.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+                addBubble('doa', aiText);
+                speak(aiText);
+                chat.messages.push({ role: 'doa', text: aiText });
+                saveAndRender();
+            } catch(e) { 
+                addBubble('doa', "Neural Link fuzzy. Try again!"); 
             }
-
-            // Anti-repetition Reroll
-            let choice;
-            let attempts = 0;
-            do {
-                choice = pool[Math.floor(Math.random() * pool.length)];
-                attempts++;
-            } while (lastResponses.includes(choice) && attempts < 10);
-
-            lastResponses.push(choice);
-            if (lastResponses.length > 5) lastResponses.shift();
-            return choice;
         }
+    }
 
-        async function handleMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if(!text) return;
+    // --- UI HELPERS ---
+    function addBubble(role, t) {
+        const h = document.getElementById('chat-history');
+        const d = document.createElement('div');
+        d.className = `flex ${role==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
+        d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm leading-relaxed">${t}</div>`;
+        h.appendChild(d); 
+        h.scrollTop = h.scrollHeight;
+    }
 
-            document.getElementById('hero-section').style.display = 'none';
-            document.getElementById('chat-history').classList.remove('hidden');
-            addBubble('user', text);
-            input.value = "";
+    function saveAndRender() {
+        localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
+        renderHistory();
+    }
 
-            let isFirst = (currentChatId === null);
-            if (isFirst) {
-                currentChatId = Date.now();
-                chatHistoryData.unshift({ id: currentChatId, title: text.substring(0, 20), messages: [] });
-            }
-            
-            const chat = chatHistoryData.find(c => c.id === currentChatId);
-            chat.messages.push({ role: 'user', text: text });
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        list.innerHTML = chatHistoryData.map(i => `
+            <div class="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition ${currentChatId === i.id ? 'bg-gray-50' : ''}">
+                <p onclick="loadChat(${i.id})" class="text-[11px] font-bold truncate cursor-pointer hover:text-black flex-1 ${currentChatId === i.id ? 'text-black font-black' : 'text-gray-400'}">${i.title}</p>
+                <button onclick="deleteHistory(${i.id}, event)" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 px-1">✕</button>
+            </div>
+        `).join('');
+    }
 
-            // 1. Check Local Brain
-            const localReply = getLocalResponse(text, isFirst);
-            
-            if (localReply) {
-                setTimeout(() => {
-                    addBubble('doa', localReply);
-                    speak(localReply);
-                    chat.messages.push({ role: 'doa', text: localReply });
-                    saveAndRender();
-                }, 300);
-            } else {
-                // 2. Fallback to Gemini
-                try {
-                    const res = await fetch(CLOUDFLARE_URL, { 
-                        method:'POST', 
-                        headers: {'Content-Type': 'application/json'},
-                        body:JSON.stringify({text:text}) 
-                    });
-                    const data = await res.json();
-                    const aiText = data.candidates[0].content.parts[0].text;
-                    addBubble('doa', aiText);
-                    speak(aiText);
-                    chat.messages.push({ role: 'doa', text: aiText });
-                    saveAndRender();
-                } catch(e) { addBubble('doa', "Connection fuzzy. Try again."); }
-            }
-        }
+    function loadChat(id) {
+        currentChatId = id;
+        const chat = chatHistoryData.find(c => c.id === id);
+        if(!chat) return;
+        document.getElementById('hero-section').style.display = 'none';
+        const historyDiv = document.getElementById('chat-history');
+        historyDiv.classList.remove('hidden');
+        historyDiv.innerHTML = "";
+        chat.messages.forEach(m => addBubble(m.role, m.text));
+        switchView('chat');
+        renderHistory();
+    }
 
-        // --- UI & UTILS ---
-        function addBubble(role, t) {
-            const h = document.getElementById('chat-history');
-            const d = document.createElement('div');
-            d.className = `flex ${role==='user'?'justify-end':'justify-start'} w-full chat-bubble`;
-            d.innerHTML = `<div class="${role==='user'?'bg-black text-white':'bg-gray-100'} p-4 rounded-3xl max-w-md text-sm my-1 shadow-sm">${t}</div>`;
-            h.appendChild(d); h.scrollTop = h.scrollHeight;
-        }
+    function startNewChat() {
+        currentChatId = null;
+        document.getElementById('chat-history').innerHTML = "";
+        document.getElementById('chat-history').classList.add('hidden');
+        document.getElementById('hero-section').style.display = 'block';
+        renderHistory();
+    }
 
-        function saveAndRender() {
-            localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-            renderHistory();
-        }
+    function deleteHistory(id, e) {
+        e.stopPropagation();
+        chatHistoryData = chatHistoryData.filter(c => c.id !== id);
+        if(currentChatId === id) startNewChat();
+        saveAndRender();
+    }
 
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = chatHistoryData.map(i => `
-                <div class="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition ${currentChatId === i.id ? 'bg-gray-50' : ''}">
-                    <p onclick="loadChat(${i.id})" class="text-[11px] font-bold truncate cursor-pointer hover:text-black flex-1 ${currentChatId === i.id ? 'text-black' : 'text-gray-400'}">${i.title}</p>
-                    <button onclick="deleteHistory(${i.id}, event)" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 px-1">✕</button>
-                </div>
-            `).join('');
-        }
+    function toggleSidebar() {
+        const sb = document.getElementById('main-sidebar');
+        const btn = document.getElementById('open-sidebar-btn');
+        sb.classList.toggle('collapsed');
+        if(sb.classList.contains('collapsed')) btn.classList.remove('hidden');
+        else btn.classList.add('hidden');
+    }
 
-        function loadChat(id) {
-            currentChatId = id;
-            const chat = chatHistoryData.find(c => c.id === id);
-            document.getElementById('hero-section').style.display = 'none';
-            const historyDiv = document.getElementById('chat-history');
-            historyDiv.classList.remove('hidden');
-            historyDiv.innerHTML = "";
-            chat.messages.forEach(m => addBubble(m.role, m.text));
-            switchView('chat');
-            renderHistory();
-        }
+    function switchView(v) {
+        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+        document.getElementById(v + '-view').classList.remove('hidden');
+    }
 
-        function startNewChat() {
-            currentChatId = null;
-            document.getElementById('chat-history').innerHTML = "";
-            document.getElementById('chat-history').classList.add('hidden');
-            document.getElementById('hero-section').style.display = 'block';
-            renderHistory();
-        }
+    // --- VOICE ---
+    let voices = [];
+    let selectedVoice = null;
+    function loadVoices() {
+        voices = window.speechSynthesis.getVoices();
+        selectedVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Aria") || v.name.includes("Google US English") || v.name.includes("Victoria"));
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    function speak(text) {
+        if (!voiceActive) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text.replace(/\bDoa\b/gi, "DOUGH-wah").replace(/[*#`_~]/g, ""));
+        if (selectedVoice) u.voice = selectedVoice;
+        u.rate = 0.95;
+        window.speechSynthesis.speak(u);
+    }
+    function toggleVoice() {
+        voiceActive = !voiceActive;
+        localStorage.setItem('voice_active', voiceActive);
+        updateVoiceUI();
+        if (voiceActive) speak("Live voice active.");
+    }
+    function updateVoiceUI() {
+        document.getElementById('voice-knob').style.left = voiceActive ? "16px" : "2px";
+        document.getElementById('voice-switch').style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+    }
 
-        function deleteHistory(id, e) {
-            e.stopPropagation();
-            chatHistoryData = chatHistoryData.filter(c => c.id !== id);
-            if(currentChatId === id) startNewChat();
-            saveAndRender();
-        }
-
-        function toggleSidebar() {
-            const sb = document.getElementById('main-sidebar');
-            const btn = document.getElementById('open-sidebar-btn');
-            sb.classList.toggle('collapsed');
-            btn.classList.toggle('hidden', !sb.classList.contains('collapsed'));
-        }
-
-        function switchView(v) {
-            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-            document.getElementById(v + '-view').classList.remove('hidden');
-        }
-
-        // VOICE
-        let voices = [];
-        let selectedVoice = null;
-        function loadVoices() {
-            voices = window.speechSynthesis.getVoices();
-            selectedVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Aria") || v.name.includes("Google US English"));
-        }
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-        function speak(text) {
-            if (!voiceActive) return;
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text.replace(/\bDoa\b/gi, "DOUGH-wah").replace(/[*#`_~]/g, ""));
-            if (selectedVoice) u.voice = selectedVoice;
-            u.rate = 0.95;
-            window.speechSynthesis.speak(u);
-        }
-        function toggleVoice() {
-            voiceActive = !voiceActive;
-            localStorage.setItem('voice_active', voiceActive);
-            updateVoiceUI();
-        }
-        function updateVoiceUI() {
-            document.getElementById('voice-knob').style.left = voiceActive ? "16px" : "2px";
-            document.getElementById('voice-switch').style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
-        }
-
-        window.onload = () => { loadVoices(); renderHistory(); updateVoiceUI(); };
-    </script>
+    window.onload = () => { loadVoices(); renderHistory(); updateVoiceUI(); };
+</script>
 </body>
 </html>
