@@ -18,9 +18,7 @@
         .sidebar-item:hover { background-color: #f3f4f6; color: #121212; }
         .sidebar-active { background: #121212 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
-        #ticker-wrap { white-space: nowrap; overflow: hidden; position: fixed; bottom: 0; width: 100%; background: #000; padding: 8px 0; z-index: 100; border-top: 1px solid #111; }
-        #ticker-content { display: inline-block; animation: marquee 40s linear infinite; font-size: 9px; font-weight: 900; text-transform: uppercase; tracking-widest; color: #333; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
 
         .chat-bubble { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -36,28 +34,26 @@
         /* ── CHAT LAYOUT (ChatGPT-style) ── */
         #chat-view { display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Hero: fully hidden when chat starts */
-        #hero-section { transition: all 0.45s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0; overflow: hidden; }
-        #hero-section.chat-started { max-height: 0 !important; margin: 0 !important; padding: 0 !important; opacity: 0; }
+        /* Hero: takes all space when idle, collapses when chat starts */
+        #hero-section { transition: all 0.45s cubic-bezier(0.4,0,0.2,1); overflow: hidden; }
+        #hero-section.chat-started { flex: 0 0 0 !important; max-height: 0 !important; opacity: 0; padding: 0 !important; margin: 0 !important; }
 
         /* Chat history: flex-grow fills remaining height, self-scrolls */
-        /* scrollbar sits on far-right edge of viewport, 6px wide */
         #chat-history {
             flex: 1 1 auto;
             min-height: 0;
             overflow-y: auto;
+            overflow-x: hidden;
             scroll-behavior: smooth;
-            /* extend scroll area to page edge */
-            margin-right: -24px;
-            padding-right: 24px;
         }
+        /* Scrollbar on far right of the chat column */
         #chat-history::-webkit-scrollbar { width: 6px; }
-        #chat-history::-webkit-scrollbar-track { background: transparent; }
+        #chat-history::-webkit-scrollbar-track { background: #f9fafb; border-radius: 99px; }
         #chat-history::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
         #chat-history::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
         /* Input area: never overlaps ticker */
-        #chat-input-wrap { flex-shrink: 0; padding-bottom: 52px; }
+        #chat-input-wrap { flex-shrink: 0; padding-bottom: 16px; }
     </style>
 </head>
 <body class="text-gray-900">
@@ -105,34 +101,33 @@
             <div id="chat-view" class="view-container flex-1 w-full flex flex-col overflow-hidden">
 
                 <!-- HERO: fades/collapses fully when chat starts -->
-                <div id="hero-section" class="text-center px-10" style="margin-top: clamp(32px, 10vh, 80px); margin-bottom: clamp(16px, 4vh, 40px);">
-                    <h1 class="text-6xl font-black mb-4 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
+                <div id="hero-section" class="text-center px-10 flex-1 flex flex-col items-center justify-center pb-16">
+                    <h1 class="text-6xl font-black mb-5 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span> <br> do for you?</h1>
                     <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Your intelligent companion for thinking, building, and creating.</p>
                 </div>
 
                 <!-- CHAT HISTORY: grows upward, scrollbar thins as content fills -->
-                <div id="chat-history" class="w-full max-w-3xl mx-auto px-6 space-y-4 py-4 hidden"></div>
+                <div id="chat-history" class="w-full max-w-3xl mx-auto px-4 space-y-4 py-6 hidden"></div>
 
                 <!-- INPUT BAR: stays pinned at bottom, never clips under ticker -->
                 <div id="chat-input-wrap" class="w-full max-w-3xl mx-auto px-4 mt-auto">
-                    <!-- Live Voice toggle above input -->
-                    <div class="flex items-center gap-3 mb-3 px-1">
-                        <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer">
-                            <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
-                        </div>
-                        <span class="text-[9px] font-black text-gray-300 tracking-[0.2em] uppercase">Live Voice</span>
-                    </div>
                     <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-3 min-h-[36px]"></div>
-                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center gap-1">
-                        <button class="p-3 text-gray-300">+</button>
-                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium" placeholder="Ask Doa anything...">
+                    <div class="bg-white border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[24px] p-2.5 flex items-center gap-2">
+                        <button class="p-3 text-gray-300 shrink-0">+</button>
+                        <input id="user-input" class="flex-1 p-2 outline-none text-[14px] font-medium min-w-0" placeholder="Ask Doa anything...">
                         <button id="mic-btn" onclick="toggleMic()" title="Speak to Doa"
                             class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-[#00E676] transition-colors">
                             <svg id="mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
                             </svg>
                         </button>
-                        <button id="send-btn" onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors">→</button>
+                        <div class="flex items-center gap-2 shrink-0 border-l border-gray-100 pl-2 ml-1">
+                            <span class="text-[8px] font-black text-gray-300 tracking-widest uppercase whitespace-nowrap">Live Voice</span>
+                            <div id="voice-switch" onclick="toggleVoice()" class="w-7 h-3.5 bg-gray-100 rounded-full relative cursor-pointer shrink-0">
+                                <div id="voice-knob" class="absolute left-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-all"></div>
+                            </div>
+                        </div>
+                        <button id="send-btn" onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full shadow-lg hover:bg-[#00E676] transition-colors shrink-0">→</button>
                     </div>
                 </div>
             </div>
@@ -167,11 +162,11 @@
                 <div id="laser-toast" class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#00E676] text-black text-xs font-black uppercase tracking-widest px-5 py-2 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none"></div>
             </div>
 
-            <footer class="w-full py-4 px-10 border-t border-gray-100 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20">
+            <footer class="w-full py-4 px-10 border-t border-gray-100 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 shrink-0">
                 <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Affiliate</a></div>
                 <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
             </footer>
-            <div id="ticker-wrap"><div id="ticker-content">Initializing Cali Doa World Feed... ● User_88 just hit Rank 42 in Laser Tag ● New Budget App generated ● doaa Voice Active ●</div></div>
+
         </main>
     </div>
 
