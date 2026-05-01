@@ -45,10 +45,6 @@
       box-shadow: none;
     }
 
-    #chat-shell {
-      transition: transform 0.3s ease;
-    }
-
     .sidebar-item {
       transition: all 0.2s ease;
       border-radius: 14px;
@@ -63,19 +59,10 @@
       font-size: 13px;
     }
 
-    .sidebar-item:hover {
-      background-color: #f3f4f6;
-      color: #111827;
-    }
+    .sidebar-item:hover { background-color: #f3f4f6; color: #111827; }
+    .sidebar-active { background: #111111 !important; color: white !important; }
 
-    .sidebar-active {
-      background: #111111 !important;
-      color: white !important;
-    }
-
-    .chat-bubble {
-      animation: fadeIn 0.28s ease-out forwards;
-    }
+    .chat-bubble { animation: fadeIn 0.28s ease-out forwards; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
@@ -103,22 +90,22 @@
       max-height: 150px;
     }
 
+    .action-btn {
+      font-size: 10px;
+      color: #9ca3af;
+      font-weight: 800;
+      transition: .2s;
+    }
+
+    .action-btn:hover { color: #111827; }
+
     #voice-switch { transition: background-color 0.3s; }
     #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
     @media (max-width: 768px) {
-      #chat-view {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-      }
-
-      #hero-title {
-        font-size: 42px !important;
-      }
-
-      footer {
-        display: none !important;
-      }
+      #chat-view { padding-left: 16px !important; padding-right: 16px !important; }
+      #hero-title { font-size: 42px !important; }
+      footer { display: none !important; }
     }
   </style>
 </head>
@@ -135,7 +122,7 @@
 
     <aside id="main-sidebar" class="collapsed bg-white border-r border-gray-100 flex flex-col h-full shrink-0 relative">
       <div class="p-6 flex items-center justify-between">
-        <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="switchView('chat')">DOA CALI</h1>
+        <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="newChat()">DOA CALI</h1>
         <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-[9px] font-black uppercase tracking-widest">Hide</button>
       </div>
 
@@ -150,7 +137,11 @@
           <p class="p-2 opacity-30 italic">No tools published yet...</p>
         </div>
 
-        <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mt-10 mb-3">Previously</p>
+        <div class="flex items-center justify-between px-2 mt-10 mb-3">
+          <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em]">Previously</p>
+          <button id="undo-delete-btn" onclick="undoDeleteChat()" class="hidden text-[9px] font-black uppercase tracking-widest text-gray-300 hover:text-black">Undo</button>
+        </div>
+
         <div id="history-list" class="space-y-1 px-1"></div>
       </nav>
     </aside>
@@ -184,7 +175,20 @@
 
           <div id="chat-history" class="hidden w-full flex-1 overflow-y-auto hide-scrollbar space-y-5 py-6 px-1 min-h-0"></div>
 
-          <div id="input-area" class="w-full shrink-0 pb-16 pt-6 bg-white">
+          <div id="input-area" class="w-full shrink-0 pb-5 pt-2 bg-white">
+            <div class="w-full max-w-2xl mx-auto flex justify-between items-center gap-3 px-2 mb-3">
+              <p class="text-[9px] font-black text-gray-300 tracking-[0.18em] uppercase">
+                Doa can make mistakes. Check important facts.
+              </p>
+
+              <div class="flex items-center gap-3">
+                <span class="text-[9px] font-black text-gray-300 tracking-[0.22em] uppercase">Live Voice</span>
+                <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer">
+                  <div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm"></div>
+                </div>
+              </div>
+            </div>
+
             <div class="flex justify-center">
               <div class="w-full max-w-2xl bg-white border border-gray-200 shadow-[0_20px_70px_rgba(0,0,0,0.08)] rounded-[28px] p-2.5 flex items-end gap-2">
                 <button class="shrink-0 w-10 h-10 rounded-full text-gray-300 hover:text-black hover:bg-gray-50 transition text-xl leading-none">+</button>
@@ -199,13 +203,6 @@
                 <button id="send-btn" onclick="handleMessage()" class="shrink-0 bg-black text-white w-11 h-11 rounded-full shadow-lg hover:bg-[#00E676] hover:text-black transition-colors font-bold">
                   →
                 </button>
-              </div>
-            </div>
-
-            <div class="w-full max-w-2xl mx-auto flex justify-end items-center gap-3 pr-2 mt-4">
-              <span class="text-[9px] font-black text-gray-300 tracking-[0.22em] uppercase">Live Voice</span>
-              <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer">
-                <div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm"></div>
               </div>
             </div>
           </div>
@@ -234,9 +231,12 @@
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
 
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-    let chatHistoryData = JSON.parse(localStorage.getItem('doa_history')) || [];
+    let conversations = JSON.parse(localStorage.getItem('doa_conversations')) || [];
+    let currentConversationId = localStorage.getItem('current_conversation_id') || null;
+    let deletedChatBackup = null;
     let selectedVoice = null;
     let isThinking = false;
+    let lastUserPrompt = "";
 
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
@@ -261,6 +261,7 @@
 
       const cleanText = String(text)
         .replace(/\bDoa\b/gi, "doaa")
+        .replace(/\bDOA\b/g, "doaa")
         .replace(/[*#`_~]/g, "")
         .replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
 
@@ -275,19 +276,23 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    async function handleMessage() {
+    async function handleMessage(customText = null, isRegenerate = false) {
       if (isThinking) return;
 
       const input = document.getElementById('user-input');
-      const text = input.value.trim();
+      const text = customText || input.value.trim();
 
       if (!text) return;
 
       setChatMode();
-      addBubble('user', text);
-      input.value = '';
-      autoResizeInput();
 
+      if (!isRegenerate) {
+        addMessage('user', text);
+        input.value = '';
+        autoResizeInput();
+      }
+
+      lastUserPrompt = text;
       showThinking();
 
       try {
@@ -322,18 +327,100 @@
           "Neural Link fuzzy!";
 
         removeThinking();
-        addBubble('doaa', aiText);
+        addMessage('doaa', aiText);
         speak(aiText);
 
       } catch (error) {
         console.error("Fetch Error:", error);
         removeThinking();
-        addBubble('doaa', "Neural Link fuzzy! Check Cloudflare logs.");
+        addMessage('doaa', "Neural Link fuzzy! Check Cloudflare logs.");
       } finally {
         isThinking = false;
         updateSendButton(false);
         input.focus();
       }
+    }
+
+    function ensureConversation() {
+      if (currentConversationId) {
+        const found = conversations.find(c => c.id === currentConversationId);
+        if (found) return found;
+      }
+
+      const convo = {
+        id: "chat_" + Date.now(),
+        title: "New chat",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messages: []
+      };
+
+      conversations.unshift(convo);
+      currentConversationId = convo.id;
+      localStorage.setItem('current_conversation_id', currentConversationId);
+      saveConversations();
+      return convo;
+    }
+
+    function addMessage(sender, text) {
+      const convo = ensureConversation();
+
+      const msg = {
+        id: "msg_" + Date.now() + "_" + Math.random().toString(16).slice(2),
+        sender,
+        text,
+        createdAt: Date.now()
+      };
+
+      convo.messages.push(msg);
+      convo.updatedAt = Date.now();
+
+      if (sender === 'user' && (!convo.title || convo.title === "New chat")) {
+        convo.title = text.slice(0, 28);
+      }
+
+      saveConversations();
+      renderMessage(msg);
+      renderHistory();
+    }
+
+    function renderMessage(msg) {
+      const history = document.getElementById('chat-history');
+      const row = document.createElement('div');
+
+      row.className = `flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble`;
+      row.dataset.messageId = msg.id;
+
+      const bubbleClass = msg.sender === 'user'
+        ? 'bg-black text-white shadow-lg rounded-[24px] rounded-br-md'
+        : 'bg-gray-100 text-gray-900 rounded-[24px] rounded-bl-md';
+
+      const actions = msg.sender === 'doaa'
+        ? `
+          <div class="flex gap-4 mt-2 pl-1">
+            <button class="action-btn" onclick="speakFromBubble('${msg.id}')">🔊 Speak</button>
+            <button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button>
+            <button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button>
+            <button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button>
+          </div>
+        `
+        : `
+          <div class="flex justify-end gap-4 mt-2 pr-1">
+            <button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button>
+            <button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button>
+            <button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button>
+          </div>
+        `;
+
+      row.innerHTML = `
+        <div class="max-w-[78%]">
+          <div class="${bubbleClass} px-5 py-4 text-[14px] leading-relaxed shadow-sm whitespace-pre-wrap">${escapeHTML(msg.text)}</div>
+          ${actions}
+        </div>
+      `;
+
+      history.appendChild(row);
+      scrollChatToBottom();
     }
 
     function setChatMode() {
@@ -344,28 +431,157 @@
 
       if (inputArea) {
         inputArea.classList.remove('pb-16', 'pt-6');
-        inputArea.classList.add('pb-7', 'pt-3', 'mt-auto');
+        inputArea.classList.add('pb-3', 'pt-2', 'mt-auto');
       }
     }
 
-    function addBubble(sender, text) {
+    function newChat() {
+      currentConversationId = null;
+      localStorage.removeItem('current_conversation_id');
+      document.getElementById('chat-history').innerHTML = '';
+      document.getElementById('chat-history').classList.add('hidden');
+      document.getElementById('hero-section').classList.remove('hidden');
+      document.getElementById('input-area').classList.remove('pb-3', 'pt-2', 'mt-auto');
+      document.getElementById('input-area').classList.add('pb-16', 'pt-6');
+      switchView('chat');
+    }
+
+    function openConversation(id) {
+      const convo = conversations.find(c => c.id === id);
+      if (!convo) return;
+
+      currentConversationId = id;
+      localStorage.setItem('current_conversation_id', id);
+
       const history = document.getElementById('chat-history');
-      const row = document.createElement('div');
+      history.innerHTML = '';
+      setChatMode();
 
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble`;
+      convo.messages.forEach(renderMessage);
+      renderHistory();
+      switchView('chat');
+    }
 
-      const bubbleClass = sender === 'user'
-        ? 'bg-black text-white shadow-lg rounded-[24px] rounded-br-md'
-        : 'bg-gray-100 text-gray-900 rounded-[24px] rounded-bl-md';
+    function deleteConversation(id, event) {
+      if (event) event.stopPropagation();
 
-      row.innerHTML = `
-        <div class="${bubbleClass} px-5 py-4 max-w-[78%] text-[14px] leading-relaxed shadow-sm whitespace-pre-wrap">${escapeHTML(text)}</div>
-      `;
+      const index = conversations.findIndex(c => c.id === id);
+      if (index === -1) return;
 
-      history.appendChild(row);
-      scrollChatToBottom();
+      deletedChatBackup = {
+        chat: conversations[index],
+        index
+      };
 
-      if (sender === 'user') saveHistory(text);
+      conversations.splice(index, 1);
+
+      if (currentConversationId === id) {
+        currentConversationId = null;
+        localStorage.removeItem('current_conversation_id');
+        newChat();
+      }
+
+      saveConversations();
+      renderHistory();
+
+      document.getElementById('undo-delete-btn').classList.remove('hidden');
+    }
+
+    function undoDeleteChat() {
+      if (!deletedChatBackup) return;
+
+      conversations.splice(deletedChatBackup.index, 0, deletedChatBackup.chat);
+      currentConversationId = deletedChatBackup.chat.id;
+      localStorage.setItem('current_conversation_id', currentConversationId);
+
+      saveConversations();
+      renderHistory();
+      openConversation(currentConversationId);
+
+      deletedChatBackup = null;
+      document.getElementById('undo-delete-btn').classList.add('hidden');
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+
+      const recent = [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 12);
+
+      if (!recent.length) {
+        list.innerHTML = '<p class="p-2 text-gray-300 font-bold text-xs">No recent chats...</p>';
+        return;
+      }
+
+      list.innerHTML = recent.map(c => `
+        <div onclick="openConversation('${c.id}')" class="${c.id === currentConversationId ? 'bg-gray-100 text-black' : 'text-gray-400'} p-2 hover:bg-gray-50 rounded-lg cursor-pointer font-bold truncate group flex justify-between items-center">
+          <span>${escapeHTML(c.title || 'New chat')}</span>
+          <button onclick="deleteConversation('${c.id}', event)" class="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 text-[10px]">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function findMessage(id) {
+      for (const convo of conversations) {
+        const msg = convo.messages.find(m => m.id === id);
+        if (msg) return { convo, msg };
+      }
+      return null;
+    }
+
+    function copyMessage(id) {
+      const found = findMessage(id);
+      if (!found) return;
+
+      navigator.clipboard.writeText(found.msg.text);
+    }
+
+    function editMessage(id) {
+      const found = findMessage(id);
+      if (!found) return;
+
+      const input = document.getElementById('user-input');
+      input.value = found.msg.text;
+      input.focus();
+      autoResizeInput();
+    }
+
+    function speakFromBubble(id) {
+      const found = findMessage(id);
+      if (!found) return;
+
+      const wasActive = voiceActive;
+      voiceActive = true;
+      speak(found.msg.text);
+      voiceActive = wasActive;
+    }
+
+    function regenerateFromMessage(id) {
+      const found = findMessage(id);
+      if (!found) return;
+
+      const convo = found.convo;
+      const msgIndex = convo.messages.findIndex(m => m.id === id);
+
+      let prompt = "";
+
+      if (found.msg.sender === 'user') {
+        prompt = found.msg.text;
+      } else {
+        for (let i = msgIndex - 1; i >= 0; i--) {
+          if (convo.messages[i].sender === 'user') {
+            prompt = convo.messages[i].text;
+            break;
+          }
+        }
+      }
+
+      if (!prompt) prompt = lastUserPrompt;
+      if (!prompt) return;
+
+      currentConversationId = convo.id;
+      localStorage.setItem('current_conversation_id', convo.id);
+      openConversation(convo.id);
+      handleMessage(prompt, true);
     }
 
     function showThinking() {
@@ -399,52 +615,8 @@
       });
     }
 
-    function saveHistory(text) {
-      const history = { text, timestamp: Date.now() };
-
-      chatHistoryData.unshift(history);
-
-      const seen = new Set();
-      chatHistoryData = chatHistoryData.filter(item => {
-        const key = item.text.toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-
-      if (chatHistoryData.length > 12) chatHistoryData.pop();
-
-      localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-      renderHistory();
-    }
-
-    function renderHistory() {
-      const list = document.getElementById('history-list');
-
-      if (!chatHistoryData.length) {
-        list.innerHTML = '<p class="p-2 text-gray-300 font-bold text-xs">No chats yet...</p>';
-        return;
-      }
-
-      list.innerHTML = chatHistoryData.map(h => `
-        <div onclick="reuseHistory('${encodeURIComponent(h.text)}')" class="p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-400 font-bold truncate group flex justify-between items-center">
-          <span>${escapeHTML(h.text.substring(0, 18))}${h.text.length > 18 ? '...' : ''}</span>
-          <button onclick="event.stopPropagation(); clearHistoryItem(${h.timestamp})" class="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 text-[10px]">✕</button>
-        </div>
-      `).join('');
-    }
-
-    function reuseHistory(encodedText) {
-      const input = document.getElementById('user-input');
-      input.value = decodeURIComponent(encodedText);
-      input.focus();
-      autoResizeInput();
-    }
-
-    function clearHistoryItem(time) {
-      chatHistoryData = chatHistoryData.filter(h => h.timestamp !== time);
-      localStorage.setItem('doa_history', JSON.stringify(chatHistoryData));
-      renderHistory();
+    function saveConversations() {
+      localStorage.setItem('doa_conversations', JSON.stringify(conversations));
     }
 
     function toggleSidebar() {
@@ -529,17 +701,12 @@
     });
 
     window.onload = () => {
-      renderHistory();
-
       const savedVoice = JSON.parse(localStorage.getItem('voice_active'));
       voiceActive = savedVoice === true;
       updateVoiceUI();
 
-      input.focus();
-
       const sidebar = document.getElementById('main-sidebar');
       const openBtn = document.getElementById('open-sidebar-btn');
-
       const savedClosed = JSON.parse(localStorage.getItem('sidebar_closed'));
 
       if (savedClosed === false) {
@@ -550,6 +717,14 @@
         openBtn.classList.remove('hidden');
         localStorage.setItem('sidebar_closed', JSON.stringify(true));
       }
+
+      renderHistory();
+
+      if (currentConversationId && conversations.find(c => c.id === currentConversationId)) {
+        openConversation(currentConversationId);
+      }
+
+      input.focus();
     };
   </script>
 
