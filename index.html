@@ -170,21 +170,20 @@
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4 px-2`;
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
       
-      let visibleContent = text.replace(/^\[[a-z]{2}-[A-Z]{2}\]\s*/i, "").replace(/[*#`_~]/g, "");
-
-      const actions = sender === 'doaa' ? `
-        <div class="flex gap-4 mt-2 px-1">
-          <button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
-          <button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
-        </div>` : '';
+      // Remove any leftover markdown symbols from the text for a clean UI
+      let cleanText = text.replace(/[*#`_~]/g, "");
       
       row.innerHTML = `<div class="max-w-[85%]">
-        <div class="${sender === 'user' ? 'bg-black text-white rounded-[22px] rounded-tr-[4px]' : 'bg-gray-100 text-gray-900 rounded-[22px] rounded-tl-[4px]'} p-4 text-sm whitespace-pre-wrap shadow-sm">
-          ${visibleContent}
+        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
+          ${cleanText}
         </div>
-        ${actions}
+        ${sender === 'doaa' ? `
+          <div class="flex gap-4 mt-2 px-1">
+            <button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
+            <button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
+          </div>` : ''}
       </div>`;
       
       history.appendChild(row);
