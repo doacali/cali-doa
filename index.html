@@ -85,10 +85,7 @@
       40% { opacity: 1; transform: translateY(-3px); }
     }
 
-    #user-input {
-      resize: none;
-      max-height: 150px;
-    }
+    #user-input { resize: none; max-height: 150px; }
 
     .action-btn {
       font-size: 10px;
@@ -156,18 +153,15 @@
       </header>
 
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center overflow-hidden px-10 relative">
-
         <div id="chat-shell" class="w-full max-w-4xl flex-1 flex flex-col min-h-0 h-full mx-auto">
 
           <div id="hero-section" class="flex-1 flex flex-col items-center justify-center text-center pb-10">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-100 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mb-6">
               AI Operating System
             </div>
-
             <h1 id="hero-title" class="text-6xl font-black mb-5 tracking-tighter leading-none">
               What can <span class="text-[#00E676]">Doa</span><br>do for you?
             </h1>
-
             <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto leading-relaxed">
               Your intelligent companion powered by Cloud Gemma.
             </p>
@@ -180,7 +174,6 @@
               <p class="text-[9px] font-black text-gray-300 tracking-[0.18em] uppercase">
                 Doa can make mistakes. Check important facts.
               </p>
-
               <div class="flex items-center gap-3">
                 <span class="text-[9px] font-black text-gray-300 tracking-[0.22em] uppercase">Live Voice</span>
                 <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer">
@@ -192,14 +185,12 @@
             <div class="flex justify-center">
               <div class="w-full max-w-2xl bg-white border border-gray-200 shadow-[0_20px_70px_rgba(0,0,0,0.08)] rounded-[28px] p-2.5 flex items-end gap-2">
                 <button class="shrink-0 w-10 h-10 rounded-full text-gray-300 hover:text-black hover:bg-gray-50 transition text-xl leading-none">+</button>
-
                 <textarea
                   id="user-input"
                   rows="1"
                   class="flex-1 py-2 px-1 outline-none text-[14px] font-medium leading-relaxed hide-scrollbar"
-                  placeholder="Ask Doaa anything..."
+                  placeholder="Ask Doa anything..."
                 ></textarea>
-
                 <button id="send-btn" onclick="handleMessage()" class="shrink-0 bg-black text-white w-11 h-11 rounded-full shadow-lg hover:bg-[#00E676] hover:text-black transition-colors font-bold">
                   →
                 </button>
@@ -238,17 +229,47 @@
     let isThinking = false;
     let lastUserPrompt = "";
 
+    // --- DOUGHA VOICE ENGINE ---
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      const priority = ["Samantha", "Karen", "Moira", "Zira", "Aria", "Google US English Female", "Female"];
+      selectedVoice = pickFemaleVoice(voices);
+    }
 
-      for (const name of priority) {
-        const match = voices.find(v => v.name.includes(name));
-        if (match) {
-          selectedVoice = match;
-          break;
-        }
+    function pickFemaleVoice(voiceList) {
+      const femaleNames = [
+        "Samantha",               // macOS/iOS - best quality
+        "Karen",                  // macOS Australian
+        "Moira",                  // macOS Irish
+        "Tessa",                  // macOS South African
+        "Veena",                  // macOS Indian
+        "Fiona",                  // macOS Scottish
+        "Victoria",               // macOS
+        "Allison",                // macOS
+        "Ava",                    // macOS
+        "Susan",                  // macOS
+        "Zoe",                    // macOS
+        "Microsoft Zira",         // Windows Edge/Chrome
+        "Microsoft Aria",         // Windows Edge
+        "Microsoft Jenny",        // Windows Edge
+        "Google US English Female",
+        "Google UK English Female",
+      ];
+
+      for (const name of femaleNames) {
+        const match = voiceList.find(v => v.name.includes(name));
+        if (match) return match;
       }
+
+      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
+      const keywordMatch = voiceList.find(v =>
+        femaleKeywords.some(k => v.name.toLowerCase().includes(k))
+      );
+      if (keywordMatch) return keywordMatch;
+
+      const englishVoice = voiceList.find(v => v.lang.startsWith("en"));
+      if (englishVoice) return englishVoice;
+
+      return voiceList[0] || null;
     }
 
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -256,32 +277,46 @@
 
     function speak(text) {
       if (!voiceActive || !text) return;
-
       window.speechSynthesis.cancel();
 
       const cleanText = String(text)
-        .replace(/\bDoa\b/gi, "doaa")
-        .replace(/\bDOA\b/g, "doaa")
+        .replace(/\bDowa\b/gi, "Doaa")
+        .replace(/\bDoa\b/gi, "Doaa")
+        .replace(/([a-zA-Z])\1{2,}/g, "$1")
         .replace(/[*#`_~]/g, "")
-        .replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+        .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
 
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-
-      if (selectedVoice) utterance.voice = selectedVoice;
-
-      utterance.pitch = 1.12;
-      utterance.rate = 0.92;
-      utterance.volume = 1;
-
-      window.speechSynthesis.speak(utterance);
+      const u = new SpeechSynthesisUtterance(cleanText);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.lang = "en-US";
+      u.pitch = 1.35;   // warm, original feel
+      u.rate = 0.95;    // natural pace
+      u.volume = 1.0;
+      window.speechSynthesis.speak(u);
     }
 
+    function toggleVoice() {
+      voiceActive = !voiceActive;
+      localStorage.setItem('voice_active', JSON.stringify(voiceActive));
+      selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
+      updateVoiceUI();
+      if (voiceActive) speak("Live voice active. My name is Doaa.");
+    }
+
+    function updateVoiceUI() {
+      const knob = document.getElementById('voice-knob');
+      const bg = document.getElementById('voice-switch');
+      if (!knob || !bg) return;
+      knob.style.left = voiceActive ? "18px" : "2px";
+      bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+    }
+
+    // --- CHAT ---
     async function handleMessage(customText = null, isRegenerate = false) {
       if (isThinking) return;
 
       const input = document.getElementById('user-input');
       const text = customText || input.value.trim();
-
       if (!text) return;
 
       setChatMode();
@@ -306,13 +341,8 @@
         });
 
         const raw = await res.text();
-
         let data;
-        try {
-          data = JSON.parse(raw);
-        } catch {
-          data = { text: raw };
-        }
+        try { data = JSON.parse(raw); } catch { data = { text: raw }; }
 
         const aiText =
           data.response ||
@@ -426,9 +456,7 @@
     function setChatMode() {
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
-
       const inputArea = document.getElementById('input-area');
-
       if (inputArea) {
         inputArea.classList.remove('pb-16', 'pt-6');
         inputArea.classList.add('pb-3', 'pt-2', 'mt-auto');
@@ -449,14 +477,11 @@
     function openConversation(id) {
       const convo = conversations.find(c => c.id === id);
       if (!convo) return;
-
       currentConversationId = id;
       localStorage.setItem('current_conversation_id', id);
-
       const history = document.getElementById('chat-history');
       history.innerHTML = '';
       setChatMode();
-
       convo.messages.forEach(renderMessage);
       renderHistory();
       switchView('chat');
@@ -464,54 +489,39 @@
 
     function deleteConversation(id, event) {
       if (event) event.stopPropagation();
-
       const index = conversations.findIndex(c => c.id === id);
       if (index === -1) return;
-
-      deletedChatBackup = {
-        chat: conversations[index],
-        index
-      };
-
+      deletedChatBackup = { chat: conversations[index], index };
       conversations.splice(index, 1);
-
       if (currentConversationId === id) {
         currentConversationId = null;
         localStorage.removeItem('current_conversation_id');
         newChat();
       }
-
       saveConversations();
       renderHistory();
-
       document.getElementById('undo-delete-btn').classList.remove('hidden');
     }
 
     function undoDeleteChat() {
       if (!deletedChatBackup) return;
-
       conversations.splice(deletedChatBackup.index, 0, deletedChatBackup.chat);
       currentConversationId = deletedChatBackup.chat.id;
       localStorage.setItem('current_conversation_id', currentConversationId);
-
       saveConversations();
       renderHistory();
       openConversation(currentConversationId);
-
       deletedChatBackup = null;
       document.getElementById('undo-delete-btn').classList.add('hidden');
     }
 
     function renderHistory() {
       const list = document.getElementById('history-list');
-
       const recent = [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 12);
-
       if (!recent.length) {
         list.innerHTML = '<p class="p-2 text-gray-300 font-bold text-xs">No recent chats...</p>';
         return;
       }
-
       list.innerHTML = recent.map(c => `
         <div onclick="openConversation('${c.id}')" class="${c.id === currentConversationId ? 'bg-gray-100 text-black' : 'text-gray-400'} p-2 hover:bg-gray-50 rounded-lg cursor-pointer font-bold truncate group flex justify-between items-center">
           <span>${escapeHTML(c.title || 'New chat')}</span>
@@ -531,14 +541,12 @@
     function copyMessage(id) {
       const found = findMessage(id);
       if (!found) return;
-
       navigator.clipboard.writeText(found.msg.text);
     }
 
     function editMessage(id) {
       const found = findMessage(id);
       if (!found) return;
-
       const input = document.getElementById('user-input');
       input.value = found.msg.text;
       input.focus();
@@ -548,7 +556,6 @@
     function speakFromBubble(id) {
       const found = findMessage(id);
       if (!found) return;
-
       const wasActive = voiceActive;
       voiceActive = true;
       speak(found.msg.text);
@@ -558,12 +565,9 @@
     function regenerateFromMessage(id) {
       const found = findMessage(id);
       if (!found) return;
-
       const convo = found.convo;
       const msgIndex = convo.messages.findIndex(m => m.id === id);
-
       let prompt = "";
-
       if (found.msg.sender === 'user') {
         prompt = found.msg.text;
       } else {
@@ -574,10 +578,8 @@
           }
         }
       }
-
       if (!prompt) prompt = lastUserPrompt;
       if (!prompt) return;
-
       currentConversationId = convo.id;
       localStorage.setItem('current_conversation_id', convo.id);
       openConversation(convo.id);
@@ -587,10 +589,8 @@
     function showThinking() {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
-
       row.id = 'thinking-bubble';
       row.className = 'flex justify-start w-full chat-bubble';
-
       row.innerHTML = `
         <div class="bg-gray-100 px-5 py-4 rounded-[24px] rounded-bl-md shadow-sm flex gap-2 items-center">
           <span class="thinking-dot"></span>
@@ -598,7 +598,6 @@
           <span class="thinking-dot"></span>
         </div>
       `;
-
       history.appendChild(row);
       scrollChatToBottom();
     }
@@ -622,39 +621,16 @@
     function toggleSidebar() {
       const sidebar = document.getElementById('main-sidebar');
       const openBtn = document.getElementById('open-sidebar-btn');
-
       sidebar.classList.toggle('collapsed');
-
       const isClosed = sidebar.classList.contains('collapsed');
-
       localStorage.setItem('sidebar_closed', JSON.stringify(isClosed));
       openBtn.classList.toggle('hidden', !isClosed);
-    }
-
-    function toggleVoice() {
-      voiceActive = !voiceActive;
-      localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      updateVoiceUI();
-
-      if (voiceActive) speak("Live voice active. My name is doaa.");
-    }
-
-    function updateVoiceUI() {
-      const knob = document.getElementById('voice-knob');
-      const bg = document.getElementById('voice-switch');
-
-      if (!knob || !bg) return;
-
-      knob.style.left = voiceActive ? "18px" : "2px";
-      bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
     }
 
     function switchView(view) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
       document.getElementById(view + '-view').classList.remove('hidden');
-
       document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
-
       const navItem = document.getElementById('nav-' + view);
       if (navItem) navItem.classList.add('sidebar-active');
     }
@@ -681,18 +657,11 @@
         .replaceAll("'", '&#039;');
     }
 
-    function login() {
-      alert("Login system coming next.");
-    }
-
-    function signUp() {
-      alert("Sign up system coming next.");
-    }
+    function login() { alert("Login system coming next."); }
+    function signUp() { alert("Sign up system coming next."); }
 
     const input = document.getElementById('user-input');
-
     input.addEventListener('input', autoResizeInput);
-
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
