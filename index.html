@@ -7,6 +7,8 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -99,6 +101,30 @@
     #voice-switch { transition: background-color 0.3s; }
     #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #111827;
+      color: #00E676;
+      padding: 10px 24px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     @media (max-width: 768px) {
       #chat-view { padding-left: 16px !important; padding-right: 16px !important; }
       #hero-title { font-size: 42px !important; }
@@ -108,6 +134,8 @@
 </head>
 
 <body>
+
+  <div id="toast"></div>
 
   <button id="open-sidebar-btn" onclick="toggleSidebar()" class="fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-105 transition">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -126,8 +154,13 @@
       <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
         <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mb-2">Main Hub</p>
 
-        <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
+        <button id="nav-chat" onclick="switchView('chat'); newChat();" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
         <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
+
+        <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mt-8 mb-2">Creation</p>
+        <button id="nav-editor" onclick="switchView('editor'); initEditor();" class="sidebar-item">🎨 <span>Editor App</span></button>
+        <button id="nav-whisk" onclick="switchView('whisk')" class="sidebar-item">🎥 <span>Creation Lab</span></button>
+        <button id="nav-music" onclick="switchView('music')" class="sidebar-item">🎵 <span>Music Studio</span></button>
 
         <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mt-8 mb-2">Shared Tools</p>
         <div id="shared-apps-list" class="space-y-1 px-1 text-[11px] text-gray-400 font-bold uppercase">
@@ -152,6 +185,7 @@
         </div>
       </header>
 
+      <!-- CHAT VIEW -->
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center overflow-hidden px-10 relative">
         <div id="chat-shell" class="w-full max-w-4xl flex-1 flex flex-col min-h-0 h-full mx-auto">
 
@@ -201,10 +235,45 @@
         </div>
       </div>
 
+      <!-- APPS VIEW -->
       <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
         <h2 class="text-4xl font-black italic uppercase tracking-tighter">App Factory</h2>
         <p class="text-gray-400 mt-3 font-medium">Create, save, and publish tools from Doa.</p>
         <div id="app-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10"></div>
+      </div>
+
+      <!-- EDITOR VIEW (Canva Style) -->
+      <div id="editor-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
+        <h2 class="text-4xl font-black italic uppercase tracking-tighter mb-4">Editor App</h2>
+        <div class="flex gap-3 mb-6 flex-wrap">
+          <button onclick="addText()" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl font-bold text-xs transition">✏️ Add Text</button>
+          <button onclick="addRect()" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl font-bold text-xs transition">🟩 Add Shape</button>
+          <button onclick="clearCanvas()" class="bg-gray-100 hover:bg-red-50 hover:text-red-500 px-4 py-2 rounded-xl font-bold text-xs transition">🗑 Clear</button>
+          <button onclick="downloadCanvas()" class="bg-black text-[#00E676] px-4 py-2 rounded-xl font-bold text-xs hover:scale-105 transition">⬇️ Export PNG</button>
+        </div>
+        <canvas id="canvas" class="border border-gray-200 rounded-3xl bg-gray-50 shadow-inner max-w-full"></canvas>
+      </div>
+
+      <!-- CREATION LAB VIEW (Whisk Style) -->
+      <div id="whisk-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
+        <h2 class="text-4xl font-black italic uppercase tracking-tighter mb-4">Creation Lab</h2>
+        <p class="text-gray-400 font-medium mb-6">Generate images with AI, then send them straight to your Editor.</p>
+        <div class="w-full max-w-2xl flex gap-3 mb-8">
+          <input id="whisk-prompt" type="text" placeholder="Describe your image..." class="flex-1 border border-gray-200 rounded-2xl px-5 py-3 text-sm font-medium outline-none focus:border-[#00E676] transition" />
+          <button onclick="generateWhiskImage(document.getElementById('whisk-prompt').value)" class="bg-black text-[#00E676] px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition">Generate</button>
+        </div>
+        <div id="image-results" class="grid grid-cols-2 gap-4 mb-8"></div>
+      </div>
+
+      <!-- MUSIC LAB VIEW -->
+      <div id="music-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
+        <h2 class="text-4xl font-black italic uppercase tracking-tighter mb-4">Music Studio</h2>
+        <div class="bg-gray-50 p-10 rounded-[40px] text-center border-2 border-dashed border-gray-200 max-w-xl">
+          <div class="text-6xl mb-6">🎧</div>
+          <button id="play-lofi" onclick="startLofi()" class="bg-black text-[#00E676] px-10 py-4 rounded-full font-black uppercase tracking-widest hover:scale-105 transition">Start Doa Lo-Fi</button>
+          <p class="text-gray-400 mt-6 text-xs font-bold uppercase tracking-widest">Procedural beats powered by Tone.js</p>
+          <p class="text-gray-300 mt-3 text-[10px] font-bold">Music keeps playing while you switch tabs ✨</p>
+        </div>
       </div>
 
       <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] bg-white z-20 shrink-0">
@@ -228,8 +297,19 @@
     let selectedVoice = null;
     let isThinking = false;
     let lastUserPrompt = "";
+    let lofiLoop = null;
+    let lofiSynth = null;
+    let lofiPlaying = false;
 
-    // --- DOUGHA VOICE ENGINE ---
+    // --- TOAST ---
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    // --- VOICE ENGINE ---
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
       selectedVoice = pickFemaleVoice(voices);
@@ -237,39 +317,17 @@
 
     function pickFemaleVoice(voiceList) {
       const femaleNames = [
-        "Samantha",               // macOS/iOS - best quality
-        "Karen",                  // macOS Australian
-        "Moira",                  // macOS Irish
-        "Tessa",                  // macOS South African
-        "Veena",                  // macOS Indian
-        "Fiona",                  // macOS Scottish
-        "Victoria",               // macOS
-        "Allison",                // macOS
-        "Ava",                    // macOS
-        "Susan",                  // macOS
-        "Zoe",                    // macOS
-        "Microsoft Zira",         // Windows Edge/Chrome
-        "Microsoft Aria",         // Windows Edge
-        "Microsoft Jenny",        // Windows Edge
-        "Google US English Female",
-        "Google UK English Female",
+        "Samantha","Karen","Moira","Tessa","Veena","Fiona","Victoria","Allison","Ava","Susan","Zoe",
+        "Microsoft Zira","Microsoft Aria","Microsoft Jenny","Google US English Female","Google UK English Female",
       ];
-
       for (const name of femaleNames) {
         const match = voiceList.find(v => v.name.includes(name));
         if (match) return match;
       }
-
-      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
-      const keywordMatch = voiceList.find(v =>
-        femaleKeywords.some(k => v.name.toLowerCase().includes(k))
-      );
+      const femaleKeywords = ["female","woman","girl","aria","zira","jenny","ava"];
+      const keywordMatch = voiceList.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
       if (keywordMatch) return keywordMatch;
-
-      const englishVoice = voiceList.find(v => v.lang.startsWith("en"));
-      if (englishVoice) return englishVoice;
-
-      return voiceList[0] || null;
+      return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0] || null;
     }
 
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -278,20 +336,13 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-
       const cleanText = String(text)
-        .replace(/\bDowa\b/gi, "Doaa")
-        .replace(/\bDoa\b/gi, "Doaa")
-        .replace(/([a-zA-Z])\1{2,}/g, "$1")
-        .replace(/[*#`_~]/g, "")
-        .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
-
+        .replace(/\bDowa\b/gi,"Doaa").replace(/\bDoa\b/gi,"Doaa")
+        .replace(/([a-zA-Z])\1{2,}/g,"$1").replace(/[*#`_~]/g,"")
+        .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu,"");
       const u = new SpeechSynthesisUtterance(cleanText);
       if (selectedVoice) u.voice = selectedVoice;
-      u.lang = "en-US";
-      u.pitch = 1.35;   // warm, original feel
-      u.rate = 0.95;    // natural pace
-      u.volume = 1.0;
+      u.lang = "en-US"; u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
       window.speechSynthesis.speak(u);
     }
 
@@ -314,52 +365,31 @@
     // --- CHAT ---
     async function handleMessage(customText = null, isRegenerate = false) {
       if (isThinking) return;
-
       const input = document.getElementById('user-input');
       const text = customText || input.value.trim();
       if (!text) return;
-
       setChatMode();
-
-      if (!isRegenerate) {
-        addMessage('user', text);
-        input.value = '';
-        autoResizeInput();
-      }
-
+      if (!isRegenerate) { addMessage('user', text); input.value = ''; autoResizeInput(); }
       lastUserPrompt = text;
       showThinking();
-
       try {
         isThinking = true;
         updateSendButton(true);
-
         const res = await fetch(CLOUDFLARE_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text })
         });
-
         const raw = await res.text();
         let data;
         try { data = JSON.parse(raw); } catch { data = { text: raw }; }
-
         const aiText =
-          data.response ||
-          data.text ||
-          data.answer ||
-          data.message ||
-          data.output ||
-          data.result?.response ||
-          data.result?.text ||
-          data.result?.answer ||
-          data.choices?.[0]?.message?.content ||
-          "Neural Link fuzzy!";
-
+          data.response || data.text || data.answer || data.message || data.output ||
+          data.result?.response || data.result?.text || data.result?.answer ||
+          data.choices?.[0]?.message?.content || "Neural Link fuzzy!";
         removeThinking();
         addMessage('doaa', aiText);
         speak(aiText);
-
       } catch (error) {
         console.error("Fetch Error:", error);
         removeThinking();
@@ -376,15 +406,7 @@
         const found = conversations.find(c => c.id === currentConversationId);
         if (found) return found;
       }
-
-      const convo = {
-        id: "chat_" + Date.now(),
-        title: "New chat",
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        messages: []
-      };
-
+      const convo = { id: "chat_" + Date.now(), title: "New chat", createdAt: Date.now(), updatedAt: Date.now(), messages: [] };
       conversations.unshift(convo);
       currentConversationId = convo.id;
       localStorage.setItem('current_conversation_id', currentConversationId);
@@ -394,21 +416,10 @@
 
     function addMessage(sender, text) {
       const convo = ensureConversation();
-
-      const msg = {
-        id: "msg_" + Date.now() + "_" + Math.random().toString(16).slice(2),
-        sender,
-        text,
-        createdAt: Date.now()
-      };
-
+      const msg = { id: "msg_" + Date.now() + "_" + Math.random().toString(16).slice(2), sender, text, createdAt: Date.now() };
       convo.messages.push(msg);
       convo.updatedAt = Date.now();
-
-      if (sender === 'user' && (!convo.title || convo.title === "New chat")) {
-        convo.title = text.slice(0, 28);
-      }
-
+      if (sender === 'user' && (!convo.title || convo.title === "New chat")) convo.title = text.slice(0, 28);
       saveConversations();
       renderMessage(msg);
       renderHistory();
@@ -417,38 +428,15 @@
     function renderMessage(msg) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
-
       row.className = `flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble`;
       row.dataset.messageId = msg.id;
-
       const bubbleClass = msg.sender === 'user'
         ? 'bg-black text-white shadow-lg rounded-[24px] rounded-br-md'
         : 'bg-gray-100 text-gray-900 rounded-[24px] rounded-bl-md';
-
       const actions = msg.sender === 'doaa'
-        ? `
-          <div class="flex gap-4 mt-2 pl-1">
-            <button class="action-btn" onclick="speakFromBubble('${msg.id}')">🔊 Speak</button>
-            <button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button>
-            <button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button>
-            <button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button>
-          </div>
-        `
-        : `
-          <div class="flex justify-end gap-4 mt-2 pr-1">
-            <button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button>
-            <button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button>
-            <button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button>
-          </div>
-        `;
-
-      row.innerHTML = `
-        <div class="max-w-[78%]">
-          <div class="${bubbleClass} px-5 py-4 text-[14px] leading-relaxed shadow-sm whitespace-pre-wrap">${escapeHTML(msg.text)}</div>
-          ${actions}
-        </div>
-      `;
-
+        ? `<div class="flex gap-4 mt-2 pl-1"><button class="action-btn" onclick="speakFromBubble('${msg.id}')">🔊 Speak</button><button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button><button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button><button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button></div>`
+        : `<div class="flex justify-end gap-4 mt-2 pr-1"><button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button><button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button><button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button></div>`;
+      row.innerHTML = `<div class="max-w-[78%]"><div class="${bubbleClass} px-5 py-4 text-[14px] leading-relaxed shadow-sm whitespace-pre-wrap">${escapeHTML(msg.text)}</div>${actions}</div>`;
       history.appendChild(row);
       scrollChatToBottom();
     }
@@ -457,10 +445,7 @@
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
       const inputArea = document.getElementById('input-area');
-      if (inputArea) {
-        inputArea.classList.remove('pb-16', 'pt-6');
-        inputArea.classList.add('pb-3', 'pt-2', 'mt-auto');
-      }
+      if (inputArea) { inputArea.classList.remove('pb-16','pt-6'); inputArea.classList.add('pb-3','pt-2','mt-auto'); }
     }
 
     function newChat() {
@@ -469,8 +454,8 @@
       document.getElementById('chat-history').innerHTML = '';
       document.getElementById('chat-history').classList.add('hidden');
       document.getElementById('hero-section').classList.remove('hidden');
-      document.getElementById('input-area').classList.remove('pb-3', 'pt-2', 'mt-auto');
-      document.getElementById('input-area').classList.add('pb-16', 'pt-6');
+      document.getElementById('input-area').classList.remove('pb-3','pt-2','mt-auto');
+      document.getElementById('input-area').classList.add('pb-16','pt-6');
       switchView('chat');
     }
 
@@ -493,13 +478,8 @@
       if (index === -1) return;
       deletedChatBackup = { chat: conversations[index], index };
       conversations.splice(index, 1);
-      if (currentConversationId === id) {
-        currentConversationId = null;
-        localStorage.removeItem('current_conversation_id');
-        newChat();
-      }
-      saveConversations();
-      renderHistory();
+      if (currentConversationId === id) { currentConversationId = null; localStorage.removeItem('current_conversation_id'); newChat(); }
+      saveConversations(); renderHistory();
       document.getElementById('undo-delete-btn').classList.remove('hidden');
     }
 
@@ -508,8 +488,7 @@
       conversations.splice(deletedChatBackup.index, 0, deletedChatBackup.chat);
       currentConversationId = deletedChatBackup.chat.id;
       localStorage.setItem('current_conversation_id', currentConversationId);
-      saveConversations();
-      renderHistory();
+      saveConversations(); renderHistory();
       openConversation(currentConversationId);
       deletedChatBackup = null;
       document.getElementById('undo-delete-btn').classList.add('hidden');
@@ -518,10 +497,7 @@
     function renderHistory() {
       const list = document.getElementById('history-list');
       const recent = [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 12);
-      if (!recent.length) {
-        list.innerHTML = '<p class="p-2 text-gray-300 font-bold text-xs">No recent chats...</p>';
-        return;
-      }
+      if (!recent.length) { list.innerHTML = '<p class="p-2 text-gray-300 font-bold text-xs">No recent chats...</p>'; return; }
       list.innerHTML = recent.map(c => `
         <div onclick="openConversation('${c.id}')" class="${c.id === currentConversationId ? 'bg-gray-100 text-black' : 'text-gray-400'} p-2 hover:bg-gray-50 rounded-lg cursor-pointer font-bold truncate group flex justify-between items-center">
           <span>${escapeHTML(c.title || 'New chat')}</span>
@@ -542,6 +518,7 @@
       const found = findMessage(id);
       if (!found) return;
       navigator.clipboard.writeText(found.msg.text);
+      showToast("Copied!");
     }
 
     function editMessage(id) {
@@ -568,16 +545,8 @@
       const convo = found.convo;
       const msgIndex = convo.messages.findIndex(m => m.id === id);
       let prompt = "";
-      if (found.msg.sender === 'user') {
-        prompt = found.msg.text;
-      } else {
-        for (let i = msgIndex - 1; i >= 0; i--) {
-          if (convo.messages[i].sender === 'user') {
-            prompt = convo.messages[i].text;
-            break;
-          }
-        }
-      }
+      if (found.msg.sender === 'user') { prompt = found.msg.text; }
+      else { for (let i = msgIndex - 1; i >= 0; i--) { if (convo.messages[i].sender === 'user') { prompt = convo.messages[i].text; break; } } }
       if (!prompt) prompt = lastUserPrompt;
       if (!prompt) return;
       currentConversationId = convo.id;
@@ -591,32 +560,22 @@
       const row = document.createElement('div');
       row.id = 'thinking-bubble';
       row.className = 'flex justify-start w-full chat-bubble';
-      row.innerHTML = `
-        <div class="bg-gray-100 px-5 py-4 rounded-[24px] rounded-bl-md shadow-sm flex gap-2 items-center">
-          <span class="thinking-dot"></span>
-          <span class="thinking-dot"></span>
-          <span class="thinking-dot"></span>
-        </div>
-      `;
+      row.innerHTML = `<div class="bg-gray-100 px-5 py-4 rounded-[24px] rounded-bl-md shadow-sm flex gap-2 items-center"><span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span></div>`;
       history.appendChild(row);
       scrollChatToBottom();
     }
 
     function removeThinking() {
-      const thinking = document.getElementById('thinking-bubble');
-      if (thinking) thinking.remove();
+      const t = document.getElementById('thinking-bubble');
+      if (t) t.remove();
     }
 
     function scrollChatToBottom() {
       const history = document.getElementById('chat-history');
-      requestAnimationFrame(() => {
-        history.scrollTo({ top: history.scrollHeight, behavior: 'smooth' });
-      });
+      requestAnimationFrame(() => { history.scrollTo({ top: history.scrollHeight, behavior: 'smooth' }); });
     }
 
-    function saveConversations() {
-      localStorage.setItem('doa_conversations', JSON.stringify(conversations));
-    }
+    function saveConversations() { localStorage.setItem('doa_conversations', JSON.stringify(conversations)); }
 
     function toggleSidebar() {
       const sidebar = document.getElementById('main-sidebar');
@@ -649,24 +608,111 @@
     }
 
     function escapeHTML(value) {
-      return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+      return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     }
 
     function login() { alert("Login system coming next."); }
     function signUp() { alert("Sign up system coming next."); }
 
+    // --- 🎨 EDITOR LOGIC (Fabric.js) ---
+    let fabricCanvas;
+    function initEditor() {
+      if (!fabricCanvas) {
+        fabricCanvas = new fabric.Canvas('canvas', { width: 800, height: 550 });
+        fabricCanvas.backgroundColor = '#ffffff';
+        fabricCanvas.renderAll();
+      }
+    }
+    function addText() {
+      if (!fabricCanvas) initEditor();
+      fabricCanvas.add(new fabric.IText('Double click to edit', { left: 100, top: 100, fontFamily: 'Plus Jakarta Sans', fontSize: 24 }));
+    }
+    function addRect() {
+      if (!fabricCanvas) initEditor();
+      fabricCanvas.add(new fabric.Rect({ left: 150, top: 150, fill: '#00E676', width: 120, height: 120, rx: 20, ry: 20 }));
+    }
+    function clearCanvas() {
+      if (!fabricCanvas) return;
+      fabricCanvas.clear();
+      fabricCanvas.backgroundColor = '#ffffff';
+      fabricCanvas.renderAll();
+    }
+    function downloadCanvas() {
+      if (!fabricCanvas) return;
+      const link = document.createElement('a');
+      link.download = 'doa-creation.png';
+      link.href = fabricCanvas.toDataURL({ format: 'png', quality: 1 });
+      link.click();
+      showToast("Exported!");
+    }
+
+    // --- 🎵 MUSIC LAB (Tone.js) ---
+    function startLofi() {
+      const btn = document.getElementById('play-lofi');
+      if (!lofiPlaying) {
+        Tone.start().then(() => {
+          lofiSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.4, decay: 0.3, sustain: 0.6, release: 1.5 }
+          }).toDestination();
+          lofiSynth.volume.value = -12;
+          const chords = [["C3","E3","G3","B3"],["A2","C3","E3","G3"],["F2","A2","C3","E3"],["G2","B2","D3","F3"]];
+          let idx = 0;
+          lofiLoop = new Tone.Loop(time => {
+            lofiSynth.triggerAttackRelease(chords[idx % chords.length], "2n", time);
+            idx++;
+          }, "2n").start(0);
+          Tone.Transport.bpm.value = 70;
+          Tone.Transport.start();
+          lofiPlaying = true;
+          btn.textContent = "⏹ Stop Music";
+          btn.classList.add('bg-[#00E676]', 'text-black');
+          btn.classList.remove('text-[#00E676]');
+          showToast("Lo-Fi vibes started 🎧");
+        });
+      } else {
+        Tone.Transport.stop();
+        if (lofiLoop) lofiLoop.dispose();
+        if (lofiSynth) lofiSynth.dispose();
+        lofiPlaying = false;
+        btn.textContent = "Start Doa Lo-Fi";
+        btn.classList.remove('bg-[#00E676]','text-black');
+        btn.classList.add('text-[#00E676]');
+        showToast("Music stopped");
+      }
+    }
+
+    // --- 🎥 CREATION LAB (Pollinations) ---
+    function generateWhiskImage(prompt) {
+      if (!prompt || !prompt.trim()) { showToast("Enter a prompt first!"); return; }
+      const results = document.getElementById('image-results');
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'relative group';
+      wrapper.innerHTML = `
+        <img src="${url}" class="rounded-3xl border border-gray-100 shadow-xl hover:scale-[1.02] transition cursor-pointer w-full" onerror="this.parentElement.innerHTML='<div class=\'rounded-3xl border border-dashed border-gray-200 p-10 text-center text-gray-300 text-xs font-bold\'>Generation failed — try again</div>'" />
+        <button onclick="sendToEditor('${url}')" class="absolute bottom-3 right-3 bg-black text-[#00E676] text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition">Send to Editor</button>
+      `;
+      results.prepend(wrapper);
+      showToast("Generating your image…");
+    }
+
+    function sendToEditor(url) {
+      switchView('editor');
+      initEditor();
+      fabric.Image.fromURL(url, function(img) {
+        img.scaleToWidth(300);
+        fabricCanvas.add(img);
+        fabricCanvas.renderAll();
+        showToast("Image sent to Editor!");
+      }, { crossOrigin: 'anonymous' });
+    }
+
+    // --- INPUT ---
     const input = document.getElementById('user-input');
     input.addEventListener('input', autoResizeInput);
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleMessage();
-      }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); }
     });
 
     window.onload = () => {
