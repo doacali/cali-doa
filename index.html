@@ -103,78 +103,7 @@
     window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
 
     function speak(text) {
-      if (!voiceActive || !text) return;
-      window.speechSynthesis.cancel();
-
-      // 1. Detect language code from brackets (e.g., [es-ES])
-      let langCode = "en-US"; 
-      const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
-      if (langMatch) {
-          langCode = langMatch[1];
-          text = text.replace(langMatch[0], "").trim(); // Remove brackets for speaking
-      }
-
-      // 2. Clean text for voice engine
-      const cleanText = text.replace(/[*#`_~]/g, "").trim();
-      const u = new SpeechSynthesisUtterance(cleanText);
-      u.lang = langCode;
-
-      // 3. Find a voice that matches the language
-      const voices = window.speechSynthesis.getVoices();
-      const matchedVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
-      if (matchedVoice) u.voice = matchedVoice;
-
-      u.pitch = 1.3; u.rate = 1.0; 
-      window.speechSynthesis.speak(u);
-    }
-
-    async function handleMessage() {
-      if (isThinking) return;
-      const input = document.getElementById('user-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      document.getElementById('hero-section').classList.add('hidden');
-      document.getElementById('chat-history').classList.remove('hidden');
-      
-      const now = new Date();
-      const localTime = now.toLocaleTimeString();
-      const localDate = now.toDateString();
-
-      addMessage('user', text);
-      input.value = '';
-      isThinking = true;
-      document.getElementById('status-text').innerText = "Doaa is thinking...";
-
-      try {
-        const res = await fetch(CLOUDFLARE_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            text, 
-            localTime, 
-            localDate, 
-            history: chatMemory.slice(-6) 
-          }) 
-        });
-        const data = await res.json();
-        
-        // 4. Strip language code from the UI bubble so it looks clean
-        let cleanReply = data.response.replace(/^\[[a-z]{2}-[A-Z]{2}\]\s*/, "");
-        
-        addMessage('doaa', cleanReply);
-        
-        chatMemory.push({ role: 'user', content: text });
-        chatMemory.push({ role: 'assistant', content: data.response });
-        
-        speak(data.response); // Pass original with brackets to speak function
-      } catch (error) { 
-        addMessage('doaa', "Connection lost."); 
-      } finally { 
-        isThinking = false; 
-        document.getElementById('status-text').innerText = ""; 
-      }
-    }
+      if
 
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
