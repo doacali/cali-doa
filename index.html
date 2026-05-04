@@ -9,36 +9,43 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
-    #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.28s; z-index: 60; background: white; border-right: 1px solid #f3f4f6; }
-    #main-sidebar.collapsed { transform: translateX(-100%); }
+    
+    /* Sidebar Collapsed by Default */
+    #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; transform: translateX(-100%); }
+    #main-sidebar.open { transform: translateX(0); }
+    
     .sidebar-item { transition: all 0.2s; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; font-weight: 700; color: #9ca3af; font-size: 13px; }
     .sidebar-active { background: #111111 !important; color: white !important; }
     #chat-history { display: flex; flex-direction: column; overflow-y: auto; scroll-behavior: smooth; flex: 1; }
     .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    #voice-switch { transition: background-color 0.3s; }
-    .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    /* OS Action Card */
-    .action-card { 
-      margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; 
-      display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; 
-    }
+    /* Action Cards & Buttons */
+    .action-card { margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
     .action-card:hover { background: #f3f4f6; border-color: #00E676; }
     .action-icon { width: 24px; height: 24px; background: #00E676; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-    
-    /* Hyperlink Styling */
     .chat-link { color: #00E676; text-decoration: underline; font-weight: 600; }
+    
+    /* Menu Toggle Button (Visible when sidebar is closed) */
+    #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; }
+    #menu-btn.hidden { opacity: 0; pointer-events: none; }
   </style>
 </head>
 <body class="bg-white">
 
-  <div class="flex h-screen w-screen overflow-hidden">
-    <!-- Sidebar -->
-    <aside id="main-sidebar" class="flex flex-col h-full shrink-0 relative">
+  <div class="flex h-screen w-screen overflow-hidden relative">
+    
+    <!-- Floating Menu Button -->
+    <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-sm p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50">
+        <span class="text-[#00E676] font-black italic tracking-tighter text-sm">DOA</span>
+        <div class="w-4 h-[2px] bg-gray-300 relative after:content-[''] after:absolute after:top-[-5px] after:w-full after:h-full after:bg-gray-300 before:content-[''] before:absolute before:bottom-[-5px] before:w-full before:h-full before:bg-gray-300"></div>
+    </button>
+
+    <!-- Sidebar (Default Closed) -->
+    <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
-        <button onclick="toggleSidebar()" class="text-gray-300 text-[9px] font-black uppercase">Hide</button>
+        <button onclick="toggleSidebar()" class="text-gray-300 text-[9px] font-black uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-lg">Hide</button>
       </div>
       <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
         <button onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 Chat With Doa</button>
@@ -81,78 +88,57 @@
         </div>
       </div>
 
-      <!-- Secondary Views -->
       <div id="calendar-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
         <h1 class="text-4xl font-black mb-4">📅 Calendar</h1>
-        <p class="text-gray-400">Your OS schedule is synchronized.</p>
       </div>
       <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
         <h1 class="text-4xl font-black mb-4">📱 App Factory</h1>
-        <p class="text-gray-400">Gemma logic enabled. Ready to code.</p>
       </div>
     </main>
   </div>
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
     let selectedVoice = null;
     let lastHumanResponse = "";
 
-    // ─── 1. INSTANT HUMAN WHITELIST (Step 2 Logic) ───
+    // ─── 1. INSTANT HUMAN WHITELIST ───
     const HUMAN_MAP = {
       greetings: ["Hey! How can I help?", "Hi there. What's on your mind?", "Hello! Ready for some tasks?", "Hey. I'm here."],
-      status: ["I'm feeling electric! My systems are all green.", "Doing great—processing data at high speed. You?", "I'm good! My circuits are warm and ready."],
-      day: ["My day has been great—busy optimizing things for you! Yours?", "Busy day in the digital world, but I'm loving it. How was yours?", "Every day is a good day when I'm helpful!"],
-      thanks: ["You're very welcome!", "No problem at all.", "Happy to help.", "Anytime!"]
+      status: ["I'm feeling electric! Systems green.", "Doing great—processing data. You?", "I'm good! My circuits are warm and ready."],
+      day: ["My day has been busy managing tasks, but I'm loving it. Yours?", "It's been a busy day in the digital world, but I'm loving it. Yours?"],
+      thanks: ["You're very welcome!", "No problem at all.", "Happy to help."]
     };
+    const WHITELIST = { "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings", "how are you": "status", "hows it going": "status", "whats up": "status", "how was your day": "day", "hows your day": "day", "thanks": "thanks", "thank you": "thanks" };
 
-    const WHITELIST = {
-      "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings", "sup": "greetings",
-      "how are you": "status", "hows it going": "status", "whats up": "status",
-      "how was your day": "day", "hows your day": "day", "how is your day": "day",
-      "thanks": "thanks", "thank you": "thanks", "appreciate it": "thanks"
-    };
-
-    // ─── 2. OS TASK ENGINE (Silent Execution + URL Integrity) ───
+    // ─── 2. OS TASK ENGINE ───
     function executeTask(command, value) {
-      console.log("OS Execution:", command, value);
       if (command === 'OPEN_TAB') switchView(value.toLowerCase());
-
-      if (command === 'OPEN_URL' || command === 'RESEARCH') {
-        let finalTarget = value;
-        
-        // PLACEHOLDER SHIELD: Detect broken links with brackets/IDs
-        const isBroken = /\[|\]|%20ID|ID\]/i.test(value);
-        
-        if (isBroken || command === 'RESEARCH') {
-          // Force a clean Google search for the term instead of a dead link
+      if (command === 'OPEN_SIDEBAR') { document.getElementById('main-sidebar').classList.add('open'); document.getElementById('menu-btn').classList.add('hidden'); }
+      if (command === 'RESEARCH' || command === 'OPEN_URL') {
+        let url = value;
+        if (/\[|\]|%20ID|ID\]/i.test(value) || command === 'RESEARCH') {
           const query = value.replace(/https?:\/\/(www\.)?|\.com|\.org|\/.*$/g, '').replace(/[\[\]]/g, '');
-          finalTarget = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        } else if (!finalTarget.startsWith('http')) {
-          finalTarget = `https://www.google.com/search?q=${encodeURIComponent(value)}`;
+          url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        } else if (!url.startsWith('http')) {
+          url = `https://www.google.com/search?q=${encodeURIComponent(value)}`;
         }
-        window.open(finalTarget, '_blank');
+        window.open(url, '_blank');
       }
-
       if (command === 'DOWNLOAD') {
         const blob = new Blob([chatMemory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')], {type: 'text/plain'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `doa_memory_${Date.now()}.txt`; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `doa_chat.txt`; a.click();
       }
     }
 
-    // ─── 3. DOUGHA VOICE ENGINE (Samantha Settings) ───
+    // ─── 3. DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
-      for (const name of femaleNames) {
-        const match = voices.find(v => v.name.includes(name));
-        if (match) { selectedVoice = match; break; }
-      }
+      const names = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
+      for (const n of names) { const m = voices.find(v => v.name.includes(n)); if (m) { selectedVoice = m; break; } }
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
@@ -160,37 +146,37 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      
-      // Filter URLS/Tags from speech
       const speech = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
-      
-      // Doaa Pronunciation Override
       const clean = String(speech).replace(/\bDoa\b/gi, "Doaa").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "").replace(/[\u{1F000}-\u{1FFFF}]/gu, "");
-      
       const u = new SpeechSynthesisUtterance(clean);
       if (selectedVoice) u.voice = selectedVoice;
-      u.lang = "en-US";
-      u.pitch = 1.35; // Warm original feel
-      u.rate = 0.95;  // Natural pace
-      u.volume = 1.0;
-
-      // Heartbeat Fix
-      u.onstart = () => {
-        const interval = setInterval(() => {
-          if (!window.speechSynthesis.speaking) clearInterval(interval);
-          else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
-        }, 10000);
-      };
+      u.lang = "en-US"; u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
+      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
     }
 
-    // ─── 4. UTILITY: Linkifier ───
+    // ─── 4. CHAT & UI LOGIC ───
+    function toggleSidebar() {
+      const sidebar = document.getElementById('main-sidebar');
+      const menuBtn = document.getElementById('menu-btn');
+      sidebar.classList.toggle('open');
+      menuBtn.classList.toggle('hidden');
+    }
+
+    function switchView(v) {
+      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
+      const target = document.getElementById(v + '-view');
+      if(target) target.classList.remove('hidden');
+      const btn = Array.from(document.querySelectorAll('.sidebar-item')).find(b => b.innerText.toLowerCase().includes(v));
+      if(btn) btn.classList.add('sidebar-active');
+    }
+
     function linkify(text) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
     }
 
-    // ─── 5. CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -201,30 +187,17 @@
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
-      
       addMessage('user', rawText);
       input.value = '';
 
-      // STEP 1: Normalize (Lowercase, no punctuation, remove "doa")
       const normalized = rawText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/g, '').trim();
-
-      // STEP 2: Whitelist Check (Instant Emotional Layer)
       if (WHITELIST[normalized]) {
-        const category = WHITELIST[normalized];
-        const variants = HUMAN_MAP[category];
+        const variants = HUMAN_MAP[WHITELIST[normalized]];
         let response = variants[Math.floor(Math.random() * variants.length)];
-        if (response === lastHumanResponse) response = variants[(variants.indexOf(response) + 1) % variants.length];
-        lastHumanResponse = response;
-
-        setTimeout(() => {
-          addMessage('doa', response);
-          speak(response);
-          chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: response });
-        }, 250);
+        setTimeout(() => { addMessage('doa', response); speak(response); chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: response }); }, 250);
         return;
       }
 
-      // STEP 3: Fallback to AI Brain
       isThinking = true;
       document.getElementById('status-text').innerText = "Doa is thinking...";
 
@@ -237,15 +210,11 @@
         const data = await res.json();
         let responseText = data.response;
 
-        // Detect Actions
         const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
         const matches = [...responseText.matchAll(actionRegex)];
         matches.forEach(match => executeTask(match[1], match[2]));
 
-        // Cleanup response
         let displayContent = responseText.replace(actionRegex, "").trim();
-        
-        // Backup Link Detector (if tags missed)
         if (matches.length === 0 && displayContent.includes('http')) {
            const rawUrl = displayContent.match(/(https?:\/\/[^\s]+)/)?.[0];
            if (rawUrl) matches.push([null, 'OPEN_URL', rawUrl, 'OPEN LINK']);
@@ -255,56 +224,25 @@
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         speak(displayContent);
 
-      } catch (error) { 
-        addMessage('doa', "System error. OS connection lost."); 
-      } finally { 
-        isThinking = false; document.getElementById('status-text').innerText = ""; 
-      }
+      } catch (error) { addMessage('doa', "System error."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
     function addMessage(sender, text, actions = []) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      
       const content = sender === 'doa' ? linkify(text) : text;
-
-      let html = `<div class="max-w-[85%]">
-        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${content}
-        </div>`;
-
+      let html = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">${content}</div>`;
       if (actions.length > 0 && sender === 'doa') {
         actions.forEach(match => {
-          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')">
-            <div class="action-icon text-white">⚡</div>
-            <div class="flex flex-col">
-              <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS SYSTEM TASK</span>
-              <span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span>
-            </div>
-          </div>`;
+          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')"><div class="action-icon text-white">⚡</div><div class="flex flex-col"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS SYSTEM TASK</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
         });
       }
-      
-      html += `</div>`;
-      row.innerHTML = html;
-      history.appendChild(row);
-      history.scrollTop = history.scrollHeight;
+      html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
-    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
-    function switchView(v) { 
-      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
-      const t = document.getElementById(v + '-view'); if(t) t.classList.remove('hidden'); 
-    }
-    function toggleVoice() { 
-      voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); 
-      updateVoiceUI(); if (voiceActive) speak("Live voice active. My name is Doa."); 
-    }
-    function updateVoiceUI() { 
-      const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); 
-      if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
-    }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active."); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     window.onload = () => { updateVoiceUI(); loadVoices(); };
   </script>
