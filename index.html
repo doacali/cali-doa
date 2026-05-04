@@ -25,6 +25,9 @@
     }
     .action-card:hover { background: #f3f4f6; border-color: #00E676; }
     .action-icon { width: 24px; height: 24px; background: #00E676; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+    
+    /* Hyperlink Styling */
+    .chat-link { color: #00E676; text-decoration: underline; font-weight: 600; }
   </style>
 </head>
 <body class="bg-white">
@@ -84,32 +87,29 @@
     let selectedVoice = null;
     let lastHumanResponse = "";
 
-    // ─── 1. INSTANT HUMAN WHITELIST ───
-    const HUMAN_MAP = {
-      greetings: ["Hey! How can I help?", "Hi there. What's on your mind?", "Hello! Ready for some tasks?", "Hey. I'm here."],
-      status: ["I'm feeling electric! Systems green.", "Doing great—processing data. You?", "I'm good! My circuits are warm and ready."],
-      day: ["My day has been busy managing tasks, but I'm loving it. Yours?", "It's been a busy day in the digital world, but I'm loving it. Yours?"],
-      thanks: ["You're very welcome!", "No problem at all.", "Happy to help."]
-    };
+    // ─── UTILITY: Link Detector ───
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, function(url) {
+        return `<a href="${url}" target="_blank" class="chat-link">${url}</a>`;
+      });
+    }
 
-    const WHITELIST = {
-      "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings",
-      "how are you": "status", "hows it going": "status", "whats up": "status",
-      "how was your day": "day", "hows your day": "day",
-      "thanks": "thanks", "thank you": "thanks"
-    };
-
-    // ─── 2. OS TASK ENGINE ───
+    // ─── OS TASK ENGINE ───
     function executeTask(command, value) {
+      console.log("Executing:", command, value);
       if (command === 'OPEN_TAB') switchView(value.toLowerCase());
-      if (command === 'RESEARCH') window.open(value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
+      if (command === 'OPEN_URL' || command === 'RESEARCH') {
+        const url = value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`;
+        window.open(url, '_blank');
+      }
       if (command === 'DOWNLOAD') {
         const blob = new Blob([chatMemory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')], {type: 'text/plain'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `doa_chat.txt`; a.click();
       }
     }
 
-    // ─── 3. DOUGHA VOICE ENGINE ───
+    // ─── DOUGHA VOICE ENGINE (RESTORED) ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
       selectedVoice = pickFemaleVoice(voices);
@@ -130,43 +130,19 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-
-      // Silent Filter: Don't speak URLs or Action Tags
       const speechText = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
-
       const cleanText = String(speechText)
-        .replace(/\bDowa\b/gi, "Doaa")
-        .replace(/\bDoa\b/gi, "Doaa")
-        .replace(/([a-zA-Z])\1{2,}/g, "$1")
-        .replace(/[*#`_~]/g, "")
+        .replace(/\bDoa\b/gi, "Doaa").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "")
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
 
       const u = new SpeechSynthesisUtterance(cleanText);
       if (selectedVoice) u.voice = selectedVoice;
-      u.lang = "en-US";
-      u.pitch = 1.35;   // warm, original feel
-      u.rate = 0.95;    // natural pace
-      u.volume = 1.0;
-
-      // Heartbeat Fix for long sentences
-      u.onstart = () => {
-        const interval = setInterval(() => {
-          if (!window.speechSynthesis.speaking) { clearInterval(interval); }
-          else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
-        }, 10000);
-      };
-
+      u.lang = "en-US"; u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
+      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
     }
 
-    function toggleVoice() {
-      voiceActive = !voiceActive;
-      localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      updateVoiceUI();
-      if (voiceActive) speak("Live voice active. My name is Doaa.");
-    }
-
-    // ─── 4. CHAT LOGIC ───
+    // ─── CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -180,13 +156,6 @@
       addMessage('user', rawText);
       input.value = '';
 
-      const normalized = rawText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/g, '').trim();
-      if (WHITELIST[normalized]) {
-        const response = HUMAN_MAP[WHITELIST[normalized]][Math.floor(Math.random() * 3)];
-        setTimeout(() => { addMessage('doa', response); speak(response); chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: response }); }, 250);
-        return;
-      }
-
       isThinking = true;
       document.getElementById('status-text').innerText = "Doa is thinking...";
 
@@ -199,28 +168,49 @@
         const data = await res.json();
         let responseText = data.response;
 
+        // Auto-Execute Actions
         const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
         const matches = [...responseText.matchAll(actionRegex)];
         matches.forEach(match => executeTask(match[1], match[2]));
 
+        // Cleanup and detect raw URLs if tags were missed
         let displayContent = responseText.replace(actionRegex, "").trim();
+        
+        // Manual fallback: If Llama mentions a URL but no tag exists, create a card
+        if (matches.length === 0 && displayContent.includes('http')) {
+           const rawUrl = displayContent.match(/(https?:\/\/[^\s]+)/)?.[0];
+           if (rawUrl) matches.push([null, 'OPEN_URL', rawUrl, 'OPEN LINK']);
+        }
+
         addMessage('doa', displayContent, matches);
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         speak(displayContent);
 
-      } catch (error) { addMessage('doa', "System link disrupted."); } finally { 
-        isThinking = false; document.getElementById('status-text').innerText = ""; 
-      }
+      } catch (error) { addMessage('doa', "System error."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
     function addMessage(sender, text, actions = []) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      let html = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">${text}</div>`;
+      
+      // Apply Linkify to the text
+      const content = sender === 'doa' ? linkify(text) : text;
+
+      let html = `<div class="max-w-[85%]">
+        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
+          ${content}
+        </div>`;
+
       if (actions.length > 0 && sender === 'doa') {
         actions.forEach(match => {
-          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')"><div class="action-icon text-white">⚡</div><div class="flex flex-col"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS System Task</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
+          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')">
+            <div class="action-icon text-white">⚡</div>
+            <div class="flex flex-col">
+              <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS SYSTEM TASK</span>
+              <span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span>
+            </div>
+          </div>`;
         });
       }
       html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
@@ -228,6 +218,7 @@
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
     function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); const t = document.getElementById(v + '-view'); if(t) t.classList.remove('hidden'); }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active."); }
     function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     window.onload = () => { updateVoiceUI(); loadVoices(); };
