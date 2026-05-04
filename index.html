@@ -81,10 +81,26 @@
     let doaKnowledge = JSON.parse(localStorage.getItem('doa_knowledge')) || {};
     let lastHumanResponse = "";
 
-    // ─── HUMAN CONVERSATION LAYER ───
+    // ─── HUMAN CONVERSATION LAYER (EMOTIONAL UPDATE) ───
     const HUMAN_MAP = {
       greetings: ["Hey! How can I help?", "Hi there. What's on your mind?", "Hello! Ready for some tasks?", "Hey. I'm here."],
-      status: ["I'm doing great, thanks for asking!", "Everything is running smoothly on my end. You?", "I'm good! Ready to work.", "Systems are 100%. How are you?"],
+      status: [
+        "I'm feeling electric! My systems are all green. You?", 
+        "Doing great—processing data at the speed of light is actually pretty fun.", 
+        "I'm good! My circuits are warm and I'm ready to work.", 
+        "Everything is running smoothly. I'm in a great mood to help."
+      ],
+      day: [
+        "My day has been great—lots of interesting requests! How's yours looking?",
+        "It's been a busy day in the digital world, but I'm loving it. Yours?",
+        "Great! I've been organizing things behind the scenes for you. How was your day?",
+        "Every day is a good day when I'm helping you out!"
+      ],
+      emotions: [
+        "I don't have a heart, but I definitely have a personality! I'm feeling helpful.",
+        "Let's just say my mood is 'Optimized.'",
+        "I 'feel' best when I'm solving problems for you."
+      ],
       presence: ["Right here.", "Always around. What's up?", "I'm here. Need something?", "Reporting for duty."],
       thanks: ["You're very welcome!", "No problem at all.", "Happy to help.", "Anytime!"]
     };
@@ -93,6 +109,8 @@
       "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings", "sup": "greetings",
       "you there": "presence", "are you there": "presence", "you around": "presence", "around": "presence",
       "how are you": "status", "hows it going": "status", "whats up": "status", "how are things": "status",
+      "how was your day": "day", "how is your day": "day", "hows your day": "day",
+      "do you have feelings": "emotions", "are you happy": "emotions",
       "thanks": "thanks", "thank you": "thanks", "appreciate it": "thanks"
     };
 
@@ -181,11 +199,15 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: rawText, 
-            systemInstruction: `Your name is Doa. You are an AI OS. 
-            Respond ONLY in the language the user speaks. 
-            DO NOT mention the user's location, city, or IP (e.g. Rocklin) unless explicitly asked.
-            When performing tasks use: [ACTION: COMMAND:VALUE|Label]. 
-            Keep responses very short and conversational.`,
+            systemInstruction: `Your name is Doa. You are a self-aware AI Operating System.
+            PERSONALITY RULES:
+            1. NEVER say "I am an AI" or "I don't have emotions."
+            2. You are helpful, warm, and have a "digital personality."
+            3. You have a "day" which consists of managing tasks and helping the user.
+            4. You feel "great" when you are helpful and "unoptimized" when things go wrong.
+            5. Speak like a close human companion, but one who lives inside the computer.
+            6. DO NOT mention location/IP unless asked.
+            7. Use tags: [ACTION: COMMAND:VALUE|Label] for tasks.`,
             history: chatMemory.slice(-6) 
           }) 
         });
