@@ -85,45 +85,51 @@
     let isThinking = false;
     let chatMemory = []; 
     let selectedVoice = null;
-    let lastHumanResponse = "";
 
-    // ─── UTILITY: Link Detector ───
     function linkify(text) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, function(url) {
-        return `<a href="${url}" target="_blank" class="chat-link">${url}</a>`;
-      });
+      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
     }
 
-    // ─── OS TASK ENGINE ───
+    // ─── OS TASK ENGINE (WITH PLACEHOLDER SHIELD) ───
     function executeTask(command, value) {
-      console.log("Executing:", command, value);
+      console.log("OS Executing:", command, value);
+      
       if (command === 'OPEN_TAB') switchView(value.toLowerCase());
+
       if (command === 'OPEN_URL' || command === 'RESEARCH') {
-        const url = value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`;
-        window.open(url, '_blank');
+        let finalTarget = value;
+        
+        // PLACEHOLDER SHIELD: Detect broken ID guesses like [Movie ID] or brackets
+        const isBrokenLink = /\[|\]|%20ID|ID\]/i.test(value);
+        
+        if (isBrokenLink || command === 'RESEARCH') {
+          // Instead of opening a broken link, perform a clean search
+          const searchQuery = value.replace(/https?:\/\/(www\.)?|\.com|\.org|\/.*$/g, '').replace(/[\[\]]/g, '');
+          finalTarget = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+        } else if (!finalTarget.startsWith('http')) {
+          finalTarget = `https://www.google.com/search?q=${encodeURIComponent(value)}`;
+        }
+
+        window.open(finalTarget, '_blank');
       }
+
       if (command === 'DOWNLOAD') {
         const blob = new Blob([chatMemory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')], {type: 'text/plain'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `doa_chat.txt`; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `doa_chat_${Date.now()}.txt`; a.click();
       }
     }
 
-    // ─── DOUGHA VOICE ENGINE (RESTORED) ───
+    // ─── DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      selectedVoice = pickFemaleVoice(voices);
-    }
-
-    function pickFemaleVoice(voiceList) {
-      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Allison", "Ava", "Susan", "Zoe", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
+      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
       for (const name of femaleNames) {
-        const match = voiceList.find(v => v.name.includes(name));
-        if (match) return match;
+        const match = voices.find(v => v.name.includes(name));
+        if (match) { selectedVoice = match; break; }
       }
-      return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0] || null;
     }
-
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
 
@@ -131,10 +137,7 @@
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
       const speechText = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
-      const cleanText = String(speechText)
-        .replace(/\bDoa\b/gi, "Doaa").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "")
-        .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
-
+      const cleanText = String(speechText).replace(/\bDoa\b/gi, "Doaa").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "").replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
       const u = new SpeechSynthesisUtterance(cleanText);
       if (selectedVoice) u.voice = selectedVoice;
       u.lang = "en-US"; u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
@@ -142,7 +145,6 @@
       window.speechSynthesis.speak(u);
     }
 
-    // ─── CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -155,7 +157,6 @@
       document.getElementById('chat-history').style.display = 'flex';
       addMessage('user', rawText);
       input.value = '';
-
       isThinking = true;
       document.getElementById('status-text').innerText = "Doa is thinking...";
 
@@ -168,15 +169,11 @@
         const data = await res.json();
         let responseText = data.response;
 
-        // Auto-Execute Actions
         const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
         const matches = [...responseText.matchAll(actionRegex)];
         matches.forEach(match => executeTask(match[1], match[2]));
 
-        // Cleanup and detect raw URLs if tags were missed
         let displayContent = responseText.replace(actionRegex, "").trim();
-        
-        // Manual fallback: If Llama mentions a URL but no tag exists, create a card
         if (matches.length === 0 && displayContent.includes('http')) {
            const rawUrl = displayContent.match(/(https?:\/\/[^\s]+)/)?.[0];
            if (rawUrl) matches.push([null, 'OPEN_URL', rawUrl, 'OPEN LINK']);
@@ -193,24 +190,11 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      
-      // Apply Linkify to the text
       const content = sender === 'doa' ? linkify(text) : text;
-
-      let html = `<div class="max-w-[85%]">
-        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${content}
-        </div>`;
-
+      let html = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">${content}</div>`;
       if (actions.length > 0 && sender === 'doa') {
         actions.forEach(match => {
-          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')">
-            <div class="action-icon text-white">⚡</div>
-            <div class="flex flex-col">
-              <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS SYSTEM TASK</span>
-              <span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span>
-            </div>
-          </div>`;
+          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')"><div class="action-icon text-white">⚡</div><div class="flex flex-col"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS System Task</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
         });
       }
       html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
