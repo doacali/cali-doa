@@ -87,46 +87,28 @@
     </main>
   </div>
 
- <script>
+  <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    const suggestionsPool = ["Weather in Sacramento", "Learn Ukrainian", "Speak Spanish", "Tell Story", "Crypto Stats"];
+    const suggestionsPool = ["Weather in Sacramento", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats"];
 
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
-    let chatMemory = []; 
+    let selectedVoice = null;
+    let chatMemory = []; // 🚨 Handles conversation memory
+
+    function loadVoices() {
+      const v = window.speechSynthesis.getVoices();
+      selectedVoice = v.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Aria") || v.name.includes("Female"));
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
 
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-
-      // 1. Detect language code (e.g., [uk-UA])
-      let langCode = "en-US"; 
-      const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
-      if (langMatch) {
-          langCode = langMatch[1];
-          text = text.replace(langMatch[0], "").trim();
-      }
-
-      const cleanText = text.replace(/[*#`_~]/g, "").trim();
+      const cleanText = String(text).replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").replace(/[^\x00-\x7F]/g, "").trim();
       const u = new SpeechSynthesisUtterance(cleanText);
-      u.lang = langCode;
-
-      // 2. Look specifically for Female voices for THAT language
-      const voices = window.speechSynthesis.getVoices();
-      let preferredVoice = voices.find(v => 
-          v.lang.startsWith(langCode.split('-')[0]) && 
-          (v.name.includes("Female") || v.name.includes("Samantha") || v.name.includes("Aria") || v.name.includes("Google") || v.name.includes("Zira"))
-      );
-
-      // Fallback to any voice for that language if no female name found
-      if (!preferredVoice) {
-          preferredVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
-      }
-
-      if (preferredVoice) u.voice = preferredVoice;
-
-      u.pitch = 1.4; // Feminine pitch
-      u.rate = 1.0; 
+      if (selectedVoice) u.voice = selectedVoice;
+      u.pitch = 1.35; u.rate = 1.05; 
       window.speechSynthesis.speak(u);
     }
 
@@ -140,6 +122,7 @@
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
       
+      // 🚨 Capture real time and date from your computer
       const now = new Date();
       const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -151,30 +134,26 @@
 
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            text, 
-            localTime, 
-            localDate, 
-            history: chatMemory.slice(-6) 
-          }) 
-        });
-        
+  method: 'POST', 
+  headers: { 'Content-Type': 'application/json' }, 
+  body: JSON.stringify({ 
+    text: text, 
+    localTime: localTime, 
+    localDate: localDate, 
+    history: chatMemory.slice(-6) 
+  }) 
+});
         const data = await res.json();
-        const rawResponse = data.response;
-
-        // 3. Clean language tags for the UI display
-        let cleanDisplayReply = rawResponse.replace(/^\[[a-z]{2}-[A-Z]{2}\]\s*/, "");
         
-        addMessage('doaa', cleanDisplayReply);
+        addMessage('doaa', data.response);
         
+        // Save to memory
         chatMemory.push({ role: 'user', content: text });
-        chatMemory.push({ role: 'assistant', content: rawResponse });
+        chatMemory.push({ role: 'assistant', content: data.response });
         
-        speak(rawResponse); // Uses the version with tags to select the right voice
+        speak(data.response);
       } catch (error) { 
-        addMessage('doaa', "Neural Link fuzzy!"); 
+        addMessage('doaa', "Neural Link fuzzy! Check your Cloudflare Worker."); 
       } finally { 
         isThinking = false; 
         document.getElementById('status-text').innerText = ""; 
@@ -186,11 +165,14 @@
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
       
+      let content = text.replace(/\*\*/g, ""); 
+      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : '';
+      
       row.innerHTML = `<div class="max-w-[85%]">
         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${text}
+          ${content}
         </div>
-        ${sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('[en-US] ${text.replace(/'/g, "\\'")}')">🔊 Speak</button></div>` : ''}
+        ${actions}
       </div>`;
       
       history.appendChild(row);
@@ -204,7 +186,7 @@
     }
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("[en-US] Live voice active."); else window.speechSynthesis.cancel(); }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active."); else window.speechSynthesis.cancel(); }
     function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); }
     
@@ -214,8 +196,6 @@
         updateVoiceUI(); rotateSuggestions(); 
         document.getElementById('side-date').innerText = new Date().getDate();
     };
-    // Re-load voices when they change (browser readiness)
-    window.speechSynthesis.onvoiceschanged = () => {}; 
   </script>
 </body>
 </html>
