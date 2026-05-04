@@ -95,69 +95,87 @@
       window.speechSynthesis.cancel(); 
       if (!voiceActive || !text) return;
 
-      // FIX: Replace degree symbols with "degrees" so it reads weather correctly
+      // 1. Detect language tag like [es-ES]
+      let langCode = "en-US";
+      const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
+      if (langMatch) {
+          langCode = langMatch[1];
+          text = text.replace(langMatch[0], "").trim();
+      }
+
+      // 2. Clean text for speech
       const cleanText = text
         .replace(/°/g, " degrees ")
         .replace(/[*#`_~]/g, "")
         .trim();
 
       const u = new SpeechSynthesisUtterance(cleanText);
-      u.lang = "en-US";
-      if (femaleVoice) u.voice = femaleVoice;
+      u.lang = langCode;
+
+      // 3. Find matching voice for the language
+      const voices = window.speechSynthesis.getVoices();
+      const matchingVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]) && (v.name.includes("Female") || v.name.includes("Google"))) || 
+                            voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
+      
+      if (matchingVoice) {
+          u.voice = matchingVoice;
+      } else if (femaleVoice && langCode.startsWith("en")) {
+          u.voice = femaleVoice;
+      }
+
       u.pitch = 1.0;
       u.rate = 1.0; 
       window.speechSynthesis.speak(u);
     }
 
     async function handleMessage() {
-  window.speechSynthesis.cancel();
-  if (isThinking) return;
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
-  if (!text) return;
+      window.speechSynthesis.cancel();
+      if (isThinking) return;
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
+      if (!text) return;
 
-  document.getElementById('hero-section').classList.add('hidden');
-  document.getElementById('chat-history').classList.remove('hidden');
-  document.getElementById('chat-history').style.display = 'flex';
-  
-  const now = new Date();
-  const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      document.getElementById('hero-section').classList.add('hidden');
+      document.getElementById('chat-history').classList.remove('hidden');
+      document.getElementById('chat-history').style.display = 'flex';
+      
+      const now = new Date();
+      const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-  addMessage('user', text);
-  input.value = '';
-  isThinking = true;
-  document.getElementById('status-text').innerText = "Doaa is thinking...";
+      addMessage('user', text);
+      input.value = '';
+      isThinking = true;
+      document.getElementById('status-text').innerText = "Doaa is thinking...";
 
-  try {
-    const res = await fetch(CLOUDFLARE_URL, { 
-      method: 'POST', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify({ 
-        text: text, 
-        // 🚨 UPDATED SYSTEM INSTRUCTIONS BELOW
-        systemInstruction: "Your name is Cali Doa. 1. Always respond in English. 2. NEVER start with robotic phrases like 'According to current data' or 'Based on my records'. 3. Be conversational and human—start naturally, like 'Right now in Sacramento...' or 'Looks like the weather is...'. 4. Vary your personality so every response feels fresh. 5. Keep information accurate but the tone casual and cool. 6. Keep it concise.",
-        localTime: localTime, 
-        localDate: localDate, 
-        history: chatMemory.slice(-6) 
-      }) 
-    });
-    const data = await res.json();
-    
-    addMessage('doaa', data.response);
-    chatMemory.push({ role: 'user', content: text });
-    chatMemory.push({ role: 'assistant', content: data.response });
-    
-    speak(data.response);
-  } catch (error) { 
-    addMessage('doaa', "System link error. Please try again."); 
-  } finally { 
-    isThinking = false; 
-    document.getElementById('status-text').innerText = ""; 
-  }
-}
+      try {
+        const res = await fetch(CLOUDFLARE_URL, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ 
+            text: text, 
+            // 🚨 SYSTEM INSTRUCTIONS: No robotic intros, high variety, and language switching support.
+            systemInstruction: "Your name is Cali Doa. 1. Always respond in English by default. 2. NEVER start with robotic phrases like 'According to current data'. 3. Be human: vary your openings (e.g., 'Check it out...', 'So, in Sacramento right now...', 'Here is the deal...'). 4. If asked to speak another language, do it happily. 5. CRITICAL: If you speak another language, start the response with a bracketed code like [es-ES] for Spanish or [fr-FR] for French so the voice engine knows to switch accents. 6. Keep info accurate but style casual.",
+            localTime: localTime, 
+            localDate: localDate, 
+            history: chatMemory.slice(-6) 
+          }) 
+        });
+        const data = await res.json();
+        
+        addMessage('doaa', data.response);
+        chatMemory.push({ role: 'user', content: text });
+        chatMemory.push({ role: 'assistant', content: data.response });
+        
+        speak(data.response);
+      } catch (error) { 
+        addMessage('doaa', "System link error. Please try again."); 
+      } finally { 
+        isThinking = false; 
+        document.getElementById('status-text').innerText = ""; 
+      }
+    }
 
-    // FIXED: addMessage now uses proper event listeners to handle multi-line text (weather)
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
@@ -168,7 +186,10 @@
 
       const bubble = document.createElement('div');
       bubble.className = `${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm`;
-      bubble.innerText = text.replace(/[*#`_~]/g, "");
+      
+      // Clean display text (remove the hidden language code)
+      let cleanDisplay = text.replace(/^\[([a-z]{2}-[A-Z]{2})\]/, "").replace(/[*#`_~]/g, "");
+      bubble.innerText = cleanDisplay;
       wrapper.appendChild(bubble);
 
       if (sender === 'doaa') {
@@ -178,7 +199,7 @@
         const sBtn = document.createElement('button');
         sBtn.className = "action-btn text-gray-400 hover:text-black";
         sBtn.innerHTML = "🔊 Speak";
-        sBtn.onclick = () => speak(text); // This correctly handles long text
+        sBtn.onclick = () => speak(text); 
 
         const stopBtn = document.createElement('button');
         stopBtn.className = "action-btn text-red-500";
@@ -211,7 +232,7 @@
       localStorage.setItem('voice_active', voiceActive); 
       updateVoiceUI(); 
       window.speechSynthesis.cancel();
-      if (voiceActive) speak("Voice mode enabled."); 
+      if (voiceActive) speak("Voice mode active."); 
     }
 
     function updateVoiceUI() { 
