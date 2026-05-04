@@ -78,12 +78,9 @@
     let chatMemory = []; 
     let femaleVoice = null;
 
-    // 🔊 1. IMPROVED VOICE INITIALIZATION (Forces English)
     function initVoices() {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length === 0) return;
-
-      // Priority list for high-quality English voices
       femaleVoice = voices.find(v => v.name.includes("Google US English")) ||
                     voices.find(v => v.name.includes("Aria")) ||
                     voices.find(v => v.name.includes("Samantha")) ||
@@ -91,31 +88,24 @@
                     voices.find(v => v.lang.startsWith("en"));
     }
 
-    // Chrome and Safari need this event to load voices
     window.speechSynthesis.onvoiceschanged = initVoices;
     initVoices();
 
     function speak(text) {
-      window.speechSynthesis.cancel(); // Stop current speech
+      window.speechSynthesis.cancel();
       if (!voiceActive || !text) return;
-
       const cleanText = text.replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(cleanText);
-      
-      // Force the engine to English
       u.lang = "en-US";
       if (femaleVoice) u.voice = femaleVoice;
-
       u.pitch = 1.0;
       u.rate = 1.0; 
       u.volume = 1;
-      
       window.speechSynthesis.speak(u);
     }
 
     async function handleMessage() {
       window.speechSynthesis.cancel();
-      
       if (isThinking) return;
       const input = document.getElementById('user-input');
       const text = input.value.trim();
@@ -125,27 +115,32 @@
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
       
-      const now = new Date();
-      const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-
       addMessage('user', text);
       input.value = '';
       isThinking = true;
       document.getElementById('status-text').innerText = "Doaa is thinking...";
 
+      // --- PRIVACY PROTECTION LOGIC ---
+      // Only include time/date if the user is actually asking for it
+      const needsContext = /time|date|today|clock|calendar|day/i.test(text);
+      const now = new Date();
+      
+      const payload = { 
+        text: text, 
+        systemInstruction: "Your name is Cali Doa. Respond ALWAYS in English. DO NOT mention user location, IP info, or specific time/date unless the user explicitly asks for it. Do not guess the user's city or region. Keep responses concise.",
+        history: chatMemory.slice(-6) 
+      };
+
+      if (needsContext) {
+        payload.localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        payload.localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      }
+
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            text: text, 
-            // 🚨 SYSTEM INSTRUCTION: Forces the AI to respond in English
-            systemInstruction: "Your name is Cali Doa. You must ALWAYS respond in English. Do not use other languages even if prompted. Keep responses concise.",
-            localTime: localTime, 
-            localDate: localDate, 
-            history: chatMemory.slice(-6) 
-          }) 
+          body: JSON.stringify(payload) 
         });
         const data = await res.json();
         
@@ -166,9 +161,7 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      
       let cleanText = text.replace(/[*#`_~]/g, "");
-      
       row.innerHTML = `<div class="max-w-[85%]">
         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
           ${cleanText}
@@ -179,7 +172,6 @@
             <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
           </div>` : ''}
       </div>`;
-      
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
