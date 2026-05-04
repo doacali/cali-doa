@@ -61,7 +61,7 @@
               </div>
             </div>
             <div class="bg-white border border-gray-200 shadow-xl rounded-[24px] p-2.5 flex items-center">
-              <textarea id="user-input" rows="1" class="flex-1 px-4 outline-none text-sm resize-none hide-scrollbar" placeholder="Ask Doaa anything..."></textarea>
+              <textarea id="user-input" rows="1" class="flex-1 px-4 outline-none text-sm resize-none hide-scrollbar" placeholder="Ask Doa anything..."></textarea>
               <button onclick="handleMessage()" class="bg-black text-white w-10 h-10 rounded-full font-bold ml-2">→</button>
             </div>
           </div>
@@ -78,35 +78,19 @@
     let chatMemory = []; 
     let selectedVoice = null;
 
-    // ─── DOUGHA VOICE ENGINE (RESTORED & PROTECTED) ───
+    // ─── DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      // Default to your preferred English profile
       selectedVoice = pickFemaleVoice(voices, "en-US");
     }
 
     function pickFemaleVoice(voiceList, lang = "en-US") {
-      const femaleNames = [
-        "Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", 
-        "Allison", "Ava", "Susan", "Zoe", "Microsoft Zira", "Microsoft Aria", 
-        "Microsoft Jenny", "Google US English Female", "Google UK English Female",
-        "Kyoko", "Nanami" // Added for Japanese support
-      ];
-
-      // Filter by language first to ensure the accent matches the text
+      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Susan", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
       const langMatch = voiceList.filter(v => v.lang.startsWith(lang.split('-')[0]));
-
       for (const name of femaleNames) {
         const match = langMatch.find(v => v.name.includes(name));
         if (match) return match;
       }
-
-      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
-      const keywordMatch = langMatch.find(v =>
-        femaleKeywords.some(k => v.name.toLowerCase().includes(k))
-      );
-      if (keywordMatch) return keywordMatch;
-
       return langMatch[0] || voiceList[0] || null;
     }
 
@@ -117,32 +101,29 @@
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
 
+      // Phonetic Override: AI says "Doa" but voice engine reads "Doaa"
       const cleanText = String(text)
+        .replace(/\bDoa\b/gi, "Doaa") 
         .replace(/\bDowa\b/gi, "Doaa")
-        .replace(/\bDoa\b/gi, "Doaa")
         .replace(/([a-zA-Z])\1{2,}/g, "$1")
         .replace(/[*#`_~]/g, "")
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
 
-      // Detect language to avoid the "American reading Japanese" robotic sound
       let detectedLang = "en-US";
       if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(cleanText)) detectedLang = "ja-JP";
       else if (/[\u0400-\u04FF]/.test(cleanText)) detectedLang = "uk-UA";
       else if (/[ñáéíóú¿¡]/i.test(cleanText)) detectedLang = "es-ES";
 
       const u = new SpeechSynthesisUtterance(cleanText);
-      
-      // Get the best voice for the detected language
       const voices = window.speechSynthesis.getVoices();
       u.voice = pickFemaleVoice(voices, detectedLang);
       u.lang = detectedLang;
 
-      // YOUR EXACT SETTINGS
       u.pitch = 1.35;   // warm, original feel
       u.rate = 0.95;    // natural pace
       u.volume = 1.0;
 
-      // HEARTBEAT FIX (Keeps her from stopping mid-sentence)
+      // HEARTBEAT FIX
       u.onstart = () => {
         const interval = setInterval(() => {
           if (!window.speechSynthesis.speaking) {
@@ -160,9 +141,8 @@
     function toggleVoice() {
       voiceActive = !voiceActive;
       localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      loadVoices();
       updateVoiceUI();
-      if (voiceActive) speak("Live voice active. My name is Doaa.");
+      if (voiceActive) speak("Live voice active. My name is Doa.");
     }
 
     // ─── CHAT LOGIC ───
@@ -180,7 +160,7 @@
       addMessage('user', text);
       input.value = '';
       isThinking = true;
-      document.getElementById('status-text').innerText = "Doaa is thinking...";
+      document.getElementById('status-text').innerText = "Doa is thinking...";
 
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
@@ -188,19 +168,19 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            systemInstruction: "Your name is Cali Doa. You are multi-lingual. Respond ONLY in the language the user speaks. If Japanese, use Kanji/Hiragana, NOT Romaji. No English translations unless asked. NEVER mention location/IP (Rocklin). Keep concise.",
+            systemInstruction: "Your name is Doa. You are a multi-lingual AI. Respond ONLY in the language the user speaks. If asked about weather or location, use the context provided. Otherwise, do not mention location or IP. Keep responses concise.",
             history: chatMemory.slice(-6) 
           }) 
         });
         const data = await res.json();
         
-        addMessage('doaa', data.response);
+        addMessage('doa', data.response);
         chatMemory.push({ role: 'user', content: text });
         chatMemory.push({ role: 'assistant', content: data.response });
         
         speak(data.response);
       } catch (error) { 
-        addMessage('doaa', "System link error."); 
+        addMessage('doa', "System link error."); 
       } finally { 
         isThinking = false; 
         document.getElementById('status-text').innerText = ""; 
@@ -216,7 +196,7 @@
         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
           ${cleanText}
         </div>
-        ${sender === 'doaa' ? `
+        ${sender === 'doa' ? `
           <div class="flex gap-4 mt-2 px-1">
             <button class="action-btn text-gray-400 hover:text-black" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
             <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
@@ -226,17 +206,11 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    function toggleSidebar() { 
-      window.speechSynthesis.cancel();
-      document.getElementById('main-sidebar').classList.toggle('collapsed'); 
-    }
-
+    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
     function switchView(v) { 
-      window.speechSynthesis.cancel();
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
       if(document.getElementById(v + '-view')) document.getElementById(v + '-view').classList.remove('hidden'); 
     }
-
     function updateVoiceUI() { 
       const knob = document.getElementById('voice-knob'); 
       const bg = document.getElementById('voice-switch'); 
@@ -245,15 +219,8 @@
         bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
       } 
     }
-
-    document.getElementById('user-input').addEventListener('keydown', (e) => { 
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
-    });
-    
-    window.onload = () => { 
-      updateVoiceUI(); 
-      loadVoices();
-    };
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    window.onload = () => { updateVoiceUI(); loadVoices(); };
   </script>
 </body>
 </html>
