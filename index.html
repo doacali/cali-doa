@@ -16,7 +16,6 @@
     #chat-history { display: flex; flex-direction: column; overflow-y: auto; scroll-behavior: smooth; flex: 1; }
     .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    .action-btn { font-size: 10px; color: #9ca3af; font-weight: 800; cursor: pointer; border: none; background: none; }
     #voice-switch { transition: background-color 0.3s; }
   </style>
 </head>
@@ -32,7 +31,7 @@
       <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
         <button onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 Chat With Doa</button>
         <button class="sidebar-item">📅 Calendar</button>
-        <button onclick="switchView('apps')" class="sidebar-item">📱 App Factory</button>
+        <button class="sidebar-item">📱 App Factory</button>
       </nav>
     </aside>
 
@@ -57,7 +56,7 @@
               <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
               
               <div class="flex items-center gap-3">
-                <span class="text-[9px] font-black text-gray-300 uppercase tracking-widest">Live Voice</span>
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Voice</span>
                 <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer">
                   <div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-all"></div>
                 </div>
@@ -80,7 +79,7 @@
     let isThinking = false;
     let chatMemory = [];
 
-    // 🔊 DUET Speech Engine: Locked to high-quality female voices
+    // 🔊 PERMANENT FEMALE VOICE ENGINE
     function speak(fullText) {
       window.speechSynthesis.cancel();
       if (!voiceActive || !fullText) return;
@@ -100,14 +99,14 @@
           u.lang = currentLang;
 
           const voices = window.speechSynthesis.getVoices();
-          // Find high-quality female voice for the current segment language
+          // Always look for Female/Natural voices first
           let bestVoice = voices.find(v => v.lang.startsWith(currentLang.split('-')[0]) && 
               (v.name.includes("Aria") || v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Female")));
 
           if (!bestVoice) bestVoice = voices.find(v => v.lang.startsWith(currentLang.split('-')[0]));
           if (bestVoice) u.voice = bestVoice;
 
-          u.pitch = 1.3; // Feminine OS tone
+          u.pitch = 1.35; // Locked to professional female tone
           u.rate = 1.1;
           window.speechSynthesis.speak(u);
         }
@@ -157,17 +156,10 @@
       
       let visibleContent = text.replace(/\[[a-z]{2}-[A-Z]{2}\]/gi, "").replace(/[*#`_~]/g, "").trim();
 
-      const actions = sender === 'doaa' ? `
-        <div class="flex gap-4 mt-2 px-1">
-          <button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
-          <button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
-        </div>` : '';
-      
       row.innerHTML = `<div class="max-w-[85%]">
         <div class="${sender === 'user' ? 'bg-black text-white rounded-[22px] rounded-tr-[4px]' : 'bg-gray-100 text-gray-900 rounded-[22px] rounded-tl-[4px]'} p-4 text-sm whitespace-pre-wrap shadow-sm">
           ${visibleContent}
         </div>
-        ${actions}
       </div>`;
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
