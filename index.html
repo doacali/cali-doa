@@ -95,7 +95,7 @@
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let selectedVoice = null;
-    let chatMemory = []; // 🚨 NEW: This handles the memory
+    let chatMemory = []; // 🚨 Handles conversation memory
 
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
@@ -113,12 +113,6 @@
       window.speechSynthesis.speak(u);
     }
 
-    // Shortcut for sidebar weather
-    function askWeather() {
-        document.getElementById('user-input').value = "What is the weather in Sacramento?";
-        handleMessage();
-    }
-
     async function handleMessage() {
       if (isThinking) return;
       const input = document.getElementById('user-input');
@@ -127,78 +121,65 @@
 
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
+      document.getElementById('chat-history').style.display = 'flex';
       
-      // 1. Get Real-Time Data from your computer
+      // 🚨 Capture real time and date from your computer
       const now = new Date();
-      const localTime = now.toLocaleTimeString();
-      const localDate = now.toDateString();
+      const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
       addMessage('user', text);
-      
       input.value = '';
       isThinking = true;
       document.getElementById('status-text').innerText = "Doaa is syncing...";
 
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ 
-                text: text,
-                history: chatMemory.slice(-6),
-                localTime: localTime,   // 🚨 Sends your real time
-                localDate: localDate    // 🚨 Sends your real date
-            }) 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ 
+            text, 
+            localTime, 
+            localDate, 
+            history: chatMemory.slice(-6) // Sends last 6 messages as memory
+          }) 
         });
         const data = await res.json();
         
         addMessage('doaa', data.response);
+        
+        // Save to memory
         chatMemory.push({ role: 'user', content: text });
         chatMemory.push({ role: 'assistant', content: data.response });
         
         speak(data.response);
       } catch (error) { 
-          addMessage('doaa', "Connection lost."); 
+        addMessage('doaa', "Neural Link fuzzy! Check your Cloudflare Worker."); 
       } finally { 
-          isThinking = false; 
-          document.getElementById('status-text').innerText = ""; 
-      }
-    }
-        const data = await res.json();
-        
-        // 2. Add AI reply to UI and Memory
-        addMessage('doaa', data.response);
-        chatMemory.push({ role: 'assistant', content: data.response });
-        
-        speak(data.response);
-      } catch (error) { 
-          addMessage('doaa', "Neural Link fuzzy! Check your connection."); 
-      } finally { 
-          isThinking = false; 
-          document.getElementById('status-text').innerText = ""; 
+        isThinking = false; 
+        document.getElementById('status-text').innerText = ""; 
       }
     }
 
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
       
-      // Better alignment and bubble shapes
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full mb-4`;
+      let content = text.replace(/\*\*/g, ""); 
+      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : '';
       
-      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button></div>` : '';
+      row.innerHTML = `<div class="max-w-[85%]">
+        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
+          ${content}
+        </div>
+        ${actions}
+      </div>`;
       
-      row.innerHTML = `
-        <div class="max-w-[80%]">
-            <div class="${sender === 'user' ? 'bg-black text-white rounded-[22px] rounded-tr-[4px]' : 'bg-gray-100 text-gray-900 rounded-[22px] rounded-tl-[4px]'} px-5 py-3 text-sm shadow-sm">
-                ${text}
-            </div>
-            ${actions}
-        </div>`;
-        
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
+
     function rotateSuggestions() {
         const cont = document.getElementById('suggestion-container');
         const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5).slice(0, 4);
@@ -206,34 +187,12 @@
     }
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active."); else window.speechSynthesis.cancel(); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
+    function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); }
     
-    function toggleVoice() { 
-        voiceActive = !voiceActive; 
-        localStorage.setItem('voice_active', voiceActive); 
-        updateVoiceUI(); 
-        if (voiceActive) speak("Live voice active. My name is Doaa."); 
-        else window.speechSynthesis.cancel(); 
-    }
-
-    function updateVoiceUI() { 
-        const knob = document.getElementById('voice-knob'); 
-        const bg = document.getElementById('voice-switch'); 
-        if(knob && bg) { 
-            knob.style.left = voiceActive ? "18px" : "2px"; 
-            bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
-        } 
-    }
-
-    function switchView(v) { 
-        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
-        const target = document.getElementById(v + '-view');
-        if(target) target.classList.remove('hidden'); 
-    }
-
-    document.getElementById('user-input').addEventListener('keydown', (e) => { 
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
-    });
-
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    
     window.onload = () => { 
         updateVoiceUI(); rotateSuggestions(); 
         document.getElementById('side-date').innerText = new Date().getDate();
