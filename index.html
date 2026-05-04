@@ -135,15 +135,15 @@
 
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            text, 
-            localTime, 
-            localDate, 
-            history: chatMemory.slice(-6) // Sends last 6 messages as memory
-          }) 
-        });
+  method: 'POST', 
+  headers: { 'Content-Type': 'application/json' }, 
+  body: JSON.stringify({ 
+    text: text, 
+    localTime: localTime, 
+    localDate: localDate, 
+    history: chatMemory.slice(-6) 
+  }) 
+});
         const data = await res.json();
         
         addMessage('doaa', data.response);
