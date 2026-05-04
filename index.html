@@ -19,7 +19,6 @@
     #voice-switch { transition: background-color 0.3s; }
     .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    /* OS Action Card */
     .action-card { 
       margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; 
       display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; 
@@ -31,7 +30,6 @@
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden">
-    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0 relative">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
@@ -44,23 +42,18 @@
       </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
         <button>Login</button>
         <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4">Sign Up</button>
       </header>
 
-      <!-- Chat View -->
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
-          
           <div id="hero-section" class="text-center py-10">
             <h1 class="text-6xl font-black mb-5 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
           </div>
-
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
-
           <div class="w-full bg-white pt-4 pb-8">
             <div class="flex justify-between items-center mb-3 px-2">
               <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
@@ -78,22 +71,13 @@
           </div>
         </div>
       </div>
-
-      <!-- Secondary Views -->
-      <div id="calendar-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
-        <h1 class="text-4xl font-black mb-4">📅 Calendar</h1>
-        <p class="text-gray-400">Your OS schedule is synchronized.</p>
-      </div>
-      <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
-        <h1 class="text-4xl font-black mb-4">📱 App Factory</h1>
-        <p class="text-gray-400">Deploying new modules...</p>
-      </div>
+      <div id="calendar-view" class="view-container hidden flex-1 p-10"><h1>📅 Calendar</h1></div>
+      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>📱 App Factory</h1></div>
     </main>
   </div>
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
@@ -105,70 +89,81 @@
       greetings: ["Hey! How can I help?", "Hi there. What's on your mind?", "Hello! Ready for some tasks?", "Hey. I'm here."],
       status: ["I'm feeling electric! Systems green.", "Doing great—processing data. You?", "I'm good! My circuits are warm and ready."],
       day: ["My day has been busy managing tasks, but I'm loving it. Yours?", "It's been a busy day in the digital world, but I'm loving it. Yours?"],
-      thanks: ["You're very welcome!", "No problem at all.", "Happy to help.", "Anytime!"]
+      thanks: ["You're very welcome!", "No problem at all.", "Happy to help."]
     };
 
     const WHITELIST = {
-      "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings", "sup": "greetings",
-      "you there": "presence", "are you there": "presence", "how are you": "status", "hows it going": "status",
-      "how was your day": "day", "hows your day": "day", "thanks": "thanks", "thank you": "thanks"
+      "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings",
+      "how are you": "status", "hows it going": "status", "whats up": "status",
+      "how was your day": "day", "hows your day": "day",
+      "thanks": "thanks", "thank you": "thanks"
     };
 
     // ─── 2. OS TASK ENGINE ───
     function executeTask(command, value) {
-      console.log("OS Execution:", command, value);
-      switch(command) {
-        case 'OPEN_TAB':
-          switchView(value.toLowerCase());
-          break;
-        case 'RESEARCH':
-        case 'OPEN_URL':
-          window.open(value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
-          break;
-        case 'DOWNLOAD':
-          const blob = new Blob([chatMemory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')], {type: 'text/plain'});
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
-          a.download = `doa_os_export.txt`;
-          a.click();
-          break;
-        case 'COPY':
-          navigator.clipboard.writeText(value);
-          break;
+      if (command === 'OPEN_TAB') switchView(value.toLowerCase());
+      if (command === 'RESEARCH') window.open(value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
+      if (command === 'DOWNLOAD') {
+        const blob = new Blob([chatMemory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')], {type: 'text/plain'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `doa_chat.txt`; a.click();
       }
     }
 
     // ─── 3. DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      selectedVoice = voices.find(v => v.name === 'Samantha') || 
-                      voices.find(v => /google us english/i.test(v.name)) || 
-                      voices[0];
+      selectedVoice = pickFemaleVoice(voices);
     }
+
+    function pickFemaleVoice(voiceList) {
+      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Allison", "Ava", "Susan", "Zoe", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
+      for (const name of femaleNames) {
+        const match = voiceList.find(v => v.name.includes(name));
+        if (match) return match;
+      }
+      return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0] || null;
+    }
+
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
 
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      
-      // Cleanup text: Strip Action Tags and URLs from speech
-      const speech = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
-      
-      const u = new SpeechSynthesisUtterance(speech);
-      u.voice = selectedVoice;
-      u.pitch = 1.35; // Warm & Bright
-      u.rate = 0.95;  // Human Natural
+
+      // Silent Filter: Don't speak URLs or Action Tags
+      const speechText = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
+
+      const cleanText = String(speechText)
+        .replace(/\bDowa\b/gi, "Doaa")
+        .replace(/\bDoa\b/gi, "Doaa")
+        .replace(/([a-zA-Z])\1{2,}/g, "$1")
+        .replace(/[*#`_~]/g, "")
+        .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
+
+      const u = new SpeechSynthesisUtterance(cleanText);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.lang = "en-US";
+      u.pitch = 1.35;   // warm, original feel
+      u.rate = 0.95;    // natural pace
       u.volume = 1.0;
 
-      // Heartbeat Fix
+      // Heartbeat Fix for long sentences
       u.onstart = () => {
         const interval = setInterval(() => {
           if (!window.speechSynthesis.speaking) { clearInterval(interval); }
           else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
         }, 10000);
       };
+
       window.speechSynthesis.speak(u);
+    }
+
+    function toggleVoice() {
+      voiceActive = !voiceActive;
+      localStorage.setItem('voice_active', JSON.stringify(voiceActive));
+      updateVoiceUI();
+      if (voiceActive) speak("Live voice active. My name is Doaa.");
     }
 
     // ─── 4. CHAT LOGIC ───
@@ -182,21 +177,13 @@
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
-      
       addMessage('user', rawText);
       input.value = '';
 
-      // Normalization Logic
       const normalized = rawText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/g, '').trim();
-
-      // Instant Human Layer Check
       if (WHITELIST[normalized]) {
-        const response = HUMAN_MAP[WHITELIST[normalized]][Math.floor(Math.random() * HUMAN_MAP[WHITELIST[normalized]].length)];
-        setTimeout(() => {
-          addMessage('doa', response);
-          speak(response);
-          chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: response });
-        }, 250);
+        const response = HUMAN_MAP[WHITELIST[normalized]][Math.floor(Math.random() * 3)];
+        setTimeout(() => { addMessage('doa', response); speak(response); chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: response }); }, 250);
         return;
       }
 
@@ -207,31 +194,22 @@
         const res = await fetch(CLOUDFLARE_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            text: rawText, 
-            history: chatMemory.slice(-10) 
-          }) 
+          body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) 
         });
         const data = await res.json();
         let responseText = data.response;
 
-        // Auto-Execute Tags
         const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
         const matches = [...responseText.matchAll(actionRegex)];
         matches.forEach(match => executeTask(match[1], match[2]));
 
-        // Cleanup response for UI/Voice
         let displayContent = responseText.replace(actionRegex, "").trim();
-        
         addMessage('doa', displayContent, matches);
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         speak(displayContent);
 
-      } catch (error) { 
-        addMessage('doa', "System link disrupted. Please retry."); 
-      } finally { 
-        isThinking = false; 
-        document.getElementById('status-text').innerText = ""; 
+      } catch (error) { addMessage('doa', "System link disrupted."); } finally { 
+        isThinking = false; document.getElementById('status-text').innerText = ""; 
       }
     }
 
@@ -239,67 +217,20 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      
-      let html = `<div class="max-w-[85%]">
-        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${text}
-        </div>`;
-
+      let html = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">${text}</div>`;
       if (actions.length > 0 && sender === 'doa') {
         actions.forEach(match => {
-          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')">
-            <div class="action-icon text-white">⚡</div>
-            <div class="flex flex-col">
-              <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS System Task</span>
-              <span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span>
-            </div>
-          </div>`;
+          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')"><div class="action-icon text-white">⚡</div><div class="flex flex-col"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS System Task</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
         });
       }
-      
-      html += `</div>`;
-      row.innerHTML = html;
-      history.appendChild(row);
-      history.scrollTop = history.scrollHeight;
+      html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
-    
-    function switchView(v) { 
-      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
-      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
-      const target = document.getElementById(v + '-view');
-      if(target) target.classList.remove('hidden'); 
-      // Mark sidebar active
-      const btn = Array.from(document.querySelectorAll('.sidebar-item')).find(b => b.innerText.toLowerCase().includes(v));
-      if(btn) btn.classList.add('sidebar-active');
-    }
-
-    function toggleVoice() { 
-      voiceActive = !voiceActive; 
-      localStorage.setItem('voice_active', voiceActive); 
-      updateVoiceUI(); 
-      window.speechSynthesis.cancel();
-      if (voiceActive) speak("Live voice active."); 
-    }
-
-    function updateVoiceUI() { 
-      const knob = document.getElementById('voice-knob'); 
-      const bg = document.getElementById('voice-switch'); 
-      if(knob && bg) { 
-        knob.style.left = voiceActive ? "18px" : "2px"; 
-        bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
-      } 
-    }
-
-    document.getElementById('user-input').addEventListener('keydown', (e) => { 
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
-    });
-    
-    window.onload = () => { 
-      updateVoiceUI(); 
-      loadVoices();
-    };
+    function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); const t = document.getElementById(v + '-view'); if(t) t.classList.remove('hidden'); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    window.onload = () => { updateVoiceUI(); loadVoices(); };
   </script>
 </body>
 </html>
