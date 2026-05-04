@@ -96,20 +96,22 @@
     let chatMemory = []; 
     let femaleVoice = null;
 
-    // 🔊 1. FIND THE HIGHEST QUALITY HUMAN VOICE
-    function initVoices() {
+    // 🔊 1. HUNT FOR THE MOST HUMAN VOICE (Aria, Google, Samantha)
+    function loadBestVoice() {
       const voices = window.speechSynthesis.getVoices();
-      // Priority list: Google/Microsoft Natural voices sound most human
-      femaleVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Aria") || v.name.includes("Natural")) ||
-                    voices.find(v => v.name.includes("Samantha") || v.name.includes("Microsoft Zira")) ||
-                    voices.find(v => v.lang.includes("en") && (v.name.includes("Female") || v.name.includes("Girl")));
+      
+      // PRIORITY: 1. Natural/Online (Edge/Chrome) 2. Samantha (Mac) 3. Zira (Windows)
+      femaleVoice = voices.find(v => v.name.includes("Aria") || v.name.includes("Natural") || v.name.includes("Google US English")) ||
+                    voices.find(v => v.name.includes("Samantha")) ||
+                    voices.find(v => v.name.includes("Zira") || v.name.includes("Female"));
     }
-    // Browser voice loading is weird, this ensures it catches them
-    window.speechSynthesis.onvoiceschanged = initVoices;
-    initVoices();
+    
+    // Ensure voices are loaded (some browsers load them late)
+    window.speechSynthesis.onvoiceschanged = loadBestVoice;
+    loadBestVoice();
 
     function speak(text) {
-      // 🚨 KILLSWITCH: Stop everything before starting new speech
+      // 🚨 INSTANT INTERRUPT: Stop any current speech
       window.speechSynthesis.cancel();
       
       if (!voiceActive || !text) return;
@@ -125,25 +127,26 @@
       const u = new SpeechSynthesisUtterance(cleanText);
       u.lang = langCode;
 
-      // 🚨 VOICE SELECTION: Use the human-priority voice for English, or find a match for other languages
+      // Use our high-quality human voice for English
       if (langCode.startsWith("en") && femaleVoice) {
           u.voice = femaleVoice;
       } else {
+          // Find matching female voice for other languages
           const voices = window.speechSynthesis.getVoices();
           u.voice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]) && v.name.toLowerCase().includes("female")) || 
                     voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
       }
 
-      // 🚨 TUNE FOR SMOOTHNESS & SPEED
-      u.pitch = 1.1;  // Natural human pitch
-      u.rate = 1.15;  // Fast and smart
+      // 🚨 TONE SETTINGS: Smooth, Human, Fast
+      u.pitch = 1.05; // Not too high, not too low
+      u.rate = 1.15;  // Brisk and smart
       u.volume = 1;
       
       window.speechSynthesis.speak(u);
     }
 
     async function handleMessage() {
-      // 🚨 KILLSWITCH: Stop talking when you start a new prompt
+      // 🚨 STOP VOICE: Immediately stop talking when user clicks/enters new prompt
       window.speechSynthesis.cancel();
       
       if (isThinking) return;
@@ -209,7 +212,7 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    // 🚨 GLOBAL KILLSWITCH FOR PAGE INTERACTION
+    // 🚨 INTERRUPTS: Stop voice when switching pages or hiding sidebar
     function toggleSidebar() { 
       window.speechSynthesis.cancel();
       document.getElementById('main-sidebar').classList.toggle('collapsed'); 
@@ -225,8 +228,8 @@
       voiceActive = !voiceActive; 
       localStorage.setItem('voice_active', voiceActive); 
       updateVoiceUI(); 
-      window.speechSynthesis.cancel();
-      if (voiceActive) speak("[en-US] Voice active."); 
+      window.speechSynthesis.cancel(); // Stop talking if user toggles off
+      if (voiceActive) speak("Voice active."); 
     }
 
     function updateVoiceUI() { 
@@ -248,11 +251,13 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
     });
     
-    // 🚨 STOP ON REFRESH
+    // 🚨 STOP VOICE IMMEDIATELY ON REFRESH
     window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
     window.onload = () => { 
-      updateVoiceUI(); rotateSuggestions(); 
+      loadBestVoice();
+      updateVoiceUI(); 
+      rotateSuggestions(); 
       document.getElementById('side-date').innerText = new Date().getDate();
     };
   </script>
