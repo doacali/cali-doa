@@ -110,51 +110,52 @@
     }
 
     async function handleMessage() {
-      window.speechSynthesis.cancel();
-      if (isThinking) return;
-      const input = document.getElementById('user-input');
-      const text = input.value.trim();
-      if (!text) return;
+  window.speechSynthesis.cancel();
+  if (isThinking) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
 
-      document.getElementById('hero-section').classList.add('hidden');
-      document.getElementById('chat-history').classList.remove('hidden');
-      document.getElementById('chat-history').style.display = 'flex';
-      
-      const now = new Date();
-      const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  document.getElementById('hero-section').classList.add('hidden');
+  document.getElementById('chat-history').classList.remove('hidden');
+  document.getElementById('chat-history').style.display = 'flex';
+  
+  const now = new Date();
+  const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-      addMessage('user', text);
-      input.value = '';
-      isThinking = true;
-      document.getElementById('status-text').innerText = "Doaa is thinking...";
+  addMessage('user', text);
+  input.value = '';
+  isThinking = true;
+  document.getElementById('status-text').innerText = "Doaa is thinking...";
 
-      try {
-        const res = await fetch(CLOUDFLARE_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            text: text, 
-            systemInstruction: "Your name is Cali Doa. You must ALWAYS respond in English. Keep responses concise.",
-            localTime: localTime, 
-            localDate: localDate, 
-            history: chatMemory.slice(-6) 
-          }) 
-        });
-        const data = await res.json();
-        
-        addMessage('doaa', data.response);
-        chatMemory.push({ role: 'user', content: text });
-        chatMemory.push({ role: 'assistant', content: data.response });
-        
-        speak(data.response);
-      } catch (error) { 
-        addMessage('doaa', "System link error. Please try again."); 
-      } finally { 
-        isThinking = false; 
-        document.getElementById('status-text').innerText = ""; 
-      }
-    }
+  try {
+    const res = await fetch(CLOUDFLARE_URL, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ 
+        text: text, 
+        // 🚨 UPDATED SYSTEM INSTRUCTIONS BELOW
+        systemInstruction: "Your name is Cali Doa. 1. Always respond in English. 2. NEVER start with robotic phrases like 'According to current data' or 'Based on my records'. 3. Be conversational and human—start naturally, like 'Right now in Sacramento...' or 'Looks like the weather is...'. 4. Vary your personality so every response feels fresh. 5. Keep information accurate but the tone casual and cool. 6. Keep it concise.",
+        localTime: localTime, 
+        localDate: localDate, 
+        history: chatMemory.slice(-6) 
+      }) 
+    });
+    const data = await res.json();
+    
+    addMessage('doaa', data.response);
+    chatMemory.push({ role: 'user', content: text });
+    chatMemory.push({ role: 'assistant', content: data.response });
+    
+    speak(data.response);
+  } catch (error) { 
+    addMessage('doaa', "System link error. Please try again."); 
+  } finally { 
+    isThinking = false; 
+    document.getElementById('status-text').innerText = ""; 
+  }
+}
 
     // FIXED: addMessage now uses proper event listeners to handle multi-line text (weather)
     function addMessage(sender, text) {
