@@ -70,71 +70,54 @@
     </main>
   </div>
 
-  <script>
+ <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
     
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
+    let selectedVoice = null;
 
-    // ─── 1. LANGUAGE DETECTION ───
-    function detectLanguage(text) {
-      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP";
-      if (/[\u4e00-\u9fff]/.test(text)) return "zh-CN";
-      if (/[\u0600-\u06FF]/.test(text)) return "ar-SA";
-      if (/[\u0400-\u04FF]/.test(text)) return "ru-RU";
-      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
-      return "en-US";
-    }
-
-    // ─── 2. VOICE SELECTION (Restoring your favorite profile) ───
-    function getBestVoice(lang) {
+    // ─── EXACT VOICE SETUP FROM YOUR CODE ───
+    function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      
-      // If it's English, use your specific priority list
-      if (lang === "en-US") {
-        return voices.find(v => v.name === 'Samantha') ||
-               voices.find(v => /google us english/i.test(v.name)) ||
-               voices.find(v => /zira|susan|victoria|karen|moira|fiona|serena|ava/i.test(v.name)) ||
-               voices.find(v => /female/i.test(v.name)) ||
-               voices[0];
-      }
+      if (voices.length === 0) return;
 
-      // If it's another language, find a female voice for that language
-      const langBase = lang.split('-')[0];
-      return voices.find(v => v.lang.startsWith(langBase) && /female|aria|google|soft/i.test(v.name.toLowerCase())) ||
-             voices.find(v => v.lang.startsWith(langBase)) ||
-             voices[0];
+      selectedVoice =
+        voices.find(v => v.name === 'Samantha') ||
+        voices.find(v => /google us english/i.test(v.name)) ||
+        voices.find(v => /zira|susan|victoria|karen|moira|fiona|serena|ava/i.test(v.name)) ||
+        voices.find(v => /female/i.test(v.name)) ||
+        voices[0] || null;
+      
+      console.log("Voice Loaded:", selectedVoice ? selectedVoice.name : "None");
     }
 
-    // ─── 3. THE SPEAK FUNCTION (Restoring Pitch & Rate) ───
+    // Chrome/Safari fix: onvoiceschanged is required
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    // Initial call for Firefox/Edge
+    loadVoices();
+
+    // ─── EXACT SPEAK FUNCTION FROM YOUR CODE ───
     function speak(text) {
-      window.speechSynthesis.cancel();
       if (!voiceActive || !text) return;
+      window.speechSynthesis.cancel();
 
-      // Your original cleaning logic
       const clean = String(text)
-        .replace(/\bDoa\b/gi, 'Doaa') // Pronunciation fix
+        .replace(/\bDoa\b/gi, 'Doaa')
         .replace(/[*#`_~]/g, '')
-        .replace(/[\u{1F600}-\u{1FFFF}]/gu, ''); // Remove emojis
+        .replace(/[\u{1F600}-\u{1FFFF}]/gu, '');
 
-      const lang = detectLanguage(clean);
-      const voice = getBestVoice(lang);
       const u = new SpeechSynthesisUtterance(clean);
-
-      u.lang = lang;
-      if (voice) u.voice = voice;
-
-      // RESTORING YOUR SETTINGS:
-      u.pitch = 1.35;  // Warm & Bright
-      u.rate = 1.55;   // Fast & Energetic
+      
+      if (selectedVoice) u.voice = selectedVoice;
+      
+      u.pitch  = 1.35;  // warm & bright
+      u.rate   = 1.55;  // fast & energetic
       u.volume = 1.0;
 
       window.speechSynthesis.speak(u);
     }
-
-    // Ensure voices load correctly in all browsers
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
     async function handleMessage() {
       window.speechSynthesis.cancel();
@@ -152,25 +135,15 @@
       isThinking = true;
       document.getElementById('status-text').innerText = "Doaa is thinking...";
 
-      const needsContext = /time|date|today|clock|calendar|day/i.test(text);
-      const now = new Date();
-      
-      const payload = { 
-        text: text, 
-        systemInstruction: "Your name is Cali Doa. Respond ALWAYS in English. DO NOT mention user location or specific time/date unless asked. Keep responses concise.",
-        history: chatMemory.slice(-6) 
-      };
-
-      if (needsContext) {
-        payload.localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        payload.localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      }
-
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify(payload) 
+          body: JSON.stringify({ 
+            text: text, 
+            systemInstruction: "Your name is Cali Doa. Always respond in English. Keep responses concise.",
+            history: chatMemory.slice(-6) 
+          }) 
         });
         const data = await res.json();
         
@@ -191,7 +164,9 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
+      
       let cleanText = text.replace(/[*#`_~]/g, "");
+      
       row.innerHTML = `<div class="max-w-[85%]">
         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
           ${cleanText}
@@ -202,6 +177,7 @@
             <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
           </div>` : ''}
       </div>`;
+      
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
@@ -242,7 +218,7 @@
 
     window.onload = () => { 
       updateVoiceUI(); 
-      window.speechSynthesis.getVoices();
+      loadVoices();
     };
   </script>
 </body>
