@@ -79,19 +79,30 @@
     let chatMemory = []; 
     let selectedVoice = null;
 
-    // ─── LEARNING ENGINE: Persistent Memory ───
+    // ─── LEARNING ENGINE ───
     let doaKnowledge = JSON.parse(localStorage.getItem('doa_knowledge')) || {};
 
     function learnPreference(trigger, action) {
       doaKnowledge[trigger.toLowerCase()] = action;
       localStorage.setItem('doa_knowledge', JSON.stringify(doaKnowledge));
-      return `I've learned that when you say "${trigger}", I should suggest ${action}.`;
+      return `I've learned that you want me to ${action} when you say "${trigger}".`;
     }
 
     // ─── TASK EXECUTION ENGINE ───
     function executeTask(command, value) {
+      console.log("Executing:", command, value);
       if (command === 'OPEN_TAB') switchView(value.toLowerCase());
-      if (command === 'RESEARCH') window.open(`https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
+      
+      // Fix for "Open Google" or "Search"
+      if (command === 'RESEARCH' || command === 'OPEN_URL') {
+        let url = value;
+        if (!url.startsWith('http')) {
+            if (url.toLowerCase() === 'google') url = 'https://google.com';
+            else url = `https://www.google.com/search?q=${encodeURIComponent(value)}`;
+        }
+        window.open(url, '_blank');
+      }
+      
       if (command === 'DOWNLOAD') {
         const blob = new Blob([chatMemory.map(m => `${m.role}: ${m.content}`).join('\n')], {type: 'text/plain'});
         const a = document.createElement('a');
@@ -101,7 +112,7 @@
       }
     }
 
-    // ─── DOUGHA VOICE ENGINE ───
+    // ─── DOUGHA VOICE ENGINE (RESTORED) ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
       selectedVoice = pickFemaleVoice(voices, "en-US");
@@ -156,9 +167,10 @@
           body: JSON.stringify({ 
             text: text, 
             systemInstruction: `Your name is Doa. You are an AI OS.
-            When you can help with a task, offer a suggestion using the tag: [SUGGEST: COMMAND:VALUE|Label].
-            Available Commands: OPEN_TAB, RESEARCH, DOWNLOAD, COPY.
-            If a user teaches you something (e.g. "When I say X, do Y"), confirm you've learned it.
+            CRITICAL: When the user wants to open a website, search, or navigate, you MUST provide a suggestion tag.
+            Format: [SUGGEST: COMMAND:VALUE|Label]
+            Example: If user says "open google", respond "I can open Google for you. [SUGGEST: RESEARCH:google|Open Google]"
+            Commands: OPEN_TAB (chat, calendar, apps), RESEARCH (search/url), DOWNLOAD, COPY.
             Keep responses very concise. Current learned triggers: ${JSON.stringify(doaKnowledge)}`,
             history: chatMemory.slice(-6) 
           }) 
@@ -166,18 +178,19 @@
         const data = await res.json();
         let responseText = data.response;
 
-        // Check if user is trying to teach something
+        // Process Teaching Logic
         if (text.toLowerCase().includes("when i say") && text.toLowerCase().includes("do")) {
            const trigger = text.match(/say ['"](.*?)['"]/i)?.[1];
            const action = text.match(/do ['"](.*?)['"]/i)?.[1];
            if(trigger && action) responseText = learnPreference(trigger, action) + " " + responseText;
         }
 
-        // Process Suggestions
+        // Catch Suggestion Tags
         const suggestRegex = /\[SUGGEST:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
+        const matches = [...responseText.matchAll(suggestRegex)];
         let finalDisplay = responseText.replace(suggestRegex, "").trim();
         
-        addMessage('doa', finalDisplay, responseText.match(suggestRegex));
+        addMessage('doa', finalDisplay, matches);
         chatMemory.push({ role: 'user', content: text });
         chatMemory.push({ role: 'assistant', content: responseText });
         speak(finalDisplay);
@@ -199,11 +212,12 @@
           ${text}
         </div>`;
 
-      if (suggestions && sender === 'doa') {
-        suggestions.forEach(s => {
-          const parts = s.replace("[SUGGEST: ", "").replace("]", "").split("|");
-          const cmdParts = parts[0].split(":");
-          html += `<div class="suggestion-chip" onclick="executeTask('${cmdParts[0].trim()}', '${cmdParts[1].trim()}')">⚡ ${parts[1]}</div>`;
+      if (suggestions.length > 0 && sender === 'doa') {
+        suggestions.forEach(match => {
+          const command = match[1];
+          const value = match[2];
+          const label = match[3];
+          html += `<div class="suggestion-chip" onclick="executeTask('${command}', '${value}')">⚡ ${label}</div>`;
         });
       }
       
