@@ -17,7 +17,7 @@
     .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     #voice-switch { transition: background-color 0.3s; }
-    .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; }
+    .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
   </style>
 </head>
 <body class="bg-white">
@@ -78,9 +78,12 @@
     let chatMemory = []; 
     let femaleVoice = null;
 
+    // 🔊 1. IMPROVED VOICE INITIALIZATION (Forces English)
     function initVoices() {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length === 0) return;
+
+      // Priority list for high-quality English voices
       femaleVoice = voices.find(v => v.name.includes("Google US English")) ||
                     voices.find(v => v.name.includes("Aria")) ||
                     voices.find(v => v.name.includes("Samantha")) ||
@@ -88,45 +91,31 @@
                     voices.find(v => v.lang.startsWith("en"));
     }
 
+    // Chrome and Safari need this event to load voices
     window.speechSynthesis.onvoiceschanged = initVoices;
     initVoices();
 
     function speak(text) {
-      window.speechSynthesis.cancel(); 
+      window.speechSynthesis.cancel(); // Stop current speech
       if (!voiceActive || !text) return;
 
-      let langCode = "en-US";
-      const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
-      if (langMatch) {
-          langCode = langMatch[1];
-          text = text.replace(langMatch[0], "").trim();
-      }
-
-      const cleanText = text
-        .replace(/°/g, " degrees ")
-        .replace(/[*#`_~]/g, "")
-        .trim();
-
+      const cleanText = text.replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(cleanText);
-      u.lang = langCode;
-
-      const voices = window.speechSynthesis.getVoices();
-      const matchingVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]) && (v.name.includes("Female") || v.name.includes("Google"))) || 
-                            voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
       
-      if (matchingVoice) {
-        u.voice = matchingVoice;
-      } else if (femaleVoice && langCode.startsWith("en")) {
-        u.voice = femaleVoice;
-      }
+      // Force the engine to English
+      u.lang = "en-US";
+      if (femaleVoice) u.voice = femaleVoice;
 
       u.pitch = 1.0;
       u.rate = 1.0; 
+      u.volume = 1;
+      
       window.speechSynthesis.speak(u);
     }
 
     async function handleMessage() {
       window.speechSynthesis.cancel();
+      
       if (isThinking) return;
       const input = document.getElementById('user-input');
       const text = input.value.trim();
@@ -151,8 +140,8 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            // 🚨 UPDATED SYSTEM INSTRUCTIONS: Stops the robotic metadata recitation
-            systemInstruction: "Your name is Cali Doa. 1. Always respond in English unless asked to speak another language. 2. NEVER start with robotic intros. 3. CRITICAL: Do not mention the date, time, or location unless the user specifically asks 'what time is it' or 'where am I'. 4. If someone says 'Hi' or 'Good morning', respond like a cool human friend, not an assistant. 5. If speaking another language, start with bracket codes like [es-ES]. 6. Be concise and conversational.",
+            // 🚨 SYSTEM INSTRUCTION: Forces the AI to respond in English
+            systemInstruction: "Your name is Cali Doa. You must ALWAYS respond in English. Do not use other languages even if prompted. Keep responses concise.",
             localTime: localTime, 
             localDate: localDate, 
             history: chatMemory.slice(-6) 
@@ -178,36 +167,19 @@
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
       
-      const wrapper = document.createElement('div');
-      wrapper.className = "max-w-[85%]";
-
-      const bubble = document.createElement('div');
-      bubble.className = `${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm`;
+      let cleanText = text.replace(/[*#`_~]/g, "");
       
-      let cleanDisplay = text.replace(/^\[([a-z]{2}-[A-Z]{2})\]/, "").replace(/[*#`_~]/g, "");
-      bubble.innerText = cleanDisplay;
-      wrapper.appendChild(bubble);
-
-      if (sender === 'doaa') {
-        const controls = document.createElement('div');
-        controls.className = "flex gap-4 mt-2 px-1";
-
-        const sBtn = document.createElement('button');
-        sBtn.className = "action-btn text-gray-400 hover:text-black";
-        sBtn.innerHTML = "🔊 Speak";
-        sBtn.onclick = () => speak(text); 
-
-        const stopBtn = document.createElement('button');
-        stopBtn.className = "action-btn text-red-500";
-        stopBtn.innerHTML = "🛑 Stop";
-        stopBtn.onclick = () => window.speechSynthesis.cancel();
-
-        controls.appendChild(sBtn);
-        controls.appendChild(stopBtn);
-        wrapper.appendChild(controls);
-      }
-
-      row.appendChild(wrapper);
+      row.innerHTML = `<div class="max-w-[85%]">
+        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
+          ${cleanText}
+        </div>
+        ${sender === 'doaa' ? `
+          <div class="flex gap-4 mt-2 px-1">
+            <button class="action-btn text-gray-400 hover:text-black" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
+            <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
+          </div>` : ''}
+      </div>`;
+      
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
