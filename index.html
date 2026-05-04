@@ -17,7 +17,7 @@
     .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     #voice-switch { transition: background-color 0.3s; }
-    .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; }
   </style>
 </head>
 <body class="bg-white">
@@ -78,12 +78,9 @@
     let chatMemory = []; 
     let femaleVoice = null;
 
-    // 🔊 1. IMPROVED VOICE INITIALIZATION (Forces English)
     function initVoices() {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length === 0) return;
-
-      // Priority list for high-quality English voices
       femaleVoice = voices.find(v => v.name.includes("Google US English")) ||
                     voices.find(v => v.name.includes("Aria")) ||
                     voices.find(v => v.name.includes("Samantha")) ||
@@ -91,31 +88,29 @@
                     voices.find(v => v.lang.startsWith("en"));
     }
 
-    // Chrome and Safari need this event to load voices
     window.speechSynthesis.onvoiceschanged = initVoices;
     initVoices();
 
     function speak(text) {
-      window.speechSynthesis.cancel(); // Stop current speech
+      window.speechSynthesis.cancel(); 
       if (!voiceActive || !text) return;
 
-      const cleanText = text.replace(/[*#`_~]/g, "").trim();
+      // FIX: Replace degree symbols with "degrees" so it reads weather correctly
+      const cleanText = text
+        .replace(/°/g, " degrees ")
+        .replace(/[*#`_~]/g, "")
+        .trim();
+
       const u = new SpeechSynthesisUtterance(cleanText);
-      
-      // Force the engine to English
       u.lang = "en-US";
       if (femaleVoice) u.voice = femaleVoice;
-
       u.pitch = 1.0;
       u.rate = 1.0; 
-      u.volume = 1;
-      
       window.speechSynthesis.speak(u);
     }
 
     async function handleMessage() {
       window.speechSynthesis.cancel();
-      
       if (isThinking) return;
       const input = document.getElementById('user-input');
       const text = input.value.trim();
@@ -140,8 +135,7 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            // 🚨 SYSTEM INSTRUCTION: Forces the AI to respond in English
-            systemInstruction: "Your name is Cali Doa. You must ALWAYS respond in English. Do not use other languages even if prompted. Keep responses concise.",
+            systemInstruction: "Your name is Cali Doa. You must ALWAYS respond in English. Keep responses concise.",
             localTime: localTime, 
             localDate: localDate, 
             history: chatMemory.slice(-6) 
@@ -162,24 +156,40 @@
       }
     }
 
+    // FIXED: addMessage now uses proper event listeners to handle multi-line text (weather)
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
       
-      let cleanText = text.replace(/[*#`_~]/g, "");
-      
-      row.innerHTML = `<div class="max-w-[85%]">
-        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${cleanText}
-        </div>
-        ${sender === 'doaa' ? `
-          <div class="flex gap-4 mt-2 px-1">
-            <button class="action-btn text-gray-400 hover:text-black" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
-            <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
-          </div>` : ''}
-      </div>`;
-      
+      const wrapper = document.createElement('div');
+      wrapper.className = "max-w-[85%]";
+
+      const bubble = document.createElement('div');
+      bubble.className = `${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm`;
+      bubble.innerText = text.replace(/[*#`_~]/g, "");
+      wrapper.appendChild(bubble);
+
+      if (sender === 'doaa') {
+        const controls = document.createElement('div');
+        controls.className = "flex gap-4 mt-2 px-1";
+
+        const sBtn = document.createElement('button');
+        sBtn.className = "action-btn text-gray-400 hover:text-black";
+        sBtn.innerHTML = "🔊 Speak";
+        sBtn.onclick = () => speak(text); // This correctly handles long text
+
+        const stopBtn = document.createElement('button');
+        stopBtn.className = "action-btn text-red-500";
+        stopBtn.innerHTML = "🛑 Stop";
+        stopBtn.onclick = () => window.speechSynthesis.cancel();
+
+        controls.appendChild(sBtn);
+        controls.appendChild(stopBtn);
+        wrapper.appendChild(controls);
+      }
+
+      row.appendChild(wrapper);
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
