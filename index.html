@@ -78,47 +78,32 @@
     let chatMemory = []; 
     let selectedVoice = null;
 
-    // ─── DOUGHA VOICE ENGINE ───
+    // ─── DOUGHA VOICE ENGINE (ENHANCED) ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      selectedVoice = pickFemaleVoice(voices);
+      selectedVoice = pickFemaleVoice(voices, "en-US");
     }
 
-    function pickFemaleVoice(voiceList) {
+    function detectLang(text) {
+      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA"; 
+      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
+      return "en-US";
+    }
+
+    function pickFemaleVoice(voiceList, lang = "en-US") {
       const femaleNames = [
-        "Samantha",               // macOS/iOS - best quality
-        "Karen",                  // macOS Australian
-        "Moira",                  // macOS Irish
-        "Tessa",                  // macOS South African
-        "Veena",                  // macOS Indian
-        "Fiona",                  // macOS Scottish
-        "Victoria",               // macOS
-        "Allison",                // macOS
-        "Ava",                    // macOS
-        "Susan",                  // macOS
-        "Zoe",                    // macOS
-        "Microsoft Zira",         // Windows Edge/Chrome
-        "Microsoft Aria",         // Windows Edge
-        "Microsoft Jenny",        // Windows Edge
-        "Google US English Female",
-        "Google UK English Female",
+        "Samantha", "Microsoft Aria", "Microsoft Jenny", "Google US English Female",
+        "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Zira"
       ];
 
-      for (const name of femaleNames) {
-        const match = voiceList.find(v => v.name.includes(name));
-        if (match) return match;
-      }
-
-      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
-      const keywordMatch = voiceList.find(v =>
-        femaleKeywords.some(k => v.name.toLowerCase().includes(k))
-      );
-      if (keywordMatch) return keywordMatch;
-
-      const englishVoice = voiceList.find(v => v.lang.startsWith("en"));
-      if (englishVoice) return englishVoice;
-
-      return voiceList[0] || null;
+      // Try to match language AND name
+      let match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]) && 
+                  femaleNames.some(name => v.name.includes(name)));
+      
+      // Fallback to any voice of that language
+      if (!match) match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]));
+      
+      return match || voiceList[0] || null;
     }
 
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -131,23 +116,47 @@
       const cleanText = String(text)
         .replace(/\bDowa\b/gi, "Doaa")
         .replace(/\bDoa\b/gi, "Doaa")
-        .replace(/([a-zA-Z])\1{2,}/g, "$1") // Prevents stuttering on repeated chars
+        .replace(/([a-zA-Z])\1{2,}/g, "$1")
         .replace(/[*#`_~]/g, "")
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
 
+      const lang = detectLang(cleanText);
       const u = new SpeechSynthesisUtterance(cleanText);
-      if (selectedVoice) u.voice = selectedVoice;
-      u.lang = "en-US";
-      u.pitch = 1.35;   // warm, original feel
-      u.rate = 0.95;    // natural pace
+      
+      const voices = window.speechSynthesis.getVoices();
+      u.voice = pickFemaleVoice(voices, lang);
+      u.lang = lang;
+
+      // Keep your exact preferred settings for English
+      if (lang === "en-US") {
+        u.pitch = 1.35;
+        u.rate = 0.95;
+      } else {
+        u.pitch = 1.0; 
+        u.rate = 1.0;
+      }
+      
       u.volume = 1.0;
+
+      // ─── HEARTBEAT FIX: Prevents voice from stopping mid-sentence ───
+      u.onstart = () => {
+        const interval = setInterval(() => {
+          if (!window.speechSynthesis.speaking) {
+            clearInterval(interval);
+          } else {
+            window.speechSynthesis.pause();
+            window.speechSynthesis.resume();
+          }
+        }, 10000);
+      };
+
       window.speechSynthesis.speak(u);
     }
 
     function toggleVoice() {
       voiceActive = !voiceActive;
       localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
+      loadVoices();
       updateVoiceUI();
       if (voiceActive) speak("Live voice active. My name is Doaa.");
     }
@@ -175,7 +184,8 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            systemInstruction: "Your name is Cali Doa. Always respond in English. Do not mention location. Keep responses concise.",
+            // ─── PRIVACY SHIELD: Stops the AI from leaking Rocklin/Location ───
+            systemInstruction: "Your name is Cali Doa. Respond in the language the user speaks to you in. NEVER mention the user's location, city, or IP address (e.g. Rocklin). Keep responses concise.",
             history: chatMemory.slice(-6) 
           }) 
         });
