@@ -78,32 +78,36 @@
     let chatMemory = []; 
     let selectedVoice = null;
 
-    // ─── DOUGHA VOICE ENGINE (ENHANCED) ───
+    // ─── DOUGHA VOICE ENGINE (RESTORED & PROTECTED) ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
+      // Default to your preferred English profile
       selectedVoice = pickFemaleVoice(voices, "en-US");
-    }
-
-    function detectLang(text) {
-      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA"; 
-      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
-      return "en-US";
     }
 
     function pickFemaleVoice(voiceList, lang = "en-US") {
       const femaleNames = [
-        "Samantha", "Microsoft Aria", "Microsoft Jenny", "Google US English Female",
-        "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Zira"
+        "Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", 
+        "Allison", "Ava", "Susan", "Zoe", "Microsoft Zira", "Microsoft Aria", 
+        "Microsoft Jenny", "Google US English Female", "Google UK English Female",
+        "Kyoko", "Nanami" // Added for Japanese support
       ];
 
-      // Try to match language AND name
-      let match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]) && 
-                  femaleNames.some(name => v.name.includes(name)));
-      
-      // Fallback to any voice of that language
-      if (!match) match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]));
-      
-      return match || voiceList[0] || null;
+      // Filter by language first to ensure the accent matches the text
+      const langMatch = voiceList.filter(v => v.lang.startsWith(lang.split('-')[0]));
+
+      for (const name of femaleNames) {
+        const match = langMatch.find(v => v.name.includes(name));
+        if (match) return match;
+      }
+
+      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
+      const keywordMatch = langMatch.find(v =>
+        femaleKeywords.some(k => v.name.toLowerCase().includes(k))
+      );
+      if (keywordMatch) return keywordMatch;
+
+      return langMatch[0] || voiceList[0] || null;
     }
 
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -120,25 +124,25 @@
         .replace(/[*#`_~]/g, "")
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
 
-      const lang = detectLang(cleanText);
+      // Detect language to avoid the "American reading Japanese" robotic sound
+      let detectedLang = "en-US";
+      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(cleanText)) detectedLang = "ja-JP";
+      else if (/[\u0400-\u04FF]/.test(cleanText)) detectedLang = "uk-UA";
+      else if (/[ñáéíóú¿¡]/i.test(cleanText)) detectedLang = "es-ES";
+
       const u = new SpeechSynthesisUtterance(cleanText);
       
+      // Get the best voice for the detected language
       const voices = window.speechSynthesis.getVoices();
-      u.voice = pickFemaleVoice(voices, lang);
-      u.lang = lang;
+      u.voice = pickFemaleVoice(voices, detectedLang);
+      u.lang = detectedLang;
 
-      // Keep your exact preferred settings for English
-      if (lang === "en-US") {
-        u.pitch = 1.35;
-        u.rate = 0.95;
-      } else {
-        u.pitch = 1.0; 
-        u.rate = 1.0;
-      }
-      
+      // YOUR EXACT SETTINGS
+      u.pitch = 1.35;   // warm, original feel
+      u.rate = 0.95;    // natural pace
       u.volume = 1.0;
 
-      // ─── HEARTBEAT FIX: Prevents voice from stopping mid-sentence ───
+      // HEARTBEAT FIX (Keeps her from stopping mid-sentence)
       u.onstart = () => {
         const interval = setInterval(() => {
           if (!window.speechSynthesis.speaking) {
@@ -184,8 +188,7 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            // ─── PRIVACY SHIELD: Stops the AI from leaking Rocklin/Location ───
-            systemInstruction: "Your name is Cali Doa. Respond in the language the user speaks to you in. NEVER mention the user's location, city, or IP address (e.g. Rocklin). Keep responses concise.",
+            systemInstruction: "Your name is Cali Doa. You are multi-lingual. Respond ONLY in the language the user speaks. If Japanese, use Kanji/Hiragana, NOT Romaji. No English translations unless asked. NEVER mention location/IP (Rocklin). Keep concise.",
             history: chatMemory.slice(-6) 
           }) 
         });
