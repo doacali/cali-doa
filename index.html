@@ -89,25 +89,41 @@
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    const suggestionsPool = ["Weather in Sacramento", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats"];
+    const suggestionsPool = ["Weather in Sacramento", "Learn Ukrainian", "Speak Spanish", "Tell Story", "Crypto Stats"];
 
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
-    let selectedVoice = null;
-    let chatMemory = []; // 🚨 Handles conversation memory
+    let chatMemory = []; 
 
-    function loadVoices() {
-      const v = window.speechSynthesis.getVoices();
-      selectedVoice = v.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Aria") || v.name.includes("Female"));
-    }
-    window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
-
+    // 🔊 SMART SILENT VOICE ENGINE
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const cleanText = String(text).replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").replace(/[^\x00-\x7F]/g, "").trim();
+
+      // 1. Detect language code (e.g., [uk-UA])
+      let langCode = "en-US"; 
+      const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
+      if (langMatch) {
+          langCode = langMatch[1];
+          // 🚨 SILENCE THE TAG: Remove the [en-US] part so she doesn't say it
+          text = text.replace(langMatch[0], "").trim();
+      }
+
+      // 2. Clean symbols and names
+      const cleanText = text.replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(cleanText);
-      if (selectedVoice) u.voice = selectedVoice;
+      u.lang = langCode;
+
+      // 3. Find specific Female voice for that language
+      const voices = window.speechSynthesis.getVoices();
+      let preferredVoice = voices.find(v => 
+          v.lang.startsWith(langCode.split('-')[0]) && 
+          (v.name.includes("Female") || v.name.includes("Samantha") || v.name.includes("Aria") || v.name.includes("Google") || v.name.includes("Zira"))
+      );
+
+      if (!preferredVoice) preferredVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
+      if (preferredVoice) u.voice = preferredVoice;
+
       u.pitch = 1.35; u.rate = 1.05; 
       window.speechSynthesis.speak(u);
     }
@@ -122,7 +138,6 @@
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
       
-      // 🚨 Capture real time and date from your computer
       const now = new Date();
       const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -134,26 +149,21 @@
 
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
-  method: 'POST', 
-  headers: { 'Content-Type': 'application/json' }, 
-  body: JSON.stringify({ 
-    text: text, 
-    localTime: localTime, 
-    localDate: localDate, 
-    history: chatMemory.slice(-6) 
-  }) 
-});
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ text, localTime, localDate, history: chatMemory.slice(-6) }) 
+        });
         const data = await res.json();
         
+        // 4. Add to UI (The addMessage function will hide the tags)
         addMessage('doaa', data.response);
         
-        // Save to memory
         chatMemory.push({ role: 'user', content: text });
         chatMemory.push({ role: 'assistant', content: data.response });
         
         speak(data.response);
       } catch (error) { 
-        addMessage('doaa', "Neural Link fuzzy! Check your Cloudflare Worker."); 
+        addMessage('doaa', "Neural Link fuzzy!"); 
       } finally { 
         isThinking = false; 
         document.getElementById('status-text').innerText = ""; 
@@ -163,11 +173,9 @@
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4 px-2`;
       
-      // 1. IMPROVED ALIGNMENT: User on right, Doaa on left
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full mb-4 px-2`;
-      
-      // 2. 🚨 THE TAG FIX: This removes [en-US], [uk-UA], etc. from the visible bubble
+      // 🚨 HIDE THE TAG: Remove the [en-US] part so it doesn't show in the bubble
       let visibleContent = text.replace(/^\[[a-z]{2}-[A-Z]{2}\]\s*/i, "").replace(/[*#`_~]/g, "");
 
       const actions = sender === 'doaa' ? `
@@ -176,19 +184,14 @@
           <button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
         </div>` : '';
       
-      row.innerHTML = `
-        <div class="max-w-[85%]">
-          <div class="${sender === 'user' 
-            ? 'bg-black text-white rounded-[22px] rounded-tr-[4px]' 
-            : 'bg-gray-100 text-gray-900 rounded-[22px] rounded-tl-[4px]'} p-4 text-sm whitespace-pre-wrap shadow-sm">
-            ${visibleContent}
-          </div>
-          ${actions}
-        </div>`;
-        
-      history.appendChild(row);
+      row.innerHTML = `<div class="max-w-[85%]">
+        <div class="${sender === 'user' ? 'bg-black text-white rounded-[22px] rounded-tr-[4px]' : 'bg-gray-100 text-gray-900 rounded-[22px] rounded-tl-[4px]'} p-4 text-sm whitespace-pre-wrap shadow-sm">
+          ${visibleContent}
+        </div>
+        ${actions}
+      </div>`;
       
-      // 🚨 SCROLL FIX: Always follow the newest message
+      history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
 
@@ -209,6 +212,7 @@
         updateVoiceUI(); rotateSuggestions(); 
         document.getElementById('side-date').innerText = new Date().getDate();
     };
+    window.speechSynthesis.onvoiceschanged = () => {}; 
   </script>
 </body>
 </html>
