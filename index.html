@@ -104,10 +104,10 @@
 
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let selectedVoice = null;
+    let isThinking = false; // 🚨 FIXED: Added missing variable
 
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      // Specifically hunting for female high-quality voices
       selectedVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Aria") || v.name.includes("Female"));
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -115,37 +115,29 @@
 
     function speak(text) {
       if (!voiceActive || !text) return;
-      
-      // 1. CLEAR PREVIOUS SPEECH IMMEDIATELY
       window.speechSynthesis.cancel();
-
-      // 2. THE CLEANER: Removes emojis, markdown, and fixes pronunciation
       const cleanText = String(text)
-        .replace(/!\[image\]\(.*?\)/g, "Generating image for you now.") // Don't read image URLs
-        .replace(/\bDoa\b/gi, "Doaa") // Pronunciation
-        .replace(/[*#`_~]/g, "") // Strip Markdown
-        // The "Emoji-Kill" Regex (Stops her from reading icons out loud)
+        .replace(/!\[image\]\(.*?\)/g, "Generating image for you now.")
+        .replace(/\bDoa\b/gi, "Doaa")
+        .replace(/[*#`_~]/g, "")
         .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '')
         .trim();
 
       const utterance = new SpeechSynthesisUtterance(cleanText);
-      
       if (selectedVoice) utterance.voice = selectedVoice;
-
-      // 3. TURBO SETTINGS
-      utterance.pitch = 1.3; // Stays girly
-      utterance.rate = 1.05; // 🚀 Snappier speed (increased from 0.95)
-      utterance.volume = 1;
-
+      utterance.pitch = 1.3;
+      utterance.rate = 1.05;
       window.speechSynthesis.speak(utterance);
     }
 
     function stopVoice() { window.speechSynthesis.cancel(); }
 
     async function handleMessage(customText = null) {
+      if (isThinking) return;
+
       const input = document.getElementById('user-input');
       const text = customText || input.value.trim();
-      if (!text || isThinking) return; // Prevent double-clicks
+      if (!text) return;
 
       isThinking = true;
       document.getElementById('hero-section').classList.add('hidden');
@@ -153,7 +145,8 @@
       
       addMessage('user', text);
       input.value = '';
-      showThinking(); // Show dots instantly
+      input.style.height = 'auto'; // Reset height
+      showThinking(); // 🚨 FIXED: Added missing function below
 
       try {
         const res = await fetch(CLOUDFLARE_URL, {
@@ -161,19 +154,44 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text })
         });
-        
         const data = await res.json();
         const aiText = data.response || "Neural Link fuzzy!";
         
-        removeThinking(); // Remove dots the millisecond data arrives
+        removeThinking(); // 🚨 FIXED: Added missing function below
         addMessage('doaa', aiText);
-        speak(aiText); // Start talking immediately
+        speak(aiText);
       } catch (error) { 
         removeThinking();
         addMessage('doaa', "Neural Link fuzzy!"); 
       } finally {
         isThinking = false;
       }
+    }
+
+    // 🚨 FIXED: Added missing Thinking Animation logic
+    function showThinking() {
+      const history = document.getElementById('chat-history');
+      const row = document.createElement('div');
+      row.id = 'thinking-bubble';
+      row.className = 'flex justify-start w-full chat-bubble';
+      row.innerHTML = `
+        <div class="bg-gray-100 px-5 py-4 rounded-[24px] rounded-bl-md shadow-sm flex gap-2 items-center">
+          <span class="thinking-dot"></span>
+          <span class="thinking-dot"></span>
+          <span class="thinking-dot"></span>
+        </div>`;
+      history.appendChild(row);
+      scrollChatToBottom();
+    }
+
+    function removeThinking() {
+      const thinking = document.getElementById('thinking-bubble');
+      if (thinking) thinking.remove();
+    }
+
+    function scrollChatToBottom() {
+      const history = document.getElementById('chat-history');
+      history.scrollTo({ top: history.scrollHeight, behavior: 'smooth' });
     }
 
     function addMessage(sender, text) {
@@ -190,38 +208,68 @@
 
       const actions = sender === 'doaa' ? `
         <div class="flex gap-4 mt-2 pl-1">
-          <button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'").replace(/\n/g, " ")}')">🔊 Speak</button>
+          <button class="action-btn" onclick="speakFromBubble(this)">🔊 Speak</button>
           <button class="action-btn text-red-500 font-bold" onclick="stopVoice()">🛑 Stop</button>
         </div>` : '';
 
       row.innerHTML = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} px-5 py-4 rounded-[24px] text-[14px] shadow-sm whitespace-pre-wrap">${content}</div>${actions}</div>`;
       history.appendChild(row);
-      history.scrollTo({ top: history.scrollHeight, behavior: 'smooth' });
+      scrollChatToBottom();
     }
+
+    // Helper for "Speak" buttons in chat bubbles
+    window.speakFromBubble = function(btn) {
+      const text = btn.closest('.chat-bubble').querySelector('.shadow-sm').innerText;
+      speak(text);
+    };
 
     function rotateSuggestions() {
         const cont = document.getElementById('suggestion-container');
+        if(!cont) return;
         const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5).slice(0, 4);
-        cont.innerHTML = shuffled.map(s => `<button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all" onclick="document.getElementById('user-input').value='${s}';handleMessage()">${s}</button>`).join('');
+        cont.innerHTML = shuffled.map(s => `<button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all" onclick="handleSuggestion('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('');
     }
+    
+    window.handleSuggestion = function(text) {
+        document.getElementById('user-input').value = text;
+        handleMessage();
+    };
+
     setInterval(rotateSuggestions, 7000);
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
     function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice synthesis active. My name is Doaa."); else stopVoice(); }
+    
     function updateVoiceUI() {
       const knob = document.getElementById('voice-knob');
       const bg = document.getElementById('voice-switch');
-      knob.style.left = voiceActive ? "18px" : "2px";
-      bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+      if(knob && bg) {
+        knob.style.left = voiceActive ? "18px" : "2px";
+        bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+      }
     }
+
     function switchView(view) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
       document.getElementById(view + '-view').classList.remove('hidden');
     }
 
-    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    // Input Listeners
+    const inputEl = document.getElementById('user-input');
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleMessage();
+      }
+    });
 
-    window.onload = () => { updateVoiceUI(); rotateSuggestions(); };
+    // Auto-resize input
+    inputEl.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    window.onload = () => { updateVoiceUI(); rotateSuggestions(); inputEl.focus(); };
   </script>
 </body>
 </html>
