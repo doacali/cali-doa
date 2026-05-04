@@ -84,9 +84,9 @@
     let isThinking = false;
     let selectedVoice = null;
 
-    // 🔊 FORCE FEMALE VOICE ENGINE
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
+      // Look for high-quality female voices
       selectedVoice = v.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Aria") || v.name.includes("Female"));
     }
     window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
@@ -94,11 +94,10 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      // Remove symbols and fix name pronunciation
-      const cleanText = String(text).replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").replace(/[^\x00-\x7F]/g, "").trim();
+      const cleanText = String(text).replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(cleanText);
       if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.35; u.rate = 1.05; // Force fast girly voice
+      u.pitch = 1.35; u.rate = 1.05; 
       window.speechSynthesis.speak(u);
     }
 
@@ -107,34 +106,56 @@
       const input = document.getElementById('user-input');
       const text = input.value.trim();
       if (!text) return;
+
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
+      
       addMessage('user', text);
       input.value = '';
       isThinking = true;
-      document.getElementById('status-text').innerText = "Doaa is searching the web...";
+      document.getElementById('status-text').innerText = "Doaa is thinking...";
+
       try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+        const res = await fetch(CLOUDFLARE_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ text }) 
+        });
         const data = await res.json();
-        addMessage('doaa', data.response);
-        speak(data.response);
-      } catch (error) { addMessage('doaa', "Neural Link fuzzy!"); }
-      finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
+        
+        // Final fallback if the worker sends something weird
+        const reply = data.response || "I'm here! My connection just flickered. What's up?";
+        addMessage('doaa', reply);
+        speak(reply);
+      } catch (error) { 
+        addMessage('doaa', "I'm having trouble reaching my brain! Check your Cloudflare Worker URL."); 
+      } finally { 
+        isThinking = false; 
+        document.getElementById('status-text').innerText = ""; 
+      }
     }
 
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
+      
+      // Clean up the text for display
       let content = text.replace(/\*\*/g, ""); 
-      if (sender !== 'user') {
-        content = content
-          .replace(/!\[image\]\((.*?)\)/g, '<img src="$1" class="rounded-3xl mt-2 mb-2 w-full shadow-xl">')
-          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-[#00E676] font-bold underline">$1</a>');
-      }
-      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : '';
-      row.innerHTML = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap">${content}</div>${actions}</div>`;
+      
+      const actions = sender === 'doaa' ? `
+        <div class="flex gap-4 mt-2 px-1">
+          <button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
+          <button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
+        </div>` : '';
+
+      row.innerHTML = `
+        <div class="max-w-[85%]">
+          <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap">${content}</div>
+          ${actions}
+        </div>`;
+        
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
@@ -146,12 +167,35 @@
     }
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active. My name is Doaa."); else window.speechSynthesis.cancel(); }
-    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
-    function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); }
-    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    function toggleVoice() { 
+        voiceActive = !voiceActive; 
+        localStorage.setItem('voice_active', voiceActive); 
+        updateVoiceUI(); 
+        if (voiceActive) speak("Live voice active. My name is Doaa."); 
+        else window.speechSynthesis.cancel(); 
+    }
+    
+    function updateVoiceUI() { 
+        const knob = document.getElementById('voice-knob'); 
+        const bg = document.getElementById('voice-switch'); 
+        if(knob && bg) { 
+            knob.style.left = voiceActive ? "18px" : "2px"; 
+            bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
+        } 
+    }
+
+    function switchView(v) { 
+        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
+        document.getElementById(v + '-view').classList.remove('hidden'); 
+    }
+
+    document.getElementById('user-input').addEventListener('keydown', (e) => { 
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
+    });
+
     window.onload = () => { 
-        updateVoiceUI(); rotateSuggestions(); 
+        updateVoiceUI(); 
+        rotateSuggestions(); 
         document.getElementById('side-date').innerText = new Date().getDate();
     };
   </script>
