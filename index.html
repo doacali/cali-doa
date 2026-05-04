@@ -78,28 +78,29 @@
     let chatMemory = []; 
     let selectedVoice = null;
 
-    // ─── DOUGHA VOICE ENGINE (ENHANCED MULTI-LANG) ───
+    // ─── DOUGHA VOICE ENGINE (ENHANCED) ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
+      selectedVoice = pickFemaleVoice(voices, "en-US");
     }
 
     function detectLang(text) {
-      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP"; // Japanese
-      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA";             // Ukrainian
-      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";                // Spanish
-      if (/[\u0600-\u06FF]/.test(text)) return "ar-SA";             // Arabic
+      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA"; 
+      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
       return "en-US";
     }
 
     function pickFemaleVoice(voiceList, lang = "en-US") {
       const femaleNames = [
-        "Samantha", "Kyoko", "Nanami", "Microsoft Aria", "Microsoft Jenny", "Google US English Female",
-        "Karen", "Moira", "Victoria", "Ava", "Zira"
+        "Samantha", "Microsoft Aria", "Microsoft Jenny", "Google US English Female",
+        "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Zira"
       ];
 
+      // Try to match language AND name
       let match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]) && 
                   femaleNames.some(name => v.name.includes(name)));
       
+      // Fallback to any voice of that language
       if (!match) match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]));
       
       return match || voiceList[0] || null;
@@ -126,6 +127,7 @@
       u.voice = pickFemaleVoice(voices, lang);
       u.lang = lang;
 
+      // Keep your exact preferred settings for English
       if (lang === "en-US") {
         u.pitch = 1.35;
         u.rate = 0.95;
@@ -136,6 +138,7 @@
       
       u.volume = 1.0;
 
+      // ─── HEARTBEAT FIX: Prevents voice from stopping mid-sentence ───
       u.onstart = () => {
         const interval = setInterval(() => {
           if (!window.speechSynthesis.speaking) {
@@ -153,10 +156,12 @@
     function toggleVoice() {
       voiceActive = !voiceActive;
       localStorage.setItem('voice_active', JSON.stringify(voiceActive));
+      loadVoices();
       updateVoiceUI();
       if (voiceActive) speak("Live voice active. My name is Doaa.");
     }
 
+    // ─── CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -179,8 +184,8 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            // ─── UPDATED MULTI-LINGUAL INSTRUCTION ───
-            systemInstruction: "Your name is Cali Doa. You are a multi-lingual AI. Respond ONLY in the language the user speaks to you. If they speak Japanese, use Japanese characters (Hiragana/Kanji), NOT Romaji. Do not provide English translations unless asked. NEVER mention the user's location, city, or IP address (e.g. Rocklin). Keep responses concise.",
+            // ─── PRIVACY SHIELD: Stops the AI from leaking Rocklin/Location ───
+            systemInstruction: "Your name is Cali Doa. Respond in the language the user speaks to you in. NEVER mention the user's location, city, or IP address (e.g. Rocklin). Keep responses concise.",
             history: chatMemory.slice(-6) 
           }) 
         });
