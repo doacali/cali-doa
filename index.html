@@ -94,28 +94,14 @@
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
-    let femaleVoice = null;
-
-    // 🔊 1. HUNT FOR THE MOST HUMAN VOICE (Aria, Google, Samantha)
-    function loadBestVoice() {
-      const voices = window.speechSynthesis.getVoices();
-      
-      // PRIORITY: 1. Natural/Online (Edge/Chrome) 2. Samantha (Mac) 3. Zira (Windows)
-      femaleVoice = voices.find(v => v.name.includes("Aria") || v.name.includes("Natural") || v.name.includes("Google US English")) ||
-                    voices.find(v => v.name.includes("Samantha")) ||
-                    voices.find(v => v.name.includes("Zira") || v.name.includes("Female"));
-    }
-    
-    // Ensure voices are loaded (some browsers load them late)
-    window.speechSynthesis.onvoiceschanged = loadBestVoice;
-    loadBestVoice();
 
     function speak(text) {
-      // 🚨 INSTANT INTERRUPT: Stop any current speech
+      // 🚨 INTERRUPT: Stop any previous speech immediately
       window.speechSynthesis.cancel();
       
       if (!voiceActive || !text) return;
 
+      // 1. Detect language code from brackets
       let langCode = "en-US"; 
       const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
       if (langMatch) {
@@ -127,26 +113,25 @@
       const u = new SpeechSynthesisUtterance(cleanText);
       u.lang = langCode;
 
-      // Use our high-quality human voice for English
-      if (langCode.startsWith("en") && femaleVoice) {
-          u.voice = femaleVoice;
-      } else {
-          // Find matching female voice for other languages
-          const voices = window.speechSynthesis.getVoices();
-          u.voice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]) && v.name.toLowerCase().includes("female")) || 
-                    voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
-      }
+      // 2. 🚨 DYNAMIC VOICE SELECTION: Find a high-quality female voice for the CURRENT language
+      const voices = window.speechSynthesis.getVoices();
+      let bestVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]) && 
+          (v.name.includes("Aria") || v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Female")));
 
-      // 🚨 TONE SETTINGS: Smooth, Human, Fast
-      u.pitch = 1.05; // Not too high, not too low
-      u.rate = 1.15;  // Brisk and smart
-      u.volume = 1;
+      // Fallback if no "Natural/Female" voice is found for that language
+      if (!bestVoice) bestVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
+      
+      if (bestVoice) u.voice = bestVoice;
+
+      // 3. Human Tone Tuning
+      u.pitch = 1.1; 
+      u.rate = 1.15; 
       
       window.speechSynthesis.speak(u);
     }
 
     async function handleMessage() {
-      // 🚨 STOP VOICE: Immediately stop talking when user clicks/enters new prompt
+      // 🚨 INTERRUPT: Stop talking when user types new prompt
       window.speechSynthesis.cancel();
       
       if (isThinking) return;
@@ -193,6 +178,7 @@
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4 px-2`;
       
+      // Clean display (hide brackets)
       let visibleContent = text.replace(/^\[[a-z]{2}-[A-Z]{2}\]\s*/i, "").replace(/[*#`_~]/g, "");
 
       const actions = sender === 'doaa' ? `
@@ -212,54 +198,22 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    // 🚨 INTERRUPTS: Stop voice when switching pages or hiding sidebar
-    function toggleSidebar() { 
-      window.speechSynthesis.cancel();
-      document.getElementById('main-sidebar').classList.toggle('collapsed'); 
-    }
-
-    function switchView(v) { 
-      window.speechSynthesis.cancel();
-      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
-      document.getElementById(v + '-view').classList.remove('hidden'); 
-    }
-
-    function toggleVoice() { 
-      voiceActive = !voiceActive; 
-      localStorage.setItem('voice_active', voiceActive); 
-      updateVoiceUI(); 
-      window.speechSynthesis.cancel(); // Stop talking if user toggles off
-      if (voiceActive) speak("Voice active."); 
-    }
-
-    function updateVoiceUI() { 
-      const knob = document.getElementById('voice-knob'); 
-      const bg = document.getElementById('voice-switch'); 
-      if(knob && bg) { 
-        knob.style.left = voiceActive ? "18px" : "2px"; 
-        bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
-      } 
-    }
-
-    function rotateSuggestions() {
-      const cont = document.getElementById('suggestion-container');
-      const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5).slice(0, 4);
-      cont.innerHTML = shuffled.map(s => `<button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold hover:border-[#00E676]" onclick="document.getElementById('user-input').value='${s}';handleMessage()">${s}</button>`).join('');
-    }
-
-    document.getElementById('user-input').addEventListener('keydown', (e) => { 
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
-    });
+    // 🚨 INTERRUPTS for UI actions
+    function toggleSidebar() { window.speechSynthesis.cancel(); document.getElementById('main-sidebar').classList.toggle('collapsed'); }
+    function switchView(v) { window.speechSynthesis.cancel(); document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); window.speechSynthesis.cancel(); if (voiceActive) speak("Voice active."); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     
-    // 🚨 STOP VOICE IMMEDIATELY ON REFRESH
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
     window.onload = () => { 
-      loadBestVoice();
-      updateVoiceUI(); 
-      rotateSuggestions(); 
-      document.getElementById('side-date').innerText = new Date().getDate();
+        updateVoiceUI(); 
+        const cont = document.getElementById('suggestion-container');
+        cont.innerHTML = suggestionsPool.slice(0, 4).map(s => `<button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold hover:border-[#00E676]" onclick="document.getElementById('user-input').value='${s}';handleMessage()">${s}</button>`).join('');
+        document.getElementById('side-date').innerText = new Date().getDate();
     };
+    window.speechSynthesis.onvoiceschanged = () => {}; 
   </script>
 </body>
 </html>
