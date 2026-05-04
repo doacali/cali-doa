@@ -425,27 +425,42 @@
       renderHistory();
     }
 
-    function renderMessage(msg) {
+ function renderMessage(msg) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
+
       row.className = `flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble`;
       row.dataset.messageId = msg.id;
+
       const bubbleClass = msg.sender === 'user'
         ? 'bg-black text-white shadow-lg rounded-[24px] rounded-br-md'
         : 'bg-gray-100 text-gray-900 rounded-[24px] rounded-bl-md';
-      const actions = msg.sender === 'doaa'
-        ? `<div class="flex gap-4 mt-2 pl-1"><button class="action-btn" onclick="speakFromBubble('${msg.id}')">🔊 Speak</button><button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button><button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button><button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button></div>`
-        : `<div class="flex justify-end gap-4 mt-2 pr-1"><button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button><button class="action-btn" onclick="editMessage('${msg.id}')">Edit</button><button class="action-btn" onclick="regenerateFromMessage('${msg.id}')">Regenerate</button></div>`;
-      row.innerHTML = `<div class="max-w-[78%]"><div class="${bubbleClass} px-5 py-4 text-[14px] leading-relaxed shadow-sm whitespace-pre-wrap">${escapeHTML(msg.text)}</div>${actions}</div>`;
+
+      // 🚨 NEW LOGIC: This handles Images and Links automatically
+      let content = msg.text;
+      if (msg.sender !== 'user') {
+          content = content
+            .replace(/!\[image\]\((.*?)\)/g, '<img src="$1" class="rounded-2xl mt-2 mb-2 w-full shadow-md border border-white cursor-zoom-in" onclick="window.open(\'$1\')">')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-500 font-bold underline">$1</a>');
+      } else {
+          content = escapeHTML(content);
+      }
+
+      const actions = msg.sender === 'doaa' ? `
+          <div class="flex gap-4 mt-2 pl-1">
+            <button class="action-btn" onclick="speakFromBubble('${msg.id}')">🔊 Speak</button>
+            <button class="action-btn" onclick="copyMessage('${msg.id}')">Copy</button>
+          </div>` : '';
+
+      row.innerHTML = `
+        <div class="max-w-[85%]">
+          <div class="${bubbleClass} px-5 py-4 text-[14px] leading-relaxed shadow-sm whitespace-pre-wrap">${content}</div>
+          ${actions}
+        </div>
+      `;
+
       history.appendChild(row);
       scrollChatToBottom();
-    }
-
-    function setChatMode() {
-      document.getElementById('hero-section').classList.add('hidden');
-      document.getElementById('chat-history').classList.remove('hidden');
-      const inputArea = document.getElementById('input-area');
-      if (inputArea) { inputArea.classList.remove('pb-16','pt-6'); inputArea.classList.add('pb-3','pt-2','mt-auto'); }
     }
 
     function newChat() {
