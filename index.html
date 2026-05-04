@@ -8,9 +8,25 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      margin: 0;
+      background: #ffffff;
+    }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
-    #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; box-shadow: 20px 0 60px rgba(0,0,0,0.04); }
+    #main-sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      width: 260px;
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 60;
+      box-shadow: 20px 0 60px rgba(0,0,0,0.04);
+    }
     #main-sidebar.collapsed { width: 0; opacity: 0; pointer-events: none; }
     .sidebar-item { transition: all 0.2s ease; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; font-weight: 700; color: #9ca3af; font-size: 13px; }
     .sidebar-item:hover { background-color: #f3f4f6; color: #111827; }
@@ -18,17 +34,13 @@
     .chat-bubble { animation: fadeIn 0.28s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .thinking-dot { width: 6px; height: 6px; border-radius: 999px; background: #9ca3af; animation: pulse 1s infinite ease-in-out; }
-    .thinking-dot:nth-child(2) { animation-delay: 0.15s; }
-    .thinking-dot:nth-child(3) { animation-delay: 0.3s; }
     @keyframes pulse { 0%, 80%, 100% { opacity: .35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
-    #user-input { resize: none; max-height: 150px; }
-    .action-btn { font-size: 10px; color: #9ca3af; font-weight: 800; transition: .2s; cursor: pointer; }
+    .action-btn { font-size: 10px; color: #9ca3af; font-weight: 800; cursor: pointer; }
     .action-btn:hover { color: #111827; }
     #voice-switch { transition: background-color 0.3s; }
-    #voice-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
 </head>
-<body>
+<body class="bg-white">
 
   <button id="open-sidebar-btn" onclick="toggleSidebar()" class="fixed top-6 left-6 z-[100] bg-white border border-gray-100 p-2.5 rounded-xl shadow-lg hover:scale-105 transition">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
@@ -37,38 +49,38 @@
   <div class="flex h-screen w-screen overflow-hidden">
     <aside id="main-sidebar" class="collapsed bg-white border-r border-gray-100 flex flex-col h-full shrink-0 relative">
       <div class="p-6 flex items-center justify-between">
-        <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="newChat()">DOA CALI</h1>
+        <h1 class="text-xl font-black text-[#00E676] italic uppercase cursor-pointer" onclick="newChat()">DOA CALI</h1>
         <button onclick="toggleSidebar()" class="text-gray-300 hover:text-black text-[9px] font-black uppercase tracking-widest">Hide</button>
       </div>
       <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
-        <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mb-2">Main Hub</p>
         <button id="nav-chat" onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 <span>Chat With Doa</span></button>
         <button id="nav-apps" onclick="switchView('apps')" class="sidebar-item">📱 <span>App Factory</span></button>
-        <p class="text-[10px] font-extrabold text-gray-300 uppercase tracking-[0.22em] px-2 mt-10 mb-3">Previously</p>
-        <div id="history-list" class="space-y-1 px-1"></div>
       </nav>
     </aside>
 
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-      <header id="main-header" class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 shrink-0">
-        <div id="auth-zone" class="flex gap-4 items-center">
-          <button onclick="login()" class="hover:text-black transition">Login</button>
-          <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-xl shadow-sm font-bold">Sign Up</button>
-        </div>
+      <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400 shrink-0">
+        <button onclick="login()">Login</button>
+        <button onclick="signUp()" class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold">Sign Up</button>
       </header>
 
-      <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center overflow-hidden px-10 relative">
-        <div id="chat-shell" class="w-full max-w-4xl flex-1 flex flex-col min-h-0 h-full mx-auto">
-          <div id="hero-section" class="flex-1 flex flex-col items-center justify-center text-center pb-10">
-            <h1 id="hero-title" class="text-6xl font-black mb-5 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span><br>do for you?</h1>
-            <p id="welcome-text" class="text-gray-400 text-lg font-medium max-w-2xl mx-auto leading-relaxed text-center text-balance">Your intelligent companion for thinking, building, and creating.</p>
+      <!-- 🚨 UPDATED CENTERED VIEWPORT -->
+      <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-center px-10 relative overflow-hidden">
+        
+        <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
+          
+          <div id="hero-section" class="text-center py-10">
+            <h1 class="text-6xl font-black mb-5 tracking-tighter leading-none">What can <span class="text-[#00E676]">Doa</span><br>do for you?</h1>
+            <p class="text-gray-400 text-lg font-medium">Your intelligent companion.</p>
           </div>
-          <div id="chat-history" class="hidden w-full flex-1 overflow-y-auto hide-scrollbar space-y-5 py-6 px-1"></div>
 
-          <div id="input-area" class="w-full shrink-0 pb-5 pt-2 bg-white">
+          <div id="chat-history" class="hidden w-full overflow-y-auto hide-scrollbar space-y-5 py-6"></div>
+
+          <div id="input-area" class="w-full bg-white pt-4">
             <div id="suggestion-container" class="flex flex-wrap justify-center gap-2 mb-6"></div>
-            <div class="w-full max-w-2xl mx-auto flex justify-between items-center gap-3 px-2 mb-3">
-              <p class="text-[9px] font-black text-gray-300 tracking-[0.18em] uppercase">Doa can make mistakes. Check important facts.</p>
+            
+            <div class="flex justify-between items-center mb-3 px-2">
+              <p class="text-[9px] font-black text-gray-300 uppercase tracking-widest">Doa is thinking...</p>
               <div class="flex items-center gap-3">
                 <span class="text-[9px] font-black text-gray-300 uppercase">Live Voice</span>
                 <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer">
@@ -76,22 +88,23 @@
                 </div>
               </div>
             </div>
-            <div class="flex justify-center">
-              <div class="w-full max-w-2xl bg-white border border-gray-200 shadow-[0_20px_70px_rgba(0,0,0,0.08)] rounded-[24px] p-2.5 flex items-end gap-2">
-                <textarea id="user-input" rows="1" class="flex-1 py-2 px-4 outline-none text-[14px] font-medium leading-relaxed" placeholder="Ask Doaa anything..."></textarea>
-                <button id="send-btn" onclick="handleMessage()" class="shrink-0 bg-black text-white w-11 h-11 rounded-full shadow-lg hover:bg-[#00E676] transition-colors font-bold">→</button>
-              </div>
+
+            <div class="bg-white border border-gray-200 shadow-[0_20px_70px_rgba(0,0,0,0.08)] rounded-[32px] p-2.5 flex items-end gap-2">
+              <textarea id="user-input" rows="1" class="flex-1 py-2 px-4 outline-none text-[14px] font-medium" placeholder="Ask Doaa anything..."></textarea>
+              <button id="send-btn" onclick="handleMessage()" class="shrink-0 bg-black text-white w-11 h-11 rounded-full shadow-lg font-bold">→</button>
             </div>
           </div>
+
         </div>
       </div>
 
+      <!-- APPS VIEW -->
       <div id="apps-view" class="view-container hidden flex-1 w-full p-10 overflow-y-auto">
         <h2 class="text-4xl font-black italic uppercase tracking-tighter">App Factory</h2>
         <div id="app-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10"></div>
       </div>
 
-      <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase tracking-[0.3em] bg-white shrink-0">
+      <footer class="w-full py-6 px-10 border-t border-gray-50 flex justify-between items-center text-[8px] font-black text-gray-300 uppercase bg-white shrink-0">
         <div class="flex gap-10"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
         <div>© 2026 DOA CALI. ALL RIGHTS RESERVED.</div>
       </footer>
@@ -100,15 +113,15 @@
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    const suggestionsPool = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats", "Budget App", "Math Help", "Startup Idea", "Write Email", "Recipe Search", "Workout Plan"];
+    const suggestionsPool = ["Analyze YouTube", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats"];
 
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
+    let isThinking = false;
     let selectedVoice = null;
-    let isThinking = false; // 🚨 FIXED: Added missing variable
 
     function loadVoices() {
-      const voices = window.speechSynthesis.getVoices();
-      selectedVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Aria") || v.name.includes("Female"));
+      const v = window.speechSynthesis.getVoices();
+      selectedVoice = v.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Female"));
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
@@ -116,37 +129,29 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const cleanText = String(text)
-        .replace(/!\[image\]\(.*?\)/g, "Generating image for you now.")
-        .replace(/\bDoa\b/gi, "Doaa")
-        .replace(/[*#`_~]/g, "")
-        .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '')
-        .trim();
-
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      if (selectedVoice) utterance.voice = selectedVoice;
-      utterance.pitch = 1.3;
-      utterance.rate = 1.05;
-      window.speechSynthesis.speak(utterance);
+      const cleanText = String(text).replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
+      const u = new SpeechSynthesisUtterance(cleanText);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.pitch = 1.3; u.rate = 1.0;
+      window.speechSynthesis.speak(u);
     }
 
     function stopVoice() { window.speechSynthesis.cancel(); }
 
-    async function handleMessage(customText = null) {
+    async function handleMessage() {
       if (isThinking) return;
-
       const input = document.getElementById('user-input');
-      const text = customText || input.value.trim();
+      const text = input.value.trim();
       if (!text) return;
 
-      isThinking = true;
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
+      document.getElementById('chat-history').style.display = 'flex';
+      document.getElementById('chat-history').style.flexDirection = 'column';
       
       addMessage('user', text);
       input.value = '';
-      input.style.height = 'auto'; // Reset height
-      showThinking(); // 🚨 FIXED: Added missing function below
+      isThinking = true;
 
       try {
         const res = await fetch(CLOUDFLARE_URL, {
@@ -156,42 +161,10 @@
         });
         const data = await res.json();
         const aiText = data.response || "Neural Link fuzzy!";
-        
-        removeThinking(); // 🚨 FIXED: Added missing function below
         addMessage('doaa', aiText);
         speak(aiText);
-      } catch (error) { 
-        removeThinking();
-        addMessage('doaa', "Neural Link fuzzy!"); 
-      } finally {
-        isThinking = false;
-      }
-    }
-
-    // 🚨 FIXED: Added missing Thinking Animation logic
-    function showThinking() {
-      const history = document.getElementById('chat-history');
-      const row = document.createElement('div');
-      row.id = 'thinking-bubble';
-      row.className = 'flex justify-start w-full chat-bubble';
-      row.innerHTML = `
-        <div class="bg-gray-100 px-5 py-4 rounded-[24px] rounded-bl-md shadow-sm flex gap-2 items-center">
-          <span class="thinking-dot"></span>
-          <span class="thinking-dot"></span>
-          <span class="thinking-dot"></span>
-        </div>`;
-      history.appendChild(row);
-      scrollChatToBottom();
-    }
-
-    function removeThinking() {
-      const thinking = document.getElementById('thinking-bubble');
-      if (thinking) thinking.remove();
-    }
-
-    function scrollChatToBottom() {
-      const history = document.getElementById('chat-history');
-      history.scrollTo({ top: history.scrollHeight, behavior: 'smooth' });
+      } catch (error) { addMessage('doaa', "Neural Link fuzzy!"); }
+      finally { isThinking = false; }
     }
 
     function addMessage(sender, text) {
@@ -214,28 +187,12 @@
 
       row.innerHTML = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} px-5 py-4 rounded-[24px] text-[14px] shadow-sm whitespace-pre-wrap">${content}</div>${actions}</div>`;
       history.appendChild(row);
-      scrollChatToBottom();
+      history.scrollTo({ top: history.scrollHeight, behavior: 'smooth' });
     }
 
-    // Helper for "Speak" buttons in chat bubbles
     window.speakFromBubble = function(btn) {
-      const text = btn.closest('.chat-bubble').querySelector('.shadow-sm').innerText;
-      speak(text);
+      speak(btn.closest('.chat-bubble').querySelector('.shadow-sm').innerText);
     };
-
-    function rotateSuggestions() {
-        const cont = document.getElementById('suggestion-container');
-        if(!cont) return;
-        const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5).slice(0, 4);
-        cont.innerHTML = shuffled.map(s => `<button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold shadow-sm hover:border-[#00E676] transition-all" onclick="handleSuggestion('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('');
-    }
-    
-    window.handleSuggestion = function(text) {
-        document.getElementById('user-input').value = text;
-        handleMessage();
-    };
-
-    setInterval(rotateSuggestions, 7000);
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
     function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice synthesis active. My name is Doaa."); else stopVoice(); }
@@ -254,22 +211,11 @@
       document.getElementById(view + '-view').classList.remove('hidden');
     }
 
-    // Input Listeners
-    const inputEl = document.getElementById('user-input');
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleMessage();
-      }
+    document.getElementById('user-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); }
     });
 
-    // Auto-resize input
-    inputEl.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = (this.scrollHeight) + 'px';
-    });
-
-    window.onload = () => { updateVoiceUI(); rotateSuggestions(); inputEl.focus(); };
+    window.onload = () => { updateVoiceUI(); };
   </script>
 </body>
 </html>
