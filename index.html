@@ -76,33 +76,61 @@
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
-    let femaleVoice = null;
 
-    function initVoices() {
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length === 0) return;
-      femaleVoice = voices.find(v => v.name.includes("Google US English")) ||
-                    voices.find(v => v.name.includes("Aria")) ||
-                    voices.find(v => v.name.includes("Samantha")) ||
-                    voices.find(v => v.lang === "en-US") ||
-                    voices.find(v => v.lang.startsWith("en"));
+    // --- NEW LANGUAGE DETECTION & VOICE SELECTION ---
+    function detectLanguage(text) {
+      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP";
+      if (/[\u4e00-\u9fff]/.test(text)) return "zh-CN";
+      if (/[\u0600-\u06FF]/.test(text)) return "ar-SA";
+      if (/[\u0400-\u04FF]/.test(text)) return "ru-RU";
+      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
+      return "en-US";
     }
 
-    window.speechSynthesis.onvoiceschanged = initVoices;
-    initVoices();
+    function getBestVoice(lang) {
+      const voices = window.speechSynthesis.getVoices();
+      let voice = voices.find(v => v.lang === lang);
+
+      if (!voice) {
+        const base = lang.split('-')[0];
+        voice = voices.find(v => v.lang.startsWith(base));
+      }
+
+      if (voice) {
+        const preferred = voices.find(v =>
+          v.lang.startsWith(lang.split('-')[0]) &&
+          /aria|samantha|female|google|zira|jenny/i.test(v.name)
+        );
+        if (preferred) voice = preferred;
+      }
+
+      if (!voice) {
+        voice = voices.find(v => v.lang === "en-US");
+      }
+      return voice;
+    }
 
     function speak(text) {
       window.speechSynthesis.cancel();
       if (!voiceActive || !text) return;
+
       const cleanText = text.replace(/[*#`_~]/g, "").trim();
+      const lang = detectLanguage(cleanText);
+      const voice = getBestVoice(lang);
+
       const u = new SpeechSynthesisUtterance(cleanText);
-      u.lang = "en-US";
-      if (femaleVoice) u.voice = femaleVoice;
+      u.lang = lang;
+      if (voice) u.voice = voice;
+
       u.pitch = 1.0;
-      u.rate = 1.0; 
+      u.rate = 1.0;
       u.volume = 1;
+
       window.speechSynthesis.speak(u);
     }
+
+    // Refresh voices list when changed
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
     async function handleMessage() {
       window.speechSynthesis.cancel();
@@ -120,14 +148,12 @@
       isThinking = true;
       document.getElementById('status-text').innerText = "Doaa is thinking...";
 
-      // --- PRIVACY PROTECTION LOGIC ---
-      // Only include time/date if the user is actually asking for it
       const needsContext = /time|date|today|clock|calendar|day/i.test(text);
       const now = new Date();
       
       const payload = { 
         text: text, 
-        systemInstruction: "Your name is Cali Doa. Respond ALWAYS in English. DO NOT mention user location, IP info, or specific time/date unless the user explicitly asks for it. Do not guess the user's city or region. Keep responses concise.",
+        systemInstruction: "Your name is Cali Doa. Respond ALWAYS in English (unless the user speaks another language). DO NOT mention user location or specific time/date unless asked. Keep responses concise.",
         history: chatMemory.slice(-6) 
       };
 
@@ -150,7 +176,7 @@
         
         speak(data.response);
       } catch (error) { 
-        addMessage('doaa', "System link error. Please try again."); 
+        addMessage('doaa', "System link error."); 
       } finally { 
         isThinking = false; 
         document.getElementById('status-text').innerText = ""; 
@@ -212,7 +238,7 @@
 
     window.onload = () => { 
       updateVoiceUI(); 
-      initVoices();
+      window.speechSynthesis.getVoices();
     };
   </script>
 </body>
