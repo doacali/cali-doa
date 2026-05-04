@@ -183,26 +183,22 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       
-      // FIX: User bubble visibility (White text on black background)
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full mb-2`;
+      // Better alignment and bubble shapes
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full mb-4`;
       
-      let content = text.replace(/\*\*/g, ""); 
-      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : '';
+      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button></div>` : '';
       
       row.innerHTML = `
-        <div class="chat-bubble">
-            <div class="${sender === 'user' ? 'bg-black text-white px-5 py-3 rounded-[20px_20px_4px_20px]' : 'bg-gray-100 text-gray-900 px-5 py-3 rounded-[20px_20px_20px_4px]'} text-sm whitespace-pre-wrap shadow-sm">
-                ${content}
+        <div class="max-w-[80%]">
+            <div class="${sender === 'user' ? 'bg-black text-white rounded-[22px] rounded-tr-[4px]' : 'bg-gray-100 text-gray-900 rounded-[22px] rounded-tl-[4px]'} px-5 py-3 text-sm shadow-sm">
+                ${text}
             </div>
             ${actions}
         </div>`;
         
       history.appendChild(row);
-      
-      // 🚨 FIX: Auto-scroll to bottom
       history.scrollTop = history.scrollHeight;
     }
-
     function rotateSuggestions() {
         const cont = document.getElementById('suggestion-container');
         const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5).slice(0, 4);
