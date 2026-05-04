@@ -78,47 +78,32 @@
     let chatMemory = []; 
     let selectedVoice = null;
 
-    // ─── DOUGHA VOICE ENGINE ───
-    function loadVoices() {
-      const voices = window.speechSynthesis.getVoices();
-      selectedVoice = pickFemaleVoice(voices);
+    // ─── DOUGHA VOICE ENGINE (UPDATED) ───
+    
+    function detectLang(text) {
+      // Simple detection: Ukrainian/Russian characters
+      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA"; 
+      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
+      return "en-US";
     }
 
-    function pickFemaleVoice(voiceList) {
-      const femaleNames = [
-        "Samantha",               // macOS/iOS - best quality
-        "Karen",                  // macOS Australian
-        "Moira",                  // macOS Irish
-        "Tessa",                  // macOS South African
-        "Veena",                  // macOS Indian
-        "Fiona",                  // macOS Scottish
-        "Victoria",               // macOS
-        "Allison",                // macOS
-        "Ava",                    // macOS
-        "Susan",                  // macOS
-        "Zoe",                    // macOS
-        "Microsoft Zira",         // Windows Edge/Chrome
-        "Microsoft Aria",         // Windows Edge
-        "Microsoft Jenny",        // Windows Edge
-        "Google US English Female",
-        "Google UK English Female",
-      ];
+    function loadVoices() {
+      const voices = window.speechSynthesis.getVoices();
+      // Default to English Samantha if available
+      selectedVoice = pickFemaleVoice(voices, "en-US");
+    }
 
-      for (const name of femaleNames) {
-        const match = voiceList.find(v => v.name.includes(name));
-        if (match) return match;
-      }
-
-      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
-      const keywordMatch = voiceList.find(v =>
-        femaleKeywords.some(k => v.name.toLowerCase().includes(k))
-      );
-      if (keywordMatch) return keywordMatch;
-
-      const englishVoice = voiceList.find(v => v.lang.startsWith("en"));
-      if (englishVoice) return englishVoice;
-
-      return voiceList[0] || null;
+    function pickFemaleVoice(voiceList, lang) {
+      const femaleNames = ["Samantha", "Aria", "Jenny", "Zira", "Google US English Female", "Karen"];
+      
+      // Try to find a voice matching the language AND a preferred name
+      let match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]) && 
+                  femaleNames.some(name => v.name.includes(name)));
+      
+      // Fallback: Just find ANY voice in that language
+      if (!match) match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]));
+      
+      return match || voiceList[0];
     }
 
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -131,28 +116,51 @@
       const cleanText = String(text)
         .replace(/\bDowa\b/gi, "Doaa")
         .replace(/\bDoa\b/gi, "Doaa")
-        .replace(/([a-zA-Z])\1{2,}/g, "$1") // Prevents stuttering on repeated chars
         .replace(/[*#`_~]/g, "")
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
 
+      const detected = detectLang(cleanText);
       const u = new SpeechSynthesisUtterance(cleanText);
-      if (selectedVoice) u.voice = selectedVoice;
-      u.lang = "en-US";
-      u.pitch = 1.35;   // warm, original feel
-      u.rate = 0.95;    // natural pace
+      
+      // Pick a voice that actually supports the detected language
+      const voices = window.speechSynthesis.getVoices();
+      u.voice = pickFemaleVoice(voices, detected);
+      u.lang = detected;
+
+      // Adjust settings based on language
+      if (detected === "en-US") {
+        u.pitch = 1.35; 
+        u.rate = 0.95;
+      } else {
+        u.pitch = 1.0; // Standard pitch for international languages to avoid distortion
+        u.rate = 1.0;
+      }
+
       u.volume = 1.0;
+
+      // FIX FOR VOICES STOPPING MID-WAY
+      // Chrome/Edge "Keep Alive" heartbeat
+      u.onstart = () => {
+        const interval = setInterval(() => {
+          if (!window.speechSynthesis.speaking) {
+            clearInterval(interval);
+          } else {
+            window.speechSynthesis.pause();
+            window.speechSynthesis.resume();
+          }
+        }, 10000);
+      };
+
       window.speechSynthesis.speak(u);
     }
 
     function toggleVoice() {
       voiceActive = !voiceActive;
       localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      selectedVoice = pickFemaleVoice(window.speechSynthesis.getVoices());
       updateVoiceUI();
-      if (voiceActive) speak("Live voice active. My name is Doaa.");
+      if (voiceActive) speak("Live voice active.");
     }
 
-    // ─── CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -175,7 +183,8 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            systemInstruction: "Your name is Cali Doa. Always respond in English. Do not mention location. Keep responses concise.",
+            // UPDATED SYSTEM PROMPT: Forces AI to stay private and stop guessing locations
+            systemInstruction: "Your name is Cali Doa. Respond in the user's language. NEVER guess the user's location, city, or IP (like Rocklin). Keep it private. Keep responses concise.",
             history: chatMemory.slice(-6) 
           }) 
         });
@@ -187,7 +196,7 @@
         
         speak(data.response);
       } catch (error) { 
-        addMessage('doaa', "System link error."); 
+        addMessage('doaa', "System error."); 
       } finally { 
         isThinking = false; 
         document.getElementById('status-text').innerText = ""; 
@@ -198,13 +207,11 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      let cleanText = text.replace(/[*#`_~]/g, "");
       row.innerHTML = `<div class="max-w-[85%]">
         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${cleanText}
+          ${text.replace(/[*#`_~]/g, "")}
         </div>
-        ${sender === 'doaa' ? `
-          <div class="flex gap-4 mt-2 px-1">
+        ${sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1">
             <button class="action-btn text-gray-400 hover:text-black" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
             <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
           </div>` : ''}
@@ -213,17 +220,11 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    function toggleSidebar() { 
-      window.speechSynthesis.cancel();
-      document.getElementById('main-sidebar').classList.toggle('collapsed'); 
-    }
-
+    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
     function switchView(v) { 
-      window.speechSynthesis.cancel();
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
       if(document.getElementById(v + '-view')) document.getElementById(v + '-view').classList.remove('hidden'); 
     }
-
     function updateVoiceUI() { 
       const knob = document.getElementById('voice-knob'); 
       const bg = document.getElementById('voice-switch'); 
@@ -232,15 +233,8 @@
         bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
       } 
     }
-
-    document.getElementById('user-input').addEventListener('keydown', (e) => { 
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
-    });
-    
-    window.onload = () => { 
-      updateVoiceUI(); 
-      loadVoices();
-    };
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    window.onload = () => { updateVoiceUI(); loadVoices(); };
   </script>
 </body>
 </html>
