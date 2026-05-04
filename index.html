@@ -238,4 +238,30 @@
           html += `<div class="action-card" onclick="window.open('${match[2]}', '_blank')"><div class="w-6 h-6 bg-[#00E676] rounded-lg text-white flex items-center justify-center text-[10px]">⚡</div><div class="flex flex-col"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS Task</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
         });
       }
-      html += `</div>
+      html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
+    }
+
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); }
+    function updateVoiceUI() { 
+        const knob = document.getElementById('voice-knob'); 
+        const bg = document.getElementById('voice-switch'); 
+        if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
+    }
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    
+    window.onload = () => { 
+      updateVoiceUI(); loadVoices(); 
+      const lastView = localStorage.getItem('doa_active_view') || 'chat';
+      if (chatMemory.length > 0) {
+        chatMemory.forEach(msg => {
+           if(msg.role === 'user') addMessage('user', msg.content);
+           else addMessage('doa', msg.content.replace(/\[ACTION:.*?\]/g, "").trim());
+        });
+        if (lastView === 'chat') setChatActiveUI(true);
+      }
+      switchView(lastView);
+      document.getElementById('main-sidebar').classList.remove('closed');
+    };
+  </script>
+</body>
+</html>
