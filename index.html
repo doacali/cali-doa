@@ -115,12 +115,29 @@
 
     function speak(text) {
       if (!voiceActive || !text) return;
+      
+      // 1. CLEAR PREVIOUS SPEECH IMMEDIATELY
       window.speechSynthesis.cancel();
-      const cleanText = String(text).replace(/\bDoa\b/gi, "Dougha").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
-      const u = new SpeechSynthesisUtterance(cleanText);
-      if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.3; u.rate = 0.95;
-      window.speechSynthesis.speak(u);
+
+      // 2. THE CLEANER: Removes emojis, markdown, and fixes pronunciation
+      const cleanText = String(text)
+        .replace(/!\[image\]\(.*?\)/g, "Generating image for you now.") // Don't read image URLs
+        .replace(/\bDoa\b/gi, "Dougha") // Pronunciation
+        .replace(/[*#`_~]/g, "") // Strip Markdown
+        // The "Emoji-Kill" Regex (Stops her from reading icons out loud)
+        .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '')
+        .trim();
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      
+      if (selectedVoice) utterance.voice = selectedVoice;
+
+      // 3. TURBO SETTINGS
+      utterance.pitch = 1.3; // Stays girly
+      utterance.rate = 1.05; // 🚀 Snappier speed (increased from 0.95)
+      utterance.volume = 1;
+
+      window.speechSynthesis.speak(utterance);
     }
 
     function stopVoice() { window.speechSynthesis.cancel(); }
