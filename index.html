@@ -136,13 +136,27 @@
     loadVoices();
 
     function speak(text) {
-        if (!voiceActive) return;
-        window.speechSynthesis.cancel();
-        const cleanText = text.replace(/\bDoa\b/gi, "doaa").replace(/\bDowa\b/gi, "doaa").replace(/[*#`_~]/g, "").replace(/[\u{1F600}-\u{1FFFF}]/gu, "");
-        const u = new SpeechSynthesisUtterance(cleanText);
-        if (selectedVoice) u.voice = selectedVoice;
-        u.pitch = 1.2; u.rate = 0.92;
-        window.speechSynthesis.speak(u);
+      if (!voiceActive || !text) return;
+      
+      window.speechSynthesis.cancel(); // Stop current talk instantly
+
+      // 🚨 THE DEEP CLEANER: Removes EVERYTHING except letters, numbers, and basic punctuation
+      const cleanText = String(text)
+        .replace(/!\[image\]\(.*?\)/g, "Generating that image for you now.") 
+        .replace(/\bDoa\b/gi, "Dougha") 
+        .replace(/\bDowa\b/gi, "Dougha")
+        .replace(/[*#`_~]/g, "") 
+        // Remove ALL emojis and special symbols
+        .replace(/[^\x00-\x7F]/g, "") 
+        .trim();
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      if (selectedVoice) utterance.voice = selectedVoice;
+
+      // 🚀 TURBO SETTINGS
+      utterance.pitch = 1.3; 
+      utterance.rate = 1.05; // Fast, human-like speed
+      window.speechSynthesis.speak(utterance);
     }
 
     // --- 2. CHAT ENGINE & LEARNING ---
