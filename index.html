@@ -77,7 +77,7 @@
     let isThinking = false;
     let chatMemory = []; 
 
-    // --- REFINED VOICE ENGINE ---
+    // ─── 1. LANGUAGE DETECTION ───
     function detectLanguage(text) {
       if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP";
       if (/[\u4e00-\u9fff]/.test(text)) return "zh-CN";
@@ -87,61 +87,54 @@
       return "en-US";
     }
 
+    // ─── 2. VOICE SELECTION (Restoring your favorite profile) ───
     function getBestVoice(lang) {
       const voices = window.speechSynthesis.getVoices();
-      if (voices.length === 0) return null;
-
-      // 1. Define priority keywords for "Good" voices
-      const priorityNames = ["google", "aria", "samantha", "jenny", "natural"];
       
-      // 2. Filter voices by requested language
-      const langVoices = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
-      
-      // 3. Try to find a priority voice within that language
-      let voice = langVoices.find(v => 
-        priorityNames.some(name => v.name.toLowerCase().includes(name))
-      );
-
-      // 4. Fallback to any voice in that language
-      if (!voice) voice = langVoices[0];
-
-      // 5. Absolute fallback to the first English high-quality voice if nothing found
-      if (!voice) {
-        voice = voices.find(v => 
-            v.lang.startsWith("en") && 
-            priorityNames.some(name => v.name.toLowerCase().includes(name))
-        );
+      // If it's English, use your specific priority list
+      if (lang === "en-US") {
+        return voices.find(v => v.name === 'Samantha') ||
+               voices.find(v => /google us english/i.test(v.name)) ||
+               voices.find(v => /zira|susan|victoria|karen|moira|fiona|serena|ava/i.test(v.name)) ||
+               voices.find(v => /female/i.test(v.name)) ||
+               voices[0];
       }
 
-      return voice || voices[0];
+      // If it's another language, find a female voice for that language
+      const langBase = lang.split('-')[0];
+      return voices.find(v => v.lang.startsWith(langBase) && /female|aria|google|soft/i.test(v.name.toLowerCase())) ||
+             voices.find(v => v.lang.startsWith(langBase)) ||
+             voices[0];
     }
 
+    // ─── 3. THE SPEAK FUNCTION (Restoring Pitch & Rate) ───
     function speak(text) {
       window.speechSynthesis.cancel();
       if (!voiceActive || !text) return;
 
-      const cleanText = text.replace(/[*#`_~]/g, "").trim();
-      const lang = detectLanguage(cleanText);
+      // Your original cleaning logic
+      const clean = String(text)
+        .replace(/\bDoa\b/gi, 'Doaa') // Pronunciation fix
+        .replace(/[*#`_~]/g, '')
+        .replace(/[\u{1F600}-\u{1FFFF}]/gu, ''); // Remove emojis
+
+      const lang = detectLanguage(clean);
       const voice = getBestVoice(lang);
+      const u = new SpeechSynthesisUtterance(clean);
 
-      const u = new SpeechSynthesisUtterance(cleanText);
       u.lang = lang;
-      
-      if (voice) {
-        u.voice = voice;
-        // Adjust pitch slightly for a more "Doa" feel (0.9 to 1.1)
-        u.pitch = 1.05; 
-        u.rate = 1.0;
-      }
+      if (voice) u.voice = voice;
 
-      u.volume = 1;
+      // RESTORING YOUR SETTINGS:
+      u.pitch = 1.35;  // Warm & Bright
+      u.rate = 1.55;   // Fast & Energetic
+      u.volume = 1.0;
+
       window.speechSynthesis.speak(u);
     }
 
-    // Ensure voices are loaded (crucial for Chrome)
-    window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-    };
+    // Ensure voices load correctly in all browsers
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
     async function handleMessage() {
       window.speechSynthesis.cancel();
@@ -249,7 +242,6 @@
 
     window.onload = () => { 
       updateVoiceUI(); 
-      // Kickstart the voices list
       window.speechSynthesis.getVoices();
     };
   </script>
