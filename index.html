@@ -137,25 +137,24 @@
 
     function speak(text) {
       if (!voiceActive || !text) return;
-      
-      window.speechSynthesis.cancel(); // Stop current talk instantly
+      window.speechSynthesis.cancel(); // Stop current speech instantly
 
-      // 🚨 THE DEEP CLEANER: Removes EVERYTHING except letters, numbers, and basic punctuation
+      // 🚨 TURBO CLEANER: Removes icons and fixes name pronunciation
       const cleanText = String(text)
-        .replace(/!\[image\]\(.*?\)/g, "Generating that image for you now.") 
+        .replace(/!\[image\]\(.*?\)/g, "Generating image.") 
         .replace(/\bDoa\b/gi, "Doaa") 
         .replace(/\bDowa\b/gi, "Doaa")
+        .replace(/\bDougha\b/gi, "Doaa")
         .replace(/[*#`_~]/g, "") 
-        // Remove ALL emojis and special symbols
-        .replace(/[^\x00-\x7F]/g, "") 
+        .replace(/[^\x00-\x7F]/g, "") // Nuclear Emoji Strip
         .trim();
 
       const utterance = new SpeechSynthesisUtterance(cleanText);
       if (selectedVoice) utterance.voice = selectedVoice;
 
-      // 🚀 TURBO SETTINGS
-      utterance.pitch = 1.3; 
-      utterance.rate = 1.05; // Fast, human-like speed
+      // 🚀 SPEED SETTINGS
+      utterance.pitch = 1.3; // Girly
+      utterance.rate = 1.05; // Fast human speed
       window.speechSynthesis.speak(utterance);
     }
 
