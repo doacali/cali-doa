@@ -17,6 +17,7 @@
     .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     #voice-switch { transition: background-color 0.3s; }
+    .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
   </style>
 </head>
 <body class="bg-white">
@@ -71,61 +72,48 @@
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    const suggestionsPool = ["Weather in Sacramento", "Learn Ukrainian", "Speak Spanish", "Tell Story", "Crypto Stats"];
-
+    
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
     let femaleVoice = null;
 
-    // 🔊 1. FIND THE HIGHEST QUALITY HUMAN VOICE
+    // 🔊 1. IMPROVED VOICE INITIALIZATION (Forces English)
     function initVoices() {
       const voices = window.speechSynthesis.getVoices();
-      // Priority list: Google/Microsoft Natural voices sound most human
-      femaleVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Aria") || v.name.includes("Natural")) ||
-                    voices.find(v => v.name.includes("Samantha") || v.name.includes("Microsoft Zira")) ||
-                    voices.find(v => v.lang.includes("en") && (v.name.includes("Female") || v.name.includes("Girl")));
+      if (voices.length === 0) return;
+
+      // Priority list for high-quality English voices
+      femaleVoice = voices.find(v => v.name.includes("Google US English")) ||
+                    voices.find(v => v.name.includes("Aria")) ||
+                    voices.find(v => v.name.includes("Samantha")) ||
+                    voices.find(v => v.lang === "en-US") ||
+                    voices.find(v => v.lang.startsWith("en"));
     }
-    // Browser voice loading is weird, this ensures it catches them
+
+    // Chrome and Safari need this event to load voices
     window.speechSynthesis.onvoiceschanged = initVoices;
     initVoices();
 
     function speak(text) {
-      // 🚨 KILLSWITCH: Stop everything before starting new speech
-      window.speechSynthesis.cancel();
-      
+      window.speechSynthesis.cancel(); // Stop current speech
       if (!voiceActive || !text) return;
 
-      let langCode = "en-US"; 
-      const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
-      if (langMatch) {
-          langCode = langMatch[1];
-          text = text.replace(langMatch[0], "").trim();
-      }
-
-      const cleanText = text.replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
+      const cleanText = text.replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(cleanText);
-      u.lang = langCode;
+      
+      // Force the engine to English
+      u.lang = "en-US";
+      if (femaleVoice) u.voice = femaleVoice;
 
-      // 🚨 VOICE SELECTION: Use the human-priority voice for English, or find a match for other languages
-      if (langCode.startsWith("en") && femaleVoice) {
-          u.voice = femaleVoice;
-      } else {
-          const voices = window.speechSynthesis.getVoices();
-          u.voice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]) && v.name.toLowerCase().includes("female")) || 
-                    voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
-      }
-
-      // 🚨 TUNE FOR SMOOTHNESS & SPEED
-      u.pitch = 1.1;  // Natural human pitch
-      u.rate = 1.15;  // Fast and smart
+      u.pitch = 1.0;
+      u.rate = 1.0; 
       u.volume = 1;
       
       window.speechSynthesis.speak(u);
     }
 
     async function handleMessage() {
-      // 🚨 KILLSWITCH: Stop talking when you start a new prompt
       window.speechSynthesis.cancel();
       
       if (isThinking) return;
@@ -148,15 +136,17 @@
 
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
-  method: 'POST', 
-  headers: { 'Content-Type': 'application/json' }, 
-  body: JSON.stringify({ 
-    text: text, 
-    localTime: localTime, 
-    localDate: localDate, 
-    history: chatMemory.slice(-6) 
-  }) 
-});
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ 
+            text: text, 
+            // 🚨 SYSTEM INSTRUCTION: Forces the AI to respond in English
+            systemInstruction: "Your name is Cali Doa. You must ALWAYS respond in English. Do not use other languages even if prompted. Keep responses concise.",
+            localTime: localTime, 
+            localDate: localDate, 
+            history: chatMemory.slice(-6) 
+          }) 
+        });
         const data = await res.json();
         
         addMessage('doaa', data.response);
@@ -165,7 +155,7 @@
         
         speak(data.response);
       } catch (error) { 
-        addMessage('doaa', "Neural Link fuzzy!"); 
+        addMessage('doaa', "System link error. Please try again."); 
       } finally { 
         isThinking = false; 
         document.getElementById('status-text').innerText = ""; 
@@ -177,7 +167,6 @@
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
       
-      // Remove any leftover markdown symbols from the text for a clean UI
       let cleanText = text.replace(/[*#`_~]/g, "");
       
       row.innerHTML = `<div class="max-w-[85%]">
@@ -186,8 +175,8 @@
         </div>
         ${sender === 'doaa' ? `
           <div class="flex gap-4 mt-2 px-1">
-            <button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
-            <button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
+            <button class="action-btn text-gray-400 hover:text-black" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
+            <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
           </div>` : ''}
       </div>`;
       
@@ -195,7 +184,6 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    // 🚨 GLOBAL KILLSWITCH FOR PAGE INTERACTION
     function toggleSidebar() { 
       window.speechSynthesis.cancel();
       document.getElementById('main-sidebar').classList.toggle('collapsed'); 
@@ -204,7 +192,7 @@
     function switchView(v) { 
       window.speechSynthesis.cancel();
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
-      document.getElementById(v + '-view').classList.remove('hidden'); 
+      if(document.getElementById(v + '-view')) document.getElementById(v + '-view').classList.remove('hidden'); 
     }
 
     function toggleVoice() { 
@@ -212,7 +200,7 @@
       localStorage.setItem('voice_active', voiceActive); 
       updateVoiceUI(); 
       window.speechSynthesis.cancel();
-      if (voiceActive) speak("[en-US] Voice active."); 
+      if (voiceActive) speak("Voice mode enabled."); 
     }
 
     function updateVoiceUI() { 
@@ -224,22 +212,15 @@
       } 
     }
 
-    function rotateSuggestions() {
-      const cont = document.getElementById('suggestion-container');
-      const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5).slice(0, 4);
-      cont.innerHTML = shuffled.map(s => `<button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold hover:border-[#00E676]" onclick="document.getElementById('user-input').value='${s}';handleMessage()">${s}</button>`).join('');
-    }
-
     document.getElementById('user-input').addEventListener('keydown', (e) => { 
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
     });
     
-    // 🚨 STOP ON REFRESH
     window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
     window.onload = () => { 
-      updateVoiceUI(); rotateSuggestions(); 
-      document.getElementById('side-date').innerText = new Date().getDate();
+      updateVoiceUI(); 
+      initVoices();
     };
   </script>
 </body>
