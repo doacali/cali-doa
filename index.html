@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cali Doa | AI Operating System</title>
+  <title>Doa | AI Operating System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -18,6 +18,8 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     #voice-switch { transition: background-color 0.3s; }
     .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .suggestion-chip { background: #00E676; color: black; padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; margin-top: 8px; cursor: pointer; display: inline-block; transition: 0.2s; }
+    .suggestion-chip:hover { transform: scale(1.05); background: #00c853; }
   </style>
 </head>
 <body class="bg-white">
@@ -30,7 +32,7 @@
       </div>
       <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
         <button onclick="switchView('chat')" class="sidebar-item sidebar-active">💬 Chat With Doa</button>
-        <button class="sidebar-item">📅 Calendar</button>
+        <button onclick="switchView('calendar')" class="sidebar-item">📅 Calendar</button>
         <button onclick="switchView('apps')" class="sidebar-item">📱 App Factory</button>
       </nav>
     </aside>
@@ -43,13 +45,10 @@
 
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
-          
           <div id="hero-section" class="text-center py-10">
             <h1 class="text-6xl font-black mb-5 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
           </div>
-
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
-
           <div class="w-full bg-white pt-4 pb-8">
             <div class="flex justify-between items-center mb-3 px-2">
               <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
@@ -67,16 +66,40 @@
           </div>
         </div>
       </div>
+      <!-- Placeholder views -->
+      <div id="calendar-view" class="view-container hidden flex-1 p-10"><h1>Calendar View</h1></div>
+      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>App Factory View</h1></div>
     </main>
   </div>
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
     let selectedVoice = null;
+
+    // ─── LEARNING ENGINE: Persistent Memory ───
+    let doaKnowledge = JSON.parse(localStorage.getItem('doa_knowledge')) || {};
+
+    function learnPreference(trigger, action) {
+      doaKnowledge[trigger.toLowerCase()] = action;
+      localStorage.setItem('doa_knowledge', JSON.stringify(doaKnowledge));
+      return `I've learned that when you say "${trigger}", I should suggest ${action}.`;
+    }
+
+    // ─── TASK EXECUTION ENGINE ───
+    function executeTask(command, value) {
+      if (command === 'OPEN_TAB') switchView(value.toLowerCase());
+      if (command === 'RESEARCH') window.open(`https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
+      if (command === 'DOWNLOAD') {
+        const blob = new Blob([chatMemory.map(m => `${m.role}: ${m.content}`).join('\n')], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `doa_chat.txt`;
+        a.click();
+      }
+    }
 
     // ─── DOUGHA VOICE ENGINE ───
     function loadVoices() {
@@ -85,13 +108,13 @@
     }
 
     function pickFemaleVoice(voiceList, lang = "en-US") {
-      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Susan", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
-      const langMatch = voiceList.filter(v => v.lang.startsWith(lang.split('-')[0]));
-      for (const name of femaleNames) {
-        const match = langMatch.find(v => v.name.includes(name));
-        if (match) return match;
+      const names = ["Samantha", "Aria", "Jenny", "Zira", "Google US English Female", "Victoria"];
+      const match = voiceList.filter(v => v.lang.startsWith(lang.split('-')[0]));
+      for (const name of names) {
+        let v = match.find(v => v.name.includes(name));
+        if (v) return v;
       }
-      return langMatch[0] || voiceList[0] || null;
+      return match[0] || voiceList[0];
     }
 
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -100,49 +123,13 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-
-      // Phonetic Override: AI says "Doa" but voice engine reads "Doaa"
-      const cleanText = String(text)
-        .replace(/\bDoa\b/gi, "Doaa") 
-        .replace(/\bDowa\b/gi, "Doaa")
-        .replace(/([a-zA-Z])\1{2,}/g, "$1")
-        .replace(/[*#`_~]/g, "")
-        .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
-
-      let detectedLang = "en-US";
-      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(cleanText)) detectedLang = "ja-JP";
-      else if (/[\u0400-\u04FF]/.test(cleanText)) detectedLang = "uk-UA";
-      else if (/[ñáéíóú¿¡]/i.test(cleanText)) detectedLang = "es-ES";
-
-      const u = new SpeechSynthesisUtterance(cleanText);
-      const voices = window.speechSynthesis.getVoices();
-      u.voice = pickFemaleVoice(voices, detectedLang);
-      u.lang = detectedLang;
-
-      u.pitch = 1.35;   // warm, original feel
-      u.rate = 0.95;    // natural pace
-      u.volume = 1.0;
-
-      // HEARTBEAT FIX
-      u.onstart = () => {
-        const interval = setInterval(() => {
-          if (!window.speechSynthesis.speaking) {
-            clearInterval(interval);
-          } else {
-            window.speechSynthesis.pause();
-            window.speechSynthesis.resume();
-          }
-        }, 10000);
-      };
-
+      const clean = text.replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "");
+      const u = new SpeechSynthesisUtterance(clean);
+      u.voice = selectedVoice;
+      u.lang = "en-US";
+      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
+      u.onstart = () => { setInterval(() => { if(window.speechSynthesis.speaking){ window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
-    }
-
-    function toggleVoice() {
-      voiceActive = !voiceActive;
-      localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      updateVoiceUI();
-      if (voiceActive) speak("Live voice active. My name is Doa.");
     }
 
     // ─── CHAT LOGIC ───
@@ -168,40 +155,60 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            systemInstruction: "Your name is Doa. You are a multi-lingual AI. Respond ONLY in the language the user speaks. If asked about weather or location, use the context provided. Otherwise, do not mention location or IP. Keep responses concise.",
+            systemInstruction: `Your name is Doa. You are an AI OS.
+            When you can help with a task, offer a suggestion using the tag: [SUGGEST: COMMAND:VALUE|Label].
+            Available Commands: OPEN_TAB, RESEARCH, DOWNLOAD, COPY.
+            If a user teaches you something (e.g. "When I say X, do Y"), confirm you've learned it.
+            Keep responses very concise. Current learned triggers: ${JSON.stringify(doaKnowledge)}`,
             history: chatMemory.slice(-6) 
           }) 
         });
         const data = await res.json();
+        let responseText = data.response;
+
+        // Check if user is trying to teach something
+        if (text.toLowerCase().includes("when i say") && text.toLowerCase().includes("do")) {
+           const trigger = text.match(/say ['"](.*?)['"]/i)?.[1];
+           const action = text.match(/do ['"](.*?)['"]/i)?.[1];
+           if(trigger && action) responseText = learnPreference(trigger, action) + " " + responseText;
+        }
+
+        // Process Suggestions
+        const suggestRegex = /\[SUGGEST:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
+        let finalDisplay = responseText.replace(suggestRegex, "").trim();
         
-        addMessage('doa', data.response);
+        addMessage('doa', finalDisplay, responseText.match(suggestRegex));
         chatMemory.push({ role: 'user', content: text });
-        chatMemory.push({ role: 'assistant', content: data.response });
-        
-        speak(data.response);
+        chatMemory.push({ role: 'assistant', content: responseText });
+        speak(finalDisplay);
+
       } catch (error) { 
-        addMessage('doa', "System link error."); 
+        addMessage('doa', "System error."); 
       } finally { 
-        isThinking = false; 
-        document.getElementById('status-text').innerText = ""; 
+        isThinking = false; document.getElementById('status-text').innerText = ""; 
       }
     }
 
-    function addMessage(sender, text) {
+    function addMessage(sender, text, suggestions = []) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      let cleanText = text.replace(/[*#`_~]/g, "");
-      row.innerHTML = `<div class="max-w-[85%]">
+      
+      let html = `<div class="max-w-[85%]">
         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${cleanText}
-        </div>
-        ${sender === 'doa' ? `
-          <div class="flex gap-4 mt-2 px-1">
-            <button class="action-btn text-gray-400 hover:text-black" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
-            <button class="action-btn text-red-500" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
-          </div>` : ''}
-      </div>`;
+          ${text}
+        </div>`;
+
+      if (suggestions && sender === 'doa') {
+        suggestions.forEach(s => {
+          const parts = s.replace("[SUGGEST: ", "").replace("]", "").split("|");
+          const cmdParts = parts[0].split(":");
+          html += `<div class="suggestion-chip" onclick="executeTask('${cmdParts[0].trim()}', '${cmdParts[1].trim()}')">⚡ ${parts[1]}</div>`;
+        });
+      }
+      
+      html += `</div>`;
+      row.innerHTML = html;
       history.appendChild(row);
       history.scrollTop = history.scrollHeight;
     }
@@ -209,15 +216,15 @@
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
     function switchView(v) { 
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
-      if(document.getElementById(v + '-view')) document.getElementById(v + '-view').classList.remove('hidden'); 
+      const t = document.getElementById(v + '-view'); if(t) t.classList.remove('hidden'); 
+    }
+    function toggleVoice() { 
+      voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); 
+      updateVoiceUI(); if (voiceActive) speak("Live voice active."); 
     }
     function updateVoiceUI() { 
-      const knob = document.getElementById('voice-knob'); 
-      const bg = document.getElementById('voice-switch'); 
-      if(knob && bg) { 
-        knob.style.left = voiceActive ? "18px" : "2px"; 
-        bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
-      } 
+      const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); 
+      if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
     }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     window.onload = () => { updateVoiceUI(); loadVoices(); };
