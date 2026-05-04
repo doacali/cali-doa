@@ -10,7 +10,7 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     
-    /* Sidebar Physics */
+    /* Sidebar Layout */
     #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; transform: translateX(0); }
     #main-sidebar.closed { transform: translateX(-100%); }
     
@@ -21,7 +21,7 @@
     .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* Action Controls under bubbles */
+    /* Bubble Action Menu */
     .bubble-action-btn { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; transition: 0.2s; }
     .bubble-action-btn:hover { color: #111827; }
     .bubble-action-btn.red:hover { color: #ef4444; }
@@ -31,37 +31,40 @@
     #menu-btn.show { opacity: 1; pointer-events: auto; }
 
     #chat-shell { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-    
+    .chat-link { color: #00E676; text-decoration: underline; font-weight: 600; }
+
     .action-card { margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
     .action-card:hover { background: #f3f4f6; border-color: #00E676; }
-    .chat-link { color: #00E676; text-decoration: underline; font-weight: 600; }
   </style>
 </head>
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden relative">
     
+    <!-- Floating Menu Button -->
     <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
         <span class="text-[#00E676] font-black italic tracking-tighter text-sm uppercase">Doa</span>
         <div class="flex flex-col gap-[3px]"><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div></div>
     </button>
 
+    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
         <button onclick="toggleSidebar()" class="text-gray-400 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
       </div>
-      <nav class="flex-1 px-4 space-y-1">
+      <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
         <button onclick="startNewChat()" class="sidebar-item hover:bg-gray-50 mb-4 text-black border border-gray-100 transition-all active:scale-95">+ New Chat</button>
         <button onclick="switchView('chat')" id="btn-chat" class="sidebar-item">💬 Chat With Doa</button>
         <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
         <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
       <div class="p-6 text-center border-t border-gray-50">
-        <span class="text-[10px] text-gray-300 font-bold uppercase">OS Engine v2.5</span>
+        <span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v2.5</span>
       </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
         <button class="hover:text-black">Login</button>
@@ -112,53 +115,70 @@
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
     let isThinking = false;
+    let selectedVoice = null;
 
-    // ─── 1. ADVANCED VOICE ENGINE ───
-    function detectLang(text) {
-      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP"; // Japanese
-      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA";             // Ukrainian
-      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";                // Spanish
-      return "en-US";
+    // ─── 1. DOUGHA VOICE ENGINE ───
+    function loadVoices() {
+      const voices = window.speechSynthesis.getVoices();
+      selectedVoice = pickFemaleVoice(voices);
     }
 
-    function getBestVoice(lang) {
-      const voices = window.speechSynthesis.getVoices();
-      const priority = ["Samantha", "Kyoko", "Aria", "Google", "Karen", "Microsoft"];
-      let match = voices.find(v => v.lang.startsWith(lang.split('-')[0]) && priority.some(p => v.name.includes(p)));
-      if (!match) match = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-      return match || voices[0];
+    function pickFemaleVoice(voiceList) {
+      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Allison", "Ava", "Susan", "Zoe", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
+      for (const name of femaleNames) {
+        const match = voiceList.find(v => v.name.includes(name));
+        if (match) return match;
+      }
+      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
+      const keywordMatch = voiceList.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
+      if (keywordMatch) return keywordMatch;
+      return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0] || null;
+    }
+
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function detectLang(text) {
+      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP";
+      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA";
+      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
+      return "en-US";
     }
 
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      
-      const cleanForSpeech = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
-      const lang = detectLang(cleanForSpeech);
-      const u = new SpeechSynthesisUtterance(cleanForSpeech);
-      
-      u.voice = getBestVoice(lang);
-      u.lang = lang;
 
-      // Keep Samantha's signature settings for English
+      const cleanText = String(text)
+        .replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "")
+        .replace(/\bDowa\b/gi, "Doaa").replace(/\bDoa\b/gi, "Doaa")
+        .replace(/([a-zA-Z])\1{2,}/g, "$1")
+        .replace(/[*#`_~]/g, "")
+        .replace(/[\u{1F000}-\u{1FFFF}]/gu, "");
+
+      const lang = detectLang(cleanText);
+      const u = new SpeechSynthesisUtterance(cleanText);
+      
+      // Multi-lang support logic
       if (lang === "en-US") {
-        u.pitch = 1.35;
-        u.rate = 0.95;
+        if (selectedVoice) u.voice = selectedVoice;
+        u.lang = "en-US";
+        u.pitch = 1.35; // warm, original feel
+        u.rate = 0.95;  // natural pace
       } else {
-        u.pitch = 1.0;
-        u.rate = 1.0;
+        const voices = window.speechSynthesis.getVoices();
+        const nativeVoice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+        if (nativeVoice) u.voice = nativeVoice;
+        u.lang = lang;
+        u.pitch = 1.0; u.rate = 1.0;
       }
 
-      u.onstart = () => {
-        const int = setInterval(() => {
-          if (!window.speechSynthesis.speaking) clearInterval(int);
-          else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
-        }, 10000);
-      };
+      u.volume = 1.0;
+      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
     }
 
-    // ─── 2. UTILITY FUNCTIONS ───
+    // ─── 2. OS UTILITIES ───
     function copyText(text, btn) {
       navigator.clipboard.writeText(text);
       const old = btn.innerText;
@@ -197,7 +217,7 @@
         shell.classList.remove('justify-end');
         shell.classList.add('justify-center');
         centerGroup.classList.add('flex-col');
-        shell.style.paddingBottom = '15vh';
+        shell.style.paddingBottom = '15vh'; // MOVES BOTH UPWARD
       }
     }
 
@@ -215,6 +235,19 @@
       sb.classList.toggle('closed');
       if (sb.classList.contains('closed')) mb.classList.add('show');
       else mb.classList.remove('show');
+    }
+
+    function toggleVoice() {
+      voiceActive = !voiceActive;
+      localStorage.setItem('voice_active', JSON.stringify(voiceActive));
+      updateVoiceUI();
+      if (voiceActive) speak("Live voice active. My name is Doaa.");
+    }
+
+    function updateVoiceUI() { 
+        const knob = document.getElementById('voice-knob'); 
+        const bg = document.getElementById('voice-switch'); 
+        if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
     }
 
     function executeTask(command, value) {
@@ -259,7 +292,7 @@
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
         speak(displayContent);
 
-      } catch (error) { addMessage('doa', "OS Error."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
+      } catch (error) { addMessage('doa', "OS Link Disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
     function addMessage(sender, text, actions = []) {
@@ -271,11 +304,8 @@
       const content = sender === 'doa' ? text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`) : text;
 
       let html = `<div class="max-w-[85%] group">
-        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">
-          ${content}
-        </div>`;
+        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${content}</div>`;
 
-      // Add Buttons for AI responses
       if (sender === 'doa') {
         html += `<div class="flex gap-4 mt-2 px-1">
           <button class="bubble-action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
@@ -292,35 +322,24 @@
       html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice mode active."); }
-    function updateVoiceUI() { 
-        const knob = document.getElementById('voice-knob'); 
-        const bg = document.getElementById('voice-switch'); 
-        if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
-    }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     
     window.onload = () => { 
-      updateVoiceUI();
-      // Required to load voices in many browsers
-      window.speechSynthesis.onvoiceschanged = () => {
-          if (chatMemory.length > 0) {
-            chatMemory.forEach(msg => {
-               if(msg.role === 'user') addMessage('user', msg.content);
-               else addMessage('doa', msg.content.replace(/\[ACTION:.*?\]/g, "").trim());
-            });
-            const lastView = localStorage.getItem('doa_active_view') || 'chat';
-            if (lastView === 'chat') setChatMode(true);
-            switchView(lastView);
-          }
-      };
-      // Trigger initial load
-      window.speechSynthesis.getVoices();
-      
+      updateVoiceUI(); 
+      loadVoices();
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      if (chatMemory.length === 0) setChatMode(false);
+      if (chatMemory.length > 0) {
+        chatMemory.forEach(msg => {
+           const actionRegex = /\[ACTION:.*?\]/g;
+           if(msg.role === 'user') addMessage('user', msg.content);
+           else addMessage('doa', msg.content.replace(actionRegex, "").trim());
+        });
+        if (lastView === 'chat') setChatMode(true);
+      } else {
+        setChatMode(false);
+      }
       switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed');
+      document.getElementById('main-sidebar').classList.remove('closed'); // Start open
     };
   </script>
 </body>
