@@ -72,37 +72,32 @@
     </main>
   </div>
 
-  <script>
+<script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
     let selectedVoice = null;
-
-    // ─── LEARNING ENGINE ───
     let doaKnowledge = JSON.parse(localStorage.getItem('doa_knowledge')) || {};
 
-    function learnPreference(trigger, action) {
-      doaKnowledge[trigger.toLowerCase()] = action;
-      localStorage.setItem('doa_knowledge', JSON.stringify(doaKnowledge));
-      return `I've learned that you want me to ${action} when you say "${trigger}".`;
-    }
-
-    // ─── TASK EXECUTION ENGINE ───
-    function executeTask(command, value) {
-      console.log("Executing:", command, value);
-      if (command === 'OPEN_TAB') switchView(value.toLowerCase());
+    // ─── TASK ENGINE (Automatic Execution) ───
+    function executeTask(command, value, silent = false) {
+      console.log("Auto-Executing:", command, value);
       
-      // Fix for "Open Google" or "Search"
+      if (command === 'OPEN_TAB') {
+        switchView(value.toLowerCase());
+      }
+      
       if (command === 'RESEARCH' || command === 'OPEN_URL') {
         let url = value;
         if (!url.startsWith('http')) {
-            if (url.toLowerCase() === 'google') url = 'https://google.com';
-            else url = `https://www.google.com/search?q=${encodeURIComponent(value)}`;
+            url = (url.toLowerCase() === 'google') ? 'https://google.com' : `https://www.google.com/search?q=${encodeURIComponent(value)}`;
         }
+        // Browsers may block this unless it's the first time; 
+        // We trigger it but also provide the visual link in chat.
         window.open(url, '_blank');
       }
-      
+
       if (command === 'DOWNLOAD') {
         const blob = new Blob([chatMemory.map(m => `${m.role}: ${m.content}`).join('\n')], {type: 'text/plain'});
         const a = document.createElement('a');
@@ -112,7 +107,7 @@
       }
     }
 
-    // ─── DOUGHA VOICE ENGINE (RESTORED) ───
+    // ─── DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
       selectedVoice = pickFemaleVoice(voices, "en-US");
@@ -134,7 +129,10 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const clean = text.replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "");
+      // Filter out URLs or tags from speech
+      const speechText = text.replace(/https?:\/\/\S+/g, "").replace(/\[.*?\]/g, "").trim();
+      const clean = speechText.replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "");
+      
       const u = new SpeechSynthesisUtterance(clean);
       u.voice = selectedVoice;
       u.lang = "en-US";
@@ -167,42 +165,42 @@
           body: JSON.stringify({ 
             text: text, 
             systemInstruction: `Your name is Doa. You are an AI OS.
-            CRITICAL: When the user wants to open a website, search, or navigate, you MUST provide a suggestion tag.
-            Format: [SUGGEST: COMMAND:VALUE|Label]
-            Example: If user says "open google", respond "I can open Google for you. [SUGGEST: RESEARCH:google|Open Google]"
-            Commands: OPEN_TAB (chat, calendar, apps), RESEARCH (search/url), DOWNLOAD, COPY.
-            Keep responses very concise. Current learned triggers: ${JSON.stringify(doaKnowledge)}`,
+            When the user asks to open a tab, site, or perform a task, include an action tag.
+            Format: [ACTION: COMMAND:VALUE|Label]
+            Example: "Opening Google... [ACTION: RESEARCH:google|Google]"
+            Commands: OPEN_TAB (chat, calendar, apps), RESEARCH (url/query), DOWNLOAD.
+            The OS will execute these automatically. Do NOT read the tags or URLs aloud.
+            Keep responses very short. Trigger history: ${JSON.stringify(doaKnowledge)}`,
             history: chatMemory.slice(-6) 
           }) 
         });
         const data = await res.json();
         let responseText = data.response;
 
-        // Process Teaching Logic
-        if (text.toLowerCase().includes("when i say") && text.toLowerCase().includes("do")) {
-           const trigger = text.match(/say ['"](.*?)['"]/i)?.[1];
-           const action = text.match(/do ['"](.*?)['"]/i)?.[1];
-           if(trigger && action) responseText = learnPreference(trigger, action) + " " + responseText;
-        }
-
-        // Catch Suggestion Tags
-        const suggestRegex = /\[SUGGEST:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
-        const matches = [...responseText.matchAll(suggestRegex)];
-        let finalDisplay = responseText.replace(suggestRegex, "").trim();
+        // Auto-Execute Actions
+        const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
+        const matches = [...responseText.matchAll(actionRegex)];
         
-        addMessage('doa', finalDisplay, matches);
+        matches.forEach(match => {
+           executeTask(match[1], match[2]);
+        });
+
+        // Remove tags from speech/display
+        let displayContent = responseText.replace(actionRegex, "").trim();
+        
+        addMessage('doa', displayContent, matches);
         chatMemory.push({ role: 'user', content: text });
         chatMemory.push({ role: 'assistant', content: responseText });
-        speak(finalDisplay);
+        speak(displayContent);
 
       } catch (error) { 
-        addMessage('doa', "System error."); 
+        addMessage('doa', "System link error."); 
       } finally { 
         isThinking = false; document.getElementById('status-text').innerText = ""; 
       }
     }
 
-    function addMessage(sender, text, suggestions = []) {
+    function addMessage(sender, text, actions = []) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
@@ -212,12 +210,15 @@
           ${text}
         </div>`;
 
-      if (suggestions.length > 0 && sender === 'doa') {
-        suggestions.forEach(match => {
+      // Display links/actions visually on screen
+      if (actions.length > 0 && sender === 'doa') {
+        actions.forEach(match => {
+          const label = match[3];
           const command = match[1];
           const value = match[2];
-          const label = match[3];
-          html += `<div class="suggestion-chip" onclick="executeTask('${command}', '${value}')">⚡ ${label}</div>`;
+          html += `<div class="mt-2 flex items-center gap-2 p-2 bg-[#00E676]/10 border border-[#00E676]/20 rounded-xl text-[10px] font-bold text-[#00c853] cursor-pointer" onclick="executeTask('${command}', '${value}')">
+            <span class="opacity-50">LINKED:</span> ${label.toUpperCase()}
+          </div>`;
         });
       }
       
