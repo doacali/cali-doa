@@ -105,10 +105,26 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const cleanText = String(text).replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").replace(/[^\x00-\x7F]/g, "").trim();
+
+      // 1. Detect language code from brackets (e.g., [es-ES])
+      let langCode = "en-US"; 
+      const langMatch = text.match(/^\[([a-z]{2}-[A-Z]{2})\]/);
+      if (langMatch) {
+          langCode = langMatch[1];
+          text = text.replace(langMatch[0], "").trim(); // Remove brackets for speaking
+      }
+
+      // 2. Clean text for voice engine
+      const cleanText = text.replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(cleanText);
-      if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.35; u.rate = 1.05; 
+      u.lang = langCode;
+
+      // 3. Find a voice that matches the language
+      const voices = window.speechSynthesis.getVoices();
+      const matchedVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
+      if (matchedVoice) u.voice = matchedVoice;
+
+      u.pitch = 1.3; u.rate = 1.0; 
       window.speechSynthesis.speak(u);
     }
 
@@ -120,40 +136,40 @@
 
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
-      document.getElementById('chat-history').style.display = 'flex';
       
-      // 🚨 Capture real time and date from your computer
       const now = new Date();
-      const localTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const localDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      const localTime = now.toLocaleTimeString();
+      const localDate = now.toDateString();
 
       addMessage('user', text);
       input.value = '';
       isThinking = true;
-      document.getElementById('status-text').innerText = "Doaa is syncing...";
+      document.getElementById('status-text').innerText = "Doaa is thinking...";
 
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
-  method: 'POST', 
-  headers: { 'Content-Type': 'application/json' }, 
-  body: JSON.stringify({ 
-    text: text, 
-    localTime: localTime, 
-    localDate: localDate, 
-    history: chatMemory.slice(-6) 
-  }) 
-});
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ 
+            text, 
+            localTime, 
+            localDate, 
+            history: chatMemory.slice(-6) 
+          }) 
+        });
         const data = await res.json();
         
-        addMessage('doaa', data.response);
+        // 4. Strip language code from the UI bubble so it looks clean
+        let cleanReply = data.response.replace(/^\[[a-z]{2}-[A-Z]{2}\]\s*/, "");
         
-        // Save to memory
+        addMessage('doaa', cleanReply);
+        
         chatMemory.push({ role: 'user', content: text });
         chatMemory.push({ role: 'assistant', content: data.response });
         
-        speak(data.response);
+        speak(data.response); // Pass original with brackets to speak function
       } catch (error) { 
-        addMessage('doaa', "Neural Link fuzzy! Check your Cloudflare Worker."); 
+        addMessage('doaa', "Connection lost."); 
       } finally { 
         isThinking = false; 
         document.getElementById('status-text').innerText = ""; 
