@@ -142,16 +142,18 @@
 
     function stopVoice() { window.speechSynthesis.cancel(); }
 
-    async function handleMessage() {
+    async function handleMessage(customText = null) {
       const input = document.getElementById('user-input');
-      const text = input.value.trim();
-      if (!text) return;
+      const text = customText || input.value.trim();
+      if (!text || isThinking) return; // Prevent double-clicks
 
+      isThinking = true;
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
       
       addMessage('user', text);
       input.value = '';
+      showThinking(); // Show dots instantly
 
       try {
         const res = await fetch(CLOUDFLARE_URL, {
@@ -159,11 +161,19 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text })
         });
+        
         const data = await res.json();
         const aiText = data.response || "Neural Link fuzzy!";
+        
+        removeThinking(); // Remove dots the millisecond data arrives
         addMessage('doaa', aiText);
-        speak(aiText);
-      } catch (error) { addMessage('doaa', "Neural Link fuzzy!"); }
+        speak(aiText); // Start talking immediately
+      } catch (error) { 
+        removeThinking();
+        addMessage('doaa', "Neural Link fuzzy!"); 
+      } finally {
+        isThinking = false;
+      }
     }
 
     function addMessage(sender, text) {
