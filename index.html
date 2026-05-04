@@ -122,7 +122,7 @@
       // 2. THE CLEANER: Removes emojis, markdown, and fixes pronunciation
       const cleanText = String(text)
         .replace(/!\[image\]\(.*?\)/g, "Generating image for you now.") // Don't read image URLs
-        .replace(/\bDoa\b/gi, "Dougha") // Pronunciation
+        .replace(/\bDoa\b/gi, "Doaa") // Pronunciation
         .replace(/[*#`_~]/g, "") // Strip Markdown
         // The "Emoji-Kill" Regex (Stops her from reading icons out loud)
         .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '')
@@ -207,7 +207,7 @@
     setInterval(rotateSuggestions, 7000);
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice synthesis active. My name is Dougha."); else stopVoice(); }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice synthesis active. My name is Doaa."); else stopVoice(); }
     function updateVoiceUI() {
       const knob = document.getElementById('voice-knob');
       const bg = document.getElementById('voice-switch');
