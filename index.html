@@ -163,19 +163,32 @@
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
       
-      let content = text.replace(/\*\*/g, ""); 
-      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : '';
+      // 1. IMPROVED ALIGNMENT: User on right, Doaa on left
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full mb-4 px-2`;
       
-      row.innerHTML = `<div class="max-w-[85%]">
-        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${content}
-        </div>
-        ${actions}
-      </div>`;
+      // 2. 🚨 THE TAG FIX: This removes [en-US], [uk-UA], etc. from the visible bubble
+      let visibleContent = text.replace(/^\[[a-z]{2}-[A-Z]{2}\]\s*/i, "").replace(/[*#`_~]/g, "");
+
+      const actions = sender === 'doaa' ? `
+        <div class="flex gap-4 mt-2 px-1">
+          <button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
+          <button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
+        </div>` : '';
       
+      row.innerHTML = `
+        <div class="max-w-[85%]">
+          <div class="${sender === 'user' 
+            ? 'bg-black text-white rounded-[22px] rounded-tr-[4px]' 
+            : 'bg-gray-100 text-gray-900 rounded-[22px] rounded-tl-[4px]'} p-4 text-sm whitespace-pre-wrap shadow-sm">
+            ${visibleContent}
+          </div>
+          ${actions}
+        </div>`;
+        
       history.appendChild(row);
+      
+      // 🚨 SCROLL FIX: Always follow the newest message
       history.scrollTop = history.scrollHeight;
     }
 
