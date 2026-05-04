@@ -78,83 +78,82 @@
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    let voiceActive = false;
-    let isThinking = false;
-    let chatHistory = []; // 🚨 NEW: This stores the memory
+    const suggestionsPool = ["Weather in Sacramento", "Learn Spanish", "Build App", "Tell Story", "Crypto Stats"];
 
-    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
+    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
+    let isThinking = false;
+    let selectedVoice = null;
+
+    // 🔊 FORCE FEMALE VOICE ENGINE
+    function loadVoices() {
+      const v = window.speechSynthesis.getVoices();
+      selectedVoice = v.find(v => v.name.includes("Samantha") || v.name.includes("Google US English Female") || v.name.includes("Aria") || v.name.includes("Female"));
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
 
     function speak(text) {
-      if (!voiceActive) return;
+      if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text.replace(/[*#`_~]/g, ""));
-      u.pitch = 1.3; u.rate = 1.1;
+      // Remove symbols and fix name pronunciation
+      const cleanText = String(text).replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").replace(/[^\x00-\x7F]/g, "").trim();
+      const u = new SpeechSynthesisUtterance(cleanText);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.pitch = 1.35; u.rate = 1.05; // Force fast girly voice
       window.speechSynthesis.speak(u);
     }
 
-    function toggleVoice() {
-        voiceActive = !voiceActive;
-        const knob = document.getElementById('voice-knob');
-        const bg = document.getElementById('voice-switch');
-        knob.style.left = voiceActive ? "20px" : "2px";
-        bg.style.background = voiceActive ? "#00E676" : "#f3f4f6";
-        if(voiceActive) speak("Voice active.");
-    }
-
     async function handleMessage() {
+      if (isThinking) return;
       const input = document.getElementById('user-input');
       const text = input.value.trim();
-      if (!text || isThinking) return;
-
+      if (!text) return;
       document.getElementById('hero-section').classList.add('hidden');
-      
-      // 1. Add user message to UI and Memory
+      document.getElementById('chat-history').classList.remove('hidden');
+      document.getElementById('chat-history').style.display = 'flex';
       addMessage('user', text);
-      chatHistory.push({ role: 'user', content: text }); 
-      
       input.value = '';
       isThinking = true;
-      document.getElementById('status-text').innerText = "DOAA IS THINKING...";
-
+      document.getElementById('status-text').innerText = "Doaa is searching the web...";
       try {
-        const res = await fetch(CLOUDFLARE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            text: text,
-            history: chatHistory.slice(-6) // 🚨 Send the last 6 messages as memory
-          })
-        });
-        
+        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
         const data = await res.json();
-        const reply = data.response;
-
-        // 2. Add Doaa's response to UI and Memory
-        addMessage('doaa', reply);
-        chatHistory.push({ role: 'assistant', content: reply });
-        
-        speak(reply);
-      } catch (e) {
-        addMessage('doaa', "Connection lost.");
-      } finally {
-        isThinking = false;
-        document.getElementById('status-text').innerText = "";
-      }
+        addMessage('doaa', data.response);
+        speak(data.response);
+      } catch (error) { addMessage('doaa', "Neural Link fuzzy!"); }
+      finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
     function addMessage(sender, text) {
-      const historyDiv = document.getElementById('chat-history');
-      const div = document.createElement('div');
-      div.className = `bubble-common ${sender === 'user' ? 'user-bubble' : 'doaa-bubble'}`;
-      div.innerText = text;
-      historyDiv.appendChild(div);
-      historyDiv.scrollTop = historyDiv.scrollHeight;
+      const history = document.getElementById('chat-history');
+      const row = document.createElement('div');
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
+      let content = text.replace(/\*\*/g, ""); 
+      if (sender !== 'user') {
+        content = content
+          .replace(/!\[image\]\((.*?)\)/g, '<img src="$1" class="rounded-3xl mt-2 mb-2 w-full shadow-xl">')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-[#00E676] font-bold underline">$1</a>');
+      }
+      const actions = sender === 'doaa' ? `<div class="flex gap-4 mt-2 px-1"><button class="action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="action-btn text-red-500 font-bold" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : '';
+      row.innerHTML = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap">${content}</div>${actions}</div>`;
+      history.appendChild(row);
+      history.scrollTop = history.scrollHeight;
     }
 
-    // Handle Enter Key
-    document.getElementById('user-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); }
-    });
+    function rotateSuggestions() {
+        const cont = document.getElementById('suggestion-container');
+        const shuffled = [...suggestionsPool].sort(() => Math.random() - 0.5).slice(0, 4);
+        cont.innerHTML = shuffled.map(s => `<button class="px-4 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-bold hover:border-[#00E676]" onclick="document.getElementById('user-input').value='${s}';handleMessage()">${s}</button>`).join('');
+    }
+
+    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active. My name is Doaa."); else window.speechSynthesis.cancel(); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
+    function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); }
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    window.onload = () => { 
+        updateVoiceUI(); rotateSuggestions(); 
+        document.getElementById('side-date').innerText = new Date().getDate();
+    };
   </script>
 </body>
 </html>
