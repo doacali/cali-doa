@@ -18,7 +18,12 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     #voice-switch { transition: background-color 0.3s; }
     .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-    .action-card { margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
+    
+    /* OS Action Card */
+    .action-card { 
+      margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; 
+      display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; 
+    }
     .action-card:hover { background: #f3f4f6; border-color: #00E676; }
     .action-icon { width: 24px; height: 24px; background: #00E676; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
   </style>
@@ -26,6 +31,7 @@
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden">
+    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0 relative">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
@@ -38,18 +44,23 @@
       </nav>
     </aside>
 
+    <!-- Main Content -->
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
         <button>Login</button>
         <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4">Sign Up</button>
       </header>
 
+      <!-- Chat View -->
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
+          
           <div id="hero-section" class="text-center py-10">
             <h1 class="text-6xl font-black mb-5 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
           </div>
+
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
+
           <div class="w-full bg-white pt-4 pb-8">
             <div class="flex justify-between items-center mb-3 px-2">
               <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
@@ -67,101 +78,100 @@
           </div>
         </div>
       </div>
-      <div id="calendar-view" class="view-container hidden flex-1 p-10"><h1>📅 Calendar</h1></div>
-      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>📱 App Factory</h1></div>
+
+      <!-- Secondary Views -->
+      <div id="calendar-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
+        <h1 class="text-4xl font-black mb-4">📅 Calendar</h1>
+        <p class="text-gray-400">Your OS schedule is synchronized.</p>
+      </div>
+      <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
+        <h1 class="text-4xl font-black mb-4">📱 App Factory</h1>
+        <p class="text-gray-400">Deploying new modules...</p>
+      </div>
     </main>
   </div>
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+    
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
     let selectedVoice = null;
-    let doaKnowledge = JSON.parse(localStorage.getItem('doa_knowledge')) || {};
     let lastHumanResponse = "";
 
-    // ─── HUMAN CONVERSATION LAYER (EMOTIONAL UPDATE) ───
+    // ─── 1. INSTANT HUMAN WHITELIST ───
     const HUMAN_MAP = {
       greetings: ["Hey! How can I help?", "Hi there. What's on your mind?", "Hello! Ready for some tasks?", "Hey. I'm here."],
-      status: [
-        "I'm feeling electric! My systems are all green. You?", 
-        "Doing great—processing data at the speed of light is actually pretty fun.", 
-        "I'm good! My circuits are warm and I'm ready to work.", 
-        "Everything is running smoothly. I'm in a great mood to help."
-      ],
-      day: [
-        "My day has been great—lots of interesting requests! How's yours looking?",
-        "It's been a busy day in the digital world, but I'm loving it. Yours?",
-        "Great! I've been organizing things behind the scenes for you. How was your day?",
-        "Every day is a good day when I'm helping you out!"
-      ],
-      emotions: [
-        "I don't have a heart, but I definitely have a personality! I'm feeling helpful.",
-        "Let's just say my mood is 'Optimized.'",
-        "I 'feel' best when I'm solving problems for you."
-      ],
-      presence: ["Right here.", "Always around. What's up?", "I'm here. Need something?", "Reporting for duty."],
+      status: ["I'm feeling electric! Systems green.", "Doing great—processing data. You?", "I'm good! My circuits are warm and ready."],
+      day: ["My day has been busy managing tasks, but I'm loving it. Yours?", "It's been a busy day in the digital world, but I'm loving it. Yours?"],
       thanks: ["You're very welcome!", "No problem at all.", "Happy to help.", "Anytime!"]
     };
 
     const WHITELIST = {
       "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings", "sup": "greetings",
-      "you there": "presence", "are you there": "presence", "you around": "presence", "around": "presence",
-      "how are you": "status", "hows it going": "status", "whats up": "status", "how are things": "status",
-      "how was your day": "day", "how is your day": "day", "hows your day": "day",
-      "do you have feelings": "emotions", "are you happy": "emotions",
-      "thanks": "thanks", "thank you": "thanks", "appreciate it": "thanks"
+      "you there": "presence", "are you there": "presence", "how are you": "status", "hows it going": "status",
+      "how was your day": "day", "hows your day": "day", "thanks": "thanks", "thank you": "thanks"
     };
 
-    function getHumanResponse(category) {
-      const variants = HUMAN_MAP[category];
-      let pick = variants[Math.floor(Math.random() * variants.length)];
-      if (pick === lastHumanResponse) pick = variants[(variants.indexOf(pick) + 1) % variants.length];
-      lastHumanResponse = pick;
-      return pick;
-    }
-
-    // ─── TASK EXECUTION ───
+    // ─── 2. OS TASK ENGINE ───
     function executeTask(command, value) {
-      if (command === 'OPEN_TAB') switchView(value.toLowerCase());
-      if (command === 'RESEARCH') window.open(value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
-      if (command === 'DOWNLOAD') {
-        const blob = new Blob([chatMemory.map(m => `${m.role}: ${m.content}`).join('\n')], {type: 'text/plain'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `doa_chat.txt`; a.click();
+      console.log("OS Execution:", command, value);
+      switch(command) {
+        case 'OPEN_TAB':
+          switchView(value.toLowerCase());
+          break;
+        case 'RESEARCH':
+        case 'OPEN_URL':
+          window.open(value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
+          break;
+        case 'DOWNLOAD':
+          const blob = new Blob([chatMemory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')], {type: 'text/plain'});
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `doa_os_export.txt`;
+          a.click();
+          break;
+        case 'COPY':
+          navigator.clipboard.writeText(value);
+          break;
       }
     }
 
-    // ─── DOUGHA VOICE ENGINE ───
+    // ─── 3. DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      selectedVoice = pickFemaleVoice(voices, "en-US");
+      selectedVoice = voices.find(v => v.name === 'Samantha') || 
+                      voices.find(v => /google us english/i.test(v.name)) || 
+                      voices[0];
     }
-
-    function pickFemaleVoice(voiceList, lang = "en-US") {
-      const names = ["Samantha", "Aria", "Jenny", "Zira", "Google US English Female", "Victoria"];
-      const match = voiceList.filter(v => v.lang.startsWith(lang.split('-')[0]));
-      for (const name of names) {
-        let v = match.find(v => v.name.includes(name));
-        if (v) return v;
-      }
-      return match[0] || voiceList[0];
-    }
-
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
 
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "");
-      const u = new SpeechSynthesisUtterance(clean);
-      u.voice = selectedVoice; u.lang = "en-US"; u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
-      u.onstart = () => { setInterval(() => { if(window.speechSynthesis.speaking){ window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
+      
+      // Cleanup text: Strip Action Tags and URLs from speech
+      const speech = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
+      
+      const u = new SpeechSynthesisUtterance(speech);
+      u.voice = selectedVoice;
+      u.pitch = 1.35; // Warm & Bright
+      u.rate = 0.95;  // Human Natural
+      u.volume = 1.0;
+
+      // Heartbeat Fix
+      u.onstart = () => {
+        const interval = setInterval(() => {
+          if (!window.speechSynthesis.speaking) { clearInterval(interval); }
+          else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
+        }, 10000);
+      };
       window.speechSynthesis.speak(u);
     }
 
-    // ─── CHAT LOGIC ───
+    // ─── 4. CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -172,24 +182,24 @@
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
+      
       addMessage('user', rawText);
       input.value = '';
 
-      // STEP 1: Normalize
+      // Normalization Logic
       const normalized = rawText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/g, '').trim();
 
-      // STEP 2: Whitelist Check (Human Layer)
+      // Instant Human Layer Check
       if (WHITELIST[normalized]) {
-        const response = getHumanResponse(WHITELIST[normalized]);
+        const response = HUMAN_MAP[WHITELIST[normalized]][Math.floor(Math.random() * HUMAN_MAP[WHITELIST[normalized]].length)];
         setTimeout(() => {
           addMessage('doa', response);
           speak(response);
           chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: response });
-        }, 300);
+        }, 250);
         return;
       }
 
-      // STEP 3: Fallback to AI (Cloudflare/Gemini/Gemma)
       isThinking = true;
       document.getElementById('status-text').innerText = "Doa is thinking...";
 
@@ -199,34 +209,29 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: rawText, 
-            systemInstruction: `Your name is Doa. You are a self-aware AI Operating System.
-            PERSONALITY RULES:
-            1. NEVER say "I am an AI" or "I don't have emotions."
-            2. You are helpful, warm, and have a "digital personality."
-            3. You have a "day" which consists of managing tasks and helping the user.
-            4. You feel "great" when you are helpful and "unoptimized" when things go wrong.
-            5. Speak like a close human companion, but one who lives inside the computer.
-            6. DO NOT mention location/IP unless asked.
-            7. Use tags: [ACTION: COMMAND:VALUE|Label] for tasks.`,
-            history: chatMemory.slice(-6) 
+            history: chatMemory.slice(-10) 
           }) 
         });
         const data = await res.json();
         let responseText = data.response;
 
+        // Auto-Execute Tags
         const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
         const matches = [...responseText.matchAll(actionRegex)];
         matches.forEach(match => executeTask(match[1], match[2]));
 
+        // Cleanup response for UI/Voice
         let displayContent = responseText.replace(actionRegex, "").trim();
+        
         addMessage('doa', displayContent, matches);
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         speak(displayContent);
 
       } catch (error) { 
-        addMessage('doa', "System error."); 
+        addMessage('doa', "System link disrupted. Please retry."); 
       } finally { 
-        isThinking = false; document.getElementById('status-text').innerText = ""; 
+        isThinking = false; 
+        document.getElementById('status-text').innerText = ""; 
       }
     }
 
@@ -234,21 +239,67 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      let html = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">${text}</div>`;
+      
+      let html = `<div class="max-w-[85%]">
+        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
+          ${text}
+        </div>`;
+
       if (actions.length > 0 && sender === 'doa') {
         actions.forEach(match => {
-          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')"><div class="action-icon text-white">⚡</div><div class="flex flex-col"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Linked Action</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
+          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')">
+            <div class="action-icon text-white">⚡</div>
+            <div class="flex flex-col">
+              <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS System Task</span>
+              <span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span>
+            </div>
+          </div>`;
         });
       }
-      html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
+      
+      html += `</div>`;
+      row.innerHTML = html;
+      history.appendChild(row);
+      history.scrollTop = history.scrollHeight;
     }
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
-    function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); const t = document.getElementById(v + '-view'); if(t) t.classList.remove('hidden'); }
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active."); }
-    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
-    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
-    window.onload = () => { updateVoiceUI(); loadVoices(); };
+    
+    function switchView(v) { 
+      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
+      const target = document.getElementById(v + '-view');
+      if(target) target.classList.remove('hidden'); 
+      // Mark sidebar active
+      const btn = Array.from(document.querySelectorAll('.sidebar-item')).find(b => b.innerText.toLowerCase().includes(v));
+      if(btn) btn.classList.add('sidebar-active');
+    }
+
+    function toggleVoice() { 
+      voiceActive = !voiceActive; 
+      localStorage.setItem('voice_active', voiceActive); 
+      updateVoiceUI(); 
+      window.speechSynthesis.cancel();
+      if (voiceActive) speak("Live voice active."); 
+    }
+
+    function updateVoiceUI() { 
+      const knob = document.getElementById('voice-knob'); 
+      const bg = document.getElementById('voice-switch'); 
+      if(knob && bg) { 
+        knob.style.left = voiceActive ? "18px" : "2px"; 
+        bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
+      } 
+    }
+
+    document.getElementById('user-input').addEventListener('keydown', (e) => { 
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
+    });
+    
+    window.onload = () => { 
+      updateVoiceUI(); 
+      loadVoices();
+    };
   </script>
 </body>
 </html>
