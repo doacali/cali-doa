@@ -78,36 +78,37 @@
     let chatMemory = []; 
     let selectedVoice = null;
 
-    // ─── DOUGHA VOICE ENGINE (ENHANCED) ───
+    // ─── DOUGHA VOICE ENGINE (MULTI-LANG ENHANCED) ───
     function loadVoices() {
-      const voices = window.speechSynthesis.getVoices();
-      selectedVoice = pickFemaleVoice(voices, "en-US");
+      window.speechSynthesis.getVoices();
     }
 
     function detectLang(text) {
-      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA"; 
-      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
+      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP"; // Japanese
+      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA";             // Ukrainian
+      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";                // Spanish
+      if (/[\u0600-\u06FF]/.test(text)) return "ar-SA";             // Arabic
       return "en-US";
     }
 
     function pickFemaleVoice(voiceList, lang = "en-US") {
+      // Priority names for a high-quality feel
       const femaleNames = [
-        "Samantha", "Microsoft Aria", "Microsoft Jenny", "Google US English Female",
-        "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Zira"
+        "Samantha", "Kyoko", "Aria", "Jenny", "Nanami", "Google US English Female",
+        "Victoria", "Zira", "Karen"
       ];
 
-      // Try to match language AND name
+      // 1. Try to match language AND preferred name
       let match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]) && 
                   femaleNames.some(name => v.name.includes(name)));
       
-      // Fallback to any voice of that language
+      // 2. Fallback to any voice of that language
       if (!match) match = voiceList.find(v => v.lang.startsWith(lang.split('-')[0]));
       
-      return match || voiceList[0] || null;
+      return match || voiceList[0];
     }
 
     window.speechSynthesis.onvoiceschanged = loadVoices;
-    loadVoices();
 
     function speak(text) {
       if (!voiceActive || !text) return;
@@ -127,7 +128,7 @@
       u.voice = pickFemaleVoice(voices, lang);
       u.lang = lang;
 
-      // Keep your exact preferred settings for English
+      // Keep your exact English settings, use natural for others
       if (lang === "en-US") {
         u.pitch = 1.35;
         u.rate = 0.95;
@@ -138,7 +139,7 @@
       
       u.volume = 1.0;
 
-      // ─── HEARTBEAT FIX: Prevents voice from stopping mid-sentence ───
+      // HEARTBEAT FIX
       u.onstart = () => {
         const interval = setInterval(() => {
           if (!window.speechSynthesis.speaking) {
@@ -156,12 +157,10 @@
     function toggleVoice() {
       voiceActive = !voiceActive;
       localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      loadVoices();
       updateVoiceUI();
-      if (voiceActive) speak("Live voice active. My name is Doaa.");
+      if (voiceActive) speak("Live voice active.");
     }
 
-    // ─── CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -184,8 +183,8 @@
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             text: text, 
-            // ─── PRIVACY SHIELD: Stops the AI from leaking Rocklin/Location ───
-            systemInstruction: "Your name is Cali Doa. Respond in the language the user speaks to you in. NEVER mention the user's location, city, or IP address (e.g. Rocklin). Keep responses concise.",
+            // ─── UPDATED MULTI-LINGUAL INSTRUCTION ───
+            systemInstruction: "Your name is Cali Doa. You are a multi-lingual AI. Respond ONLY in the language the user speaks to you. If they speak Japanese, use Japanese characters (Hiragana/Kanji), NOT Romaji. Do not provide English translations unless asked. NEVER mention location or IP addresses. Keep responses concise.",
             history: chatMemory.slice(-6) 
           }) 
         });
@@ -208,10 +207,9 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
-      let cleanText = text.replace(/[*#`_~]/g, "");
       row.innerHTML = `<div class="max-w-[85%]">
         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
-          ${cleanText}
+          ${text.replace(/[*#`_~]/g, "")}
         </div>
         ${sender === 'doaa' ? `
           <div class="flex gap-4 mt-2 px-1">
@@ -223,17 +221,11 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    function toggleSidebar() { 
-      window.speechSynthesis.cancel();
-      document.getElementById('main-sidebar').classList.toggle('collapsed'); 
-    }
-
+    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
     function switchView(v) { 
-      window.speechSynthesis.cancel();
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
       if(document.getElementById(v + '-view')) document.getElementById(v + '-view').classList.remove('hidden'); 
     }
-
     function updateVoiceUI() { 
       const knob = document.getElementById('voice-knob'); 
       const bg = document.getElementById('voice-switch'); 
@@ -242,15 +234,8 @@
         bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
       } 
     }
-
-    document.getElementById('user-input').addEventListener('keydown', (e) => { 
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } 
-    });
-    
-    window.onload = () => { 
-      updateVoiceUI(); 
-      loadVoices();
-    };
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    window.onload = () => { updateVoiceUI(); loadVoices(); };
   </script>
 </body>
 </html>
