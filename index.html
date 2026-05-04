@@ -19,6 +19,7 @@
     #voice-switch { transition: background-color 0.3s; }
     .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
     
+    /* OS Action Card */
     .action-card { 
       margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; 
       display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; 
@@ -33,6 +34,7 @@
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden">
+    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0 relative">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
@@ -45,6 +47,7 @@
       </nav>
     </aside>
 
+    <!-- Main Content -->
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
         <button>Login</button>
@@ -53,10 +56,13 @@
 
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center justify-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
+          
           <div id="hero-section" class="text-center py-10">
             <h1 class="text-6xl font-black mb-5 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
           </div>
+
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
+
           <div class="w-full bg-white pt-4 pb-8">
             <div class="flex justify-between items-center mb-3 px-2">
               <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
@@ -74,54 +80,72 @@
           </div>
         </div>
       </div>
-      <div id="calendar-view" class="view-container hidden flex-1 p-10"><h1>📅 Calendar</h1></div>
-      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>📱 App Factory</h1></div>
+
+      <!-- Secondary Views -->
+      <div id="calendar-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
+        <h1 class="text-4xl font-black mb-4">📅 Calendar</h1>
+        <p class="text-gray-400">Your OS schedule is synchronized.</p>
+      </div>
+      <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
+        <h1 class="text-4xl font-black mb-4">📱 App Factory</h1>
+        <p class="text-gray-400">Gemma logic enabled. Ready to code.</p>
+      </div>
     </main>
   </div>
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+    
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
     let chatMemory = []; 
     let selectedVoice = null;
+    let lastHumanResponse = "";
 
-    function linkify(text) {
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
-    }
+    // ─── 1. INSTANT HUMAN WHITELIST (Step 2 Logic) ───
+    const HUMAN_MAP = {
+      greetings: ["Hey! How can I help?", "Hi there. What's on your mind?", "Hello! Ready for some tasks?", "Hey. I'm here."],
+      status: ["I'm feeling electric! My systems are all green.", "Doing great—processing data at high speed. You?", "I'm good! My circuits are warm and ready."],
+      day: ["My day has been great—busy optimizing things for you! Yours?", "Busy day in the digital world, but I'm loving it. How was yours?", "Every day is a good day when I'm helpful!"],
+      thanks: ["You're very welcome!", "No problem at all.", "Happy to help.", "Anytime!"]
+    };
 
-    // ─── OS TASK ENGINE (WITH PLACEHOLDER SHIELD) ───
+    const WHITELIST = {
+      "hi": "greetings", "hey": "greetings", "hello": "greetings", "yo": "greetings", "sup": "greetings",
+      "how are you": "status", "hows it going": "status", "whats up": "status",
+      "how was your day": "day", "hows your day": "day", "how is your day": "day",
+      "thanks": "thanks", "thank you": "thanks", "appreciate it": "thanks"
+    };
+
+    // ─── 2. OS TASK ENGINE (Silent Execution + URL Integrity) ───
     function executeTask(command, value) {
-      console.log("OS Executing:", command, value);
-      
+      console.log("OS Execution:", command, value);
       if (command === 'OPEN_TAB') switchView(value.toLowerCase());
 
       if (command === 'OPEN_URL' || command === 'RESEARCH') {
         let finalTarget = value;
         
-        // PLACEHOLDER SHIELD: Detect broken ID guesses like [Movie ID] or brackets
-        const isBrokenLink = /\[|\]|%20ID|ID\]/i.test(value);
+        // PLACEHOLDER SHIELD: Detect broken links with brackets/IDs
+        const isBroken = /\[|\]|%20ID|ID\]/i.test(value);
         
-        if (isBrokenLink || command === 'RESEARCH') {
-          // Instead of opening a broken link, perform a clean search
-          const searchQuery = value.replace(/https?:\/\/(www\.)?|\.com|\.org|\/.*$/g, '').replace(/[\[\]]/g, '');
-          finalTarget = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+        if (isBroken || command === 'RESEARCH') {
+          // Force a clean Google search for the term instead of a dead link
+          const query = value.replace(/https?:\/\/(www\.)?|\.com|\.org|\/.*$/g, '').replace(/[\[\]]/g, '');
+          finalTarget = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
         } else if (!finalTarget.startsWith('http')) {
           finalTarget = `https://www.google.com/search?q=${encodeURIComponent(value)}`;
         }
-
         window.open(finalTarget, '_blank');
       }
 
       if (command === 'DOWNLOAD') {
         const blob = new Blob([chatMemory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')], {type: 'text/plain'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `doa_chat_${Date.now()}.txt`; a.click();
+        a.download = `doa_memory_${Date.now()}.txt`; a.click();
       }
     }
 
-    // ─── DOUGHA VOICE ENGINE ───
+    // ─── 3. DOUGHA VOICE ENGINE (Samantha Settings) ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
       const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
@@ -136,15 +160,37 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const speechText = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
-      const cleanText = String(speechText).replace(/\bDoa\b/gi, "Doaa").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "").replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
-      const u = new SpeechSynthesisUtterance(cleanText);
+      
+      // Filter URLS/Tags from speech
+      const speech = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
+      
+      // Doaa Pronunciation Override
+      const clean = String(speech).replace(/\bDoa\b/gi, "Doaa").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "").replace(/[\u{1F000}-\u{1FFFF}]/gu, "");
+      
+      const u = new SpeechSynthesisUtterance(clean);
       if (selectedVoice) u.voice = selectedVoice;
-      u.lang = "en-US"; u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
-      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
+      u.lang = "en-US";
+      u.pitch = 1.35; // Warm original feel
+      u.rate = 0.95;  // Natural pace
+      u.volume = 1.0;
+
+      // Heartbeat Fix
+      u.onstart = () => {
+        const interval = setInterval(() => {
+          if (!window.speechSynthesis.speaking) clearInterval(interval);
+          else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
+        }, 10000);
+      };
       window.speechSynthesis.speak(u);
     }
 
+    // ─── 4. UTILITY: Linkifier ───
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
+    }
+
+    // ─── 5. CHAT LOGIC ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -155,8 +201,30 @@
       document.getElementById('hero-section').classList.add('hidden');
       document.getElementById('chat-history').classList.remove('hidden');
       document.getElementById('chat-history').style.display = 'flex';
+      
       addMessage('user', rawText);
       input.value = '';
+
+      // STEP 1: Normalize (Lowercase, no punctuation, remove "doa")
+      const normalized = rawText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\bdoa\b/g, '').trim();
+
+      // STEP 2: Whitelist Check (Instant Emotional Layer)
+      if (WHITELIST[normalized]) {
+        const category = WHITELIST[normalized];
+        const variants = HUMAN_MAP[category];
+        let response = variants[Math.floor(Math.random() * variants.length)];
+        if (response === lastHumanResponse) response = variants[(variants.indexOf(response) + 1) % variants.length];
+        lastHumanResponse = response;
+
+        setTimeout(() => {
+          addMessage('doa', response);
+          speak(response);
+          chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: response });
+        }, 250);
+        return;
+      }
+
+      // STEP 3: Fallback to AI Brain
       isThinking = true;
       document.getElementById('status-text').innerText = "Doa is thinking...";
 
@@ -169,11 +237,15 @@
         const data = await res.json();
         let responseText = data.response;
 
+        // Detect Actions
         const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
         const matches = [...responseText.matchAll(actionRegex)];
         matches.forEach(match => executeTask(match[1], match[2]));
 
+        // Cleanup response
         let displayContent = responseText.replace(actionRegex, "").trim();
+        
+        // Backup Link Detector (if tags missed)
         if (matches.length === 0 && displayContent.includes('http')) {
            const rawUrl = displayContent.match(/(https?:\/\/[^\s]+)/)?.[0];
            if (rawUrl) matches.push([null, 'OPEN_URL', rawUrl, 'OPEN LINK']);
@@ -183,27 +255,56 @@
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         speak(displayContent);
 
-      } catch (error) { addMessage('doa', "System error."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
+      } catch (error) { 
+        addMessage('doa', "System error. OS connection lost."); 
+      } finally { 
+        isThinking = false; document.getElementById('status-text').innerText = ""; 
+      }
     }
 
     function addMessage(sender, text, actions = []) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-4`;
+      
       const content = sender === 'doa' ? linkify(text) : text;
-      let html = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">${content}</div>`;
+
+      let html = `<div class="max-w-[85%]">
+        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm">
+          ${content}
+        </div>`;
+
       if (actions.length > 0 && sender === 'doa') {
         actions.forEach(match => {
-          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')"><div class="action-icon text-white">⚡</div><div class="flex flex-col"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS System Task</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
+          html += `<div class="action-card" onclick="executeTask('${match[1]}', '${match[2]}')">
+            <div class="action-icon text-white">⚡</div>
+            <div class="flex flex-col">
+              <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS SYSTEM TASK</span>
+              <span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span>
+            </div>
+          </div>`;
         });
       }
-      html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
+      
+      html += `</div>`;
+      row.innerHTML = html;
+      history.appendChild(row);
+      history.scrollTop = history.scrollHeight;
     }
 
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
-    function switchView(v) { document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); const t = document.getElementById(v + '-view'); if(t) t.classList.remove('hidden'); }
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Live voice active."); }
-    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
+    function switchView(v) { 
+      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
+      const t = document.getElementById(v + '-view'); if(t) t.classList.remove('hidden'); 
+    }
+    function toggleVoice() { 
+      voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); 
+      updateVoiceUI(); if (voiceActive) speak("Live voice active. My name is Doa."); 
+    }
+    function updateVoiceUI() { 
+      const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); 
+      if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
+    }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     window.onload = () => { updateVoiceUI(); loadVoices(); };
   </script>
