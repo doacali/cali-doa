@@ -18,8 +18,22 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     #voice-switch { transition: background-color 0.3s; }
     .action-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-    .suggestion-chip { background: #00E676; color: black; padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; margin-top: 8px; cursor: pointer; display: inline-block; transition: 0.2s; }
-    .suggestion-chip:hover { transform: scale(1.05); background: #00c853; }
+    
+    /* Action Card Style */
+    .action-card { 
+      margin-top: 10px; 
+      padding: 10px 14px; 
+      background: #f9fafb; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 16px; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      cursor: pointer; 
+      transition: 0.2s;
+    }
+    .action-card:hover { background: #f3f4f6; border-color: #00E676; }
+    .action-icon { width: 24px; height: 24px; background: #00E676; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
   </style>
 </head>
 <body class="bg-white">
@@ -67,12 +81,12 @@
         </div>
       </div>
       <!-- Placeholder views -->
-      <div id="calendar-view" class="view-container hidden flex-1 p-10"><h1>Calendar View</h1></div>
-      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>App Factory View</h1></div>
+      <div id="calendar-view" class="view-container hidden flex-1 p-10"><h1>📅 Calendar View</h1></div>
+      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>📱 App Factory View</h1></div>
     </main>
   </div>
 
-<script>
+  <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let isThinking = false;
@@ -80,24 +94,20 @@
     let selectedVoice = null;
     let doaKnowledge = JSON.parse(localStorage.getItem('doa_knowledge')) || {};
 
-    // ─── TASK ENGINE (Automatic Execution) ───
-    function executeTask(command, value, silent = false) {
-      console.log("Auto-Executing:", command, value);
+    // ─── TASK EXECUTION ENGINE (SILENT AUTO-EXEC) ───
+    function executeTask(command, value) {
+      console.log("Auto-Executing Task:", command, value);
       
-      if (command === 'OPEN_TAB') {
-        switchView(value.toLowerCase());
-      }
+      if (command === 'OPEN_TAB') switchView(value.toLowerCase());
       
       if (command === 'RESEARCH' || command === 'OPEN_URL') {
         let url = value;
         if (!url.startsWith('http')) {
-            url = (url.toLowerCase() === 'google') ? 'https://google.com' : `https://www.google.com/search?q=${encodeURIComponent(value)}`;
+            url = (url.toLowerCase() === 'google') ? 'https://google.com' : `https://google.com/search?q=${encodeURIComponent(value)}`;
         }
-        // Browsers may block this unless it's the first time; 
-        // We trigger it but also provide the visual link in chat.
         window.open(url, '_blank');
       }
-
+      
       if (command === 'DOWNLOAD') {
         const blob = new Blob([chatMemory.map(m => `${m.role}: ${m.content}`).join('\n')], {type: 'text/plain'});
         const a = document.createElement('a');
@@ -129,9 +139,9 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      // Filter out URLs or tags from speech
-      const speechText = text.replace(/https?:\/\/\S+/g, "").replace(/\[.*?\]/g, "").trim();
-      const clean = speechText.replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "");
+      // SILENT SPEECH: Strip action tags and URLs from being spoken
+      const speechFiltered = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
+      const clean = speechFiltered.replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "");
       
       const u = new SpeechSynthesisUtterance(clean);
       u.voice = selectedVoice;
@@ -165,27 +175,35 @@
           body: JSON.stringify({ 
             text: text, 
             systemInstruction: `Your name is Doa. You are an AI OS.
-            When the user asks to open a tab, site, or perform a task, include an action tag.
-            Format: [ACTION: COMMAND:VALUE|Label]
+            When you perform a task, include this tag: [ACTION: COMMAND:VALUE|Label]
             Example: "Opening Google... [ACTION: RESEARCH:google|Google]"
             Commands: OPEN_TAB (chat, calendar, apps), RESEARCH (url/query), DOWNLOAD.
-            The OS will execute these automatically. Do NOT read the tags or URLs aloud.
-            Keep responses very short. Trigger history: ${JSON.stringify(doaKnowledge)}`,
+            You will execute these automatically. Do NOT read tags or URLs out loud.
+            If the user teaches you something (e.g. "When I say X, do Y"), confirm it.
+            Triggers learned: ${JSON.stringify(doaKnowledge)}`,
             history: chatMemory.slice(-6) 
           }) 
         });
         const data = await res.json();
         let responseText = data.response;
 
-        // Auto-Execute Actions
+        // LEARNING TRIGGER DETECTION
+        if (text.toLowerCase().includes("when i say") && text.toLowerCase().includes("do")) {
+           const trigger = text.match(/say ['"](.*?)['"]/i)?.[1];
+           const action = text.match(/do ['"](.*?)['"]/i)?.[1];
+           if(trigger && action) {
+             doaKnowledge[trigger.toLowerCase()] = action;
+             localStorage.setItem('doa_knowledge', JSON.stringify(doaKnowledge));
+             responseText = `I've learned to ${action} for you. ` + responseText;
+           }
+        }
+
+        // SILENT AUTO-EXECUTE ACTIONS
         const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
         const matches = [...responseText.matchAll(actionRegex)];
-        
-        matches.forEach(match => {
-           executeTask(match[1], match[2]);
-        });
+        matches.forEach(match => executeTask(match[1], match[2]));
 
-        // Remove tags from speech/display
+        // Cleanup response for UI and Voice
         let displayContent = responseText.replace(actionRegex, "").trim();
         
         addMessage('doa', displayContent, matches);
@@ -194,7 +212,7 @@
         speak(displayContent);
 
       } catch (error) { 
-        addMessage('doa', "System link error."); 
+        addMessage('doa', "System error."); 
       } finally { 
         isThinking = false; document.getElementById('status-text').innerText = ""; 
       }
@@ -210,14 +228,18 @@
           ${text}
         </div>`;
 
-      // Display links/actions visually on screen
+      // VISUAL ACTION CARDS (Silent Links)
       if (actions.length > 0 && sender === 'doa') {
         actions.forEach(match => {
           const label = match[3];
           const command = match[1];
           const value = match[2];
-          html += `<div class="mt-2 flex items-center gap-2 p-2 bg-[#00E676]/10 border border-[#00E676]/20 rounded-xl text-[10px] font-bold text-[#00c853] cursor-pointer" onclick="executeTask('${command}', '${value}')">
-            <span class="opacity-50">LINKED:</span> ${label.toUpperCase()}
+          html += `<div class="action-card" onclick="executeTask('${command}', '${value}')">
+            <div class="action-icon text-white">⚡</div>
+            <div class="flex flex-col">
+              <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Linked Action</span>
+              <span class="text-[11px] font-bold text-gray-800">${label.toUpperCase()}</span>
+            </div>
           </div>`;
         });
       }
