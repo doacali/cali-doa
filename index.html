@@ -255,14 +255,49 @@
         });
     }
 
+    function simulateDoaTyping(text, inputElement) {
+        let i = 0;
+        let currentText = "";
+
+        clearInterval(typingInterval); // Clear any existing interval
+
+        typingInterval = setInterval(() => {
+            if (i < text.length) {
+                currentText += text.charAt(i);
+                inputElement.value = currentText; // Update the input field
+                i++;
+            } else {
+                clearInterval(typingInterval); // Stop when the typing is done
+            }
+        }, 50 + Math.random() * 50); // Adjust typing speed (milliseconds)
+    }
+
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
-        if (!input.value) return;
-        events.push({ title: input.value, date: selectedDate.toISOString() });
-        localStorage.setItem('doa_events', JSON.stringify(events));
-        input.value = '';
-        renderCalendar();
+        const inputText = input.value.trim(); // Get the user input
+        if (!inputText) return; // Prevent saving if input is empty
+
+        // Start Doa typing animation in the input field
+        simulateDoaTyping(inputText, input);
+
+        // Save the event after a short delay (to let typing finish)
+        setTimeout(() => {
+            saveEvent(inputText);
+            input.value = '';  // Clear the input after saving
+        }, 800 + (inputText.length * 50) ); // Add a delay based on text length
     }
+
+
+   // Function to handle saving the event 
+   function saveEvent(text) {
+        // Save event logic
+        if (!text) return; // Ensure there's text to save
+        const selectedDateISO = selectedDate.toISOString(); // Get selected date
+
+        events.push({ title: text, date: selectedDateISO });
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        renderCalendar();
+   }
 
     function deleteEvent(dateStr, title) {
         events = events.filter(e => !(e.date === dateStr && e.title === title));
