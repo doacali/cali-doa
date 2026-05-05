@@ -346,7 +346,7 @@
             events.push({ title: title, date: date.toISOString() });
             localStorage.setItem('doa_events', JSON.stringify(events));
             renderCalendar();
-            addMessage('doa', `OK. I've added "${title}" to your calendar for ${date.toDateString()}.`);
+            speak(`OK. I've added "${title}" to your calendar for ${date.toDateString()}.`); // <--- ADDED THIS LINE
             return; // Stop further processing for this message
         }
       // ---  DEFAULT CHAT LOGIC ---
