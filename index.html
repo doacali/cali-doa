@@ -8,76 +8,57 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .os-scrollbar::-webkit-scrollbar { width: 6px; }
+    .os-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
     
-    /* Layout */
     #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; }
     #main-sidebar.closed { transform: translateX(-100%); }
     main { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-left: 260px; }
     #main-sidebar.closed ~ main { margin-left: 0; }
 
-    .sidebar-item { transition: all 0.2s; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; font-weight: 700; color: #9ca3af; font-size: 13px; }
-    .sidebar-active { background: #111111 !important; color: white !important; }
-    
-    /* Calendar Grid */
-    .win-calendar-card { width: 380px; background: #ffffff; padding: 32px; }
-    .cal-day { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600; color: #374151; position: relative; }
+    .win-calendar-card { width: 100%; max-width: 400px; background: #ffffff; padding: 32px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .cal-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 13px; font-weight: 600; position: relative; }
     .cal-day:hover { background: #f3f4f6; }
     .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; }
     .cal-day.selected { border: 2px solid #00E676; }
-    
-    /* Panels */
     .os-panel { width: 340px; height: 100%; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; flex-shrink: 0; }
   </style>
 </head>
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden relative">
-    
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
-      <div class="p-6 flex items-center justify-between">
-        <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase">DOA CALI</h1>
-        <button onclick="toggleSidebar()" class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">Hide</button>
-      </div>
+      <div class="p-6 flex items-center justify-between"><h1 class="text-xl font-black text-[#00E676] italic uppercase">DOA CALI</h1></div>
       <nav class="flex-1 px-4 space-y-1">
-        <button onclick="startNewChat()" class="sidebar-item mb-4 text-black border border-gray-100">+ New Chat</button>
-        <button onclick="switchView('chat')" id="btn-chat" class="sidebar-item">💬 Chat</button>
-        <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
+        <button onclick="startNewChat()" class="sidebar-item p-3 font-bold text-black border border-gray-100 rounded-xl mb-4">+ New Chat</button>
+        <button onclick="switchView('chat')" class="sidebar-item p-3 font-bold text-gray-400">💬 Chat</button>
+        <button onclick="switchView('calendar')" class="sidebar-item p-3 font-bold text-gray-400">📅 Calendar</button>
       </nav>
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden">
       <!-- CALENDAR VIEW -->
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-row h-full overflow-hidden">
-        
-        <!-- Left Panel: Upcoming -->
         <div class="os-panel border-r border-gray-100">
-            <h2 class="text-2xl font-black uppercase tracking-tighter mb-1" id="month-name-label">Month</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase mb-8">Highlights</p>
-            <div id="month-summary-list" class="flex-1 overflow-y-auto space-y-4"></div>
+            <h2 class="text-xl font-black uppercase mb-1">Highlights</h2>
+            <div id="month-summary-list" class="flex-1 overflow-y-auto os-scrollbar space-y-4"></div>
         </div>
-
-        <!-- Center: Grid -->
-        <div class="flex-1 flex items-center justify-center">
+        <div class="flex-1 flex items-center justify-center bg-gray-50/10">
             <div class="win-calendar-card">
                 <div class="flex justify-between items-center mb-8">
-                    <h1 class="text-xl font-black uppercase tracking-tighter" id="cal-main-title">May 2026</h1>
-                    <div class="flex gap-4">
-                        <button onclick="changeMonth(-1)" class="font-bold">↑</button>
-                        <button onclick="changeMonth(1)" class="font-bold">↓</button>
-                    </div>
+                    <h1 class="text-xl font-black uppercase" id="cal-main-title">May 2026</h1>
+                    <div class="flex gap-4"><button onclick="changeMonth(-1)">↑</button><button onclick="changeMonth(1)">↓</button></div>
                 </div>
                 <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black text-gray-400 uppercase mb-4">
                     <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
                 </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+                <div id="calendar-grid" class="cal-grid"></div>
             </div>
         </div>
-
-        <!-- Right Panel: Schedule -->
         <div class="os-panel border-l border-gray-100">
-            <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-1">Today</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase mb-8">OS Schedule</p>
-            <div id="day-events-list" class="flex-1 overflow-y-auto space-y-4"></div>
+            <h2 id="selected-date-header" class="text-xl font-black uppercase mb-6">Today</h2>
+            <div id="day-events-list" class="flex-1 overflow-y-auto os-scrollbar space-y-4"></div>
             <div class="pt-6 border-t border-gray-50">
                 <input id="quick-add-input" type="text" placeholder="Add event..." class="w-full text-sm p-4 bg-gray-50 rounded-2xl mb-2">
                 <button onclick="quickAddEvent()" class="w-full text-[11px] font-black uppercase bg-[#00E676] py-4 rounded-2xl">Save Event</button>
@@ -85,22 +66,58 @@
         </div>
       </div>
       
-      <!-- Placeholder Chat/Apps Views -->
-      <div id="chat-view" class="view-container flex-1 flex flex-col items-center justify-center p-10">
-        <h1 class="text-6xl font-black">How can Doa help you?</h1>
-        <div id="chat-history" class="w-full max-w-2xl overflow-y-auto"></div>
-      </div>
-      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>Apps</h1></div>
+      <div id="chat-view" class="view-container flex-1 flex flex-col items-center justify-center p-10"><div id="chat-history" class="w-full max-w-2xl overflow-y-auto"></div></div>
     </main>
   </div>
 
   <script>
-    // ... (Your existing JavaScript logic for renderCalendar, handleMessage, etc.)
-    // Note: ensure renderCalendar() and updateLeftPanel() / updateRightPanel() are called inside window.onload
-    window.onload = () => { 
-        renderCalendar();
-        switchView(localStorage.getItem('doa_active_view') || 'chat');
-    };
+    let events = JSON.parse(localStorage.getItem('doa_events')) || [];
+    let viewDate = new Date(), selectedDate = new Date();
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const title = document.getElementById('cal-main-title');
+      grid.innerHTML = '';
+      const m = viewDate.getMonth(), y = viewDate.getFullYear();
+      title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+      const firstDay = (new Date(y, m, 1).getDay() + 6) % 7; 
+      const totalDays = new Date(y, m + 1, 0).getDate();
+      for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+      for (let d = 1; d <= totalDays; d++) {
+        const date = new Date(y, m, d);
+        const el = document.createElement('div');
+        el.className = 'cal-day'; el.innerText = d;
+        if (date.toDateString() === new Date().toDateString()) el.classList.add('today');
+        el.onclick = () => { selectedDate = date; renderCalendar(); updateRightPanel(date); };
+        grid.appendChild(el);
+      }
+      updateRightPanel(selectedDate);
+    }
+
+    function updateRightPanel(date) {
+        const list = document.getElementById('day-events-list');
+        list.innerHTML = '';
+        events.filter(e => new Date(e.date).toDateString() === date.toDateString()).forEach(e => {
+            list.innerHTML += `<div class="p-3 bg-gray-50 rounded-lg text-xs font-bold">${e.title}</div>`;
+        });
+    }
+
+    function quickAddEvent() {
+      const input = document.getElementById('quick-add-input');
+      if (!input.value) return;
+      events.push({ title: input.value, date: selectedDate.toISOString() });
+      localStorage.setItem('doa_events', JSON.stringify(events));
+      input.value = '';
+      renderCalendar();
+    }
+
+    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('closed'); }
+    function switchView(v) { 
+        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden')); 
+        document.getElementById(v + '-view').classList.remove('hidden'); 
+        if(v === 'calendar') renderCalendar();
+    }
+    window.onload = () => { renderCalendar(); switchView('chat'); };
   </script>
 </body>
 </html>
