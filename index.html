@@ -42,13 +42,14 @@
     .cal-day.past-date { opacity: 0.3; color: #9ca3af; }
     .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; opacity: 1 !important; }
     .cal-day.selected { border: 2px solid #00E676; }
-    .cal-day.has-event::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: #00E676; border-radius: 50%; }
+    
+    /* Speaker Icon on Date */
+    .day-speak { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: #00E676; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; color: black; opacity: 0.8; }
+    .day-speak:hover { transform: scale(1.2); opacity: 1; }
 
     /* Split Pane Layout */
     .left-os-panel { width: 340px; border-right: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
     .right-os-panel { width: 360px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
-
-    #chat-shell { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
 </head>
 <body class="bg-white">
@@ -67,7 +68,7 @@
         <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
         <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
-      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.5</span></div>
+      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.6</span></div>
     </aside>
 
     <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
@@ -196,7 +197,20 @@
         if (date < today) el.classList.add('past-date');
         if (date.getTime() === today.getTime()) el.classList.add('today');
         if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
-        if (events.some(e => new Date(e.date).toDateString() === date.toDateString())) el.classList.add('has-event');
+        
+        // ─── INFO SPEAKER ICON ───
+        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
+        if (dayEvents.length > 0) {
+            const speaker = document.createElement('div');
+            speaker.className = 'day-speak';
+            speaker.innerHTML = '🔊';
+            speaker.onclick = (e) => {
+                e.stopPropagation();
+                const text = `On ${date.toLocaleString('default', {month:'long', day:'numeric'})}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
+                speak(text);
+            };
+            el.appendChild(speaker);
+        }
 
         el.onclick = () => { selectedDate = date; renderCalendar(); };
         grid.appendChild(el);
@@ -209,32 +223,20 @@
         const list = document.getElementById('month-summary-list');
         list.innerHTML = '';
         const today = new Date(); today.setHours(0,0,0,0);
-        
-        // Filter for events in the current viewing month that haven't happened yet
         const monthUpcoming = events.filter(e => {
             const d = new Date(e.date);
             return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear() && d >= today;
         }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
-        if (monthUpcoming.length === 0) {
-            list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
-        } else {
-            monthUpcoming.forEach(e => {
-                const d = new Date(e.date);
-                const div = document.createElement('div');
-                div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
-                div.onclick = () => { selectedDate = d; renderCalendar(); };
-                div.innerHTML = `
-                    <div class="flex flex-col items-center min-w-[35px]">
-                        <span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${d.toLocaleString('default',{month:'short'})}</span>
-                        <span class="text-sm font-black text-gray-800">${d.getDate()}</span>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p>
-                    </div>`;
-                list.appendChild(div);
-            });
-        }
+        if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
+        else monthUpcoming.forEach(e => {
+            const d = new Date(e.date);
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
+            div.onclick = () => { selectedDate = d; renderCalendar(); };
+            div.innerHTML = `<div class="flex flex-col items-center min-w-[35px]"><span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${d.toLocaleString('default',{month:'short'})}</span><span class="text-sm font-black text-gray-800">${d.getDate()}</span></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p></div>`;
+            list.appendChild(div);
+        });
     }
 
     function updateRightPanel(date) {
@@ -247,8 +249,8 @@
         if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
         else dayEvents.forEach(e => {
             const div = document.createElement('div');
-            div.className = "flex items-start gap-4 animate-fadeIn";
-            div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p></div><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400">✕</button>`;
+            div.className = "flex items-start gap-4 animate-fadeIn group";
+            div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1 flex items-center justify-between"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p><div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="speak('${e.title}')" class="text-[#00E676] text-xs">🔊</button><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400">✕</button></div></div>`;
             list.appendChild(div);
         });
     }
@@ -295,11 +297,8 @@
       if(target) target.classList.remove('hidden');
       const btn = document.getElementById('btn-' + viewName);
       if(btn) btn.classList.add('sidebar-active');
-
       const sidebar = document.getElementById('main-sidebar');
-      // 🚨 AUTO-CLOSE LOGIC
       if (!sidebar.classList.contains('closed')) toggleSidebar();
-      
       if (viewName === 'chat') setChatMode(chatMemory.length > 0);
       if (viewName === 'calendar') renderCalendar();
     }
