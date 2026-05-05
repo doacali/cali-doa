@@ -9,28 +9,20 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
-    
-    /* Sidebar Physics */
     #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; transform: translateX(0); }
     #main-sidebar.closed { transform: translateX(-100%); }
-    
     .sidebar-item { transition: all 0.2s; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; font-weight: 700; color: #9ca3af; font-size: 13px; }
     .sidebar-active { background: #111111 !important; color: white !important; }
-    
     #chat-history { display: flex; flex-direction: column; overflow-y: auto; scroll-behavior: smooth; width: 100%; max-width: 42rem; margin: 0 auto; padding-bottom: 20px; }
     .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    
     .bubble-action-btn { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; transition: 0.2s; }
     .bubble-action-btn:hover { color: #111827; }
     .bubble-action-btn.red:hover { color: #ef4444; }
-
     #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
     #menu-btn.show { opacity: 1; pointer-events: auto; }
-
     #chat-shell { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     .chat-link { color: #00E676; text-decoration: underline; font-weight: 600; }
-
     .action-card { margin-top: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
     .action-card:hover { background: #f3f4f6; border-color: #00E676; }
   </style>
@@ -38,14 +30,11 @@
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden relative">
-    
-    <!-- Floating Menu Button -->
     <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
         <span class="text-[#00E676] font-black italic tracking-tighter text-sm uppercase">Doa</span>
         <div class="flex flex-col gap-[3px]"><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div></div>
     </button>
 
-    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
@@ -57,9 +46,7 @@
         <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
         <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
-      <div class="p-6 text-center border-t border-gray-50">
-        <span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v2.5</span>
-      </div>
+      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v2.5</span></div>
     </aside>
 
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
@@ -70,14 +57,11 @@
 
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
-          
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
-
           <div id="center-group" class="flex flex-col w-full">
             <div id="hero-section" class="text-center py-6">
                 <h1 class="text-6xl font-black mb-10 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
             </div>
-
             <div id="input-area" class="w-full bg-white pb-10">
                 <div class="flex justify-between items-center mb-3 px-4">
                   <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
@@ -88,22 +72,16 @@
                     </div>
                   </div>
                 </div>
-                <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[32px] p-3 flex items-center mx-2">
+                <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[32px] p-3 flex items-center mx-2">
                   <textarea id="user-input" rows="1" class="flex-1 px-5 outline-none text-sm resize-none hide-scrollbar py-2" placeholder="Ask Doa anything..."></textarea>
                   <button onclick="handleMessage()" class="bg-black text-white w-12 h-12 rounded-full font-bold ml-2 hover:bg-gray-800 transition-all flex items-center justify-center">→</button>
                 </div>
             </div>
           </div>
-
         </div>
       </div>
-
-      <div id="calendar-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
-        <h1 class="text-4xl font-black mb-4">📅 Calendar</h1>
-      </div>
-      <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
-        <h1 class="text-4xl font-black mb-4">📱 App Factory</h1>
-      </div>
+      <div id="calendar-view" class="view-container hidden flex-1 p-10 overflow-y-auto"><h1 class="text-4xl font-black mb-4">📅 Calendar</h1></div>
+      <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto"><h1 class="text-4xl font-black mb-4">📱 App Factory</h1></div>
     </main>
   </div>
 
@@ -114,72 +92,33 @@
     let isThinking = false;
     let selectedVoice = null;
 
-    // ─── 1. DOUGHA VOICE ENGINE ───
+    // ─── DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
-      selectedVoice = pickFemaleVoice(voices);
+      const names = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
+      for (const n of names) { const m = voices.find(v => v.name.includes(n)); if (m) { selectedVoice = m; break; } }
     }
-
-    function pickFemaleVoice(voiceList) {
-      const femaleNames = ["Samantha", "Karen", "Moira", "Tessa", "Veena", "Fiona", "Victoria", "Allison", "Ava", "Susan", "Zoe", "Microsoft Zira", "Microsoft Aria", "Microsoft Jenny", "Google US English Female"];
-      for (const name of femaleNames) {
-        const match = voiceList.find(v => v.name.includes(name));
-        if (match) return match;
-      }
-      const femaleKeywords = ["female", "woman", "girl", "aria", "zira", "jenny", "ava"];
-      const keywordMatch = voiceList.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
-      if (keywordMatch) return keywordMatch;
-      return voiceList.find(v => v.lang.startsWith("en")) || voiceList[0] || null;
-    }
-
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
-
-    function detectLang(text) {
-      if (/[\u3040-\u30ff\u3400-\u9fbf]/.test(text)) return "ja-JP";
-      if (/[\u0400-\u04FF]/.test(text)) return "uk-UA";
-      if (/[ñáéíóú¿¡]/i.test(text)) return "es-ES";
-      return "en-US";
-    }
 
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-
-      const cleanText = String(text)
-        .replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "")
-        .replace(/\bDowa\b/gi, "Doaa").replace(/\bDoa\b/gi, "Doaa")
-        .replace(/([a-zA-Z])\1{2,}/g, "$1")
-        .replace(/[*#`_~]/g, "")
-        .replace(/[\u{1F000}-\u{1FFFF}]/gu, "");
-
-      const lang = detectLang(cleanText);
-      const u = new SpeechSynthesisUtterance(cleanText);
-      
-      if (lang === "en-US") {
-        if (selectedVoice) u.voice = selectedVoice;
-        u.lang = "en-US";
-        u.pitch = 1.35; 
-        u.rate = 0.95; 
-      } else {
-        const voices = window.speechSynthesis.getVoices();
-        const nativeVoice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-        if (nativeVoice) u.voice = nativeVoice;
-        u.lang = lang;
-        u.pitch = 1.0; u.rate = 1.0;
-      }
-
-      u.volume = 1.0;
+      const speech = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").trim();
+      const clean = String(speech).replace(/\bDoa\b/gi, "Doaa").replace(/([a-zA-Z])\1{2,}/g, "$1").replace(/[*#`_~]/g, "").replace(/[\u{1F000}-\u{1FFFF}]/gu, "");
+      const u = new SpeechSynthesisUtterance(clean);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.lang = "en-US"; u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
       u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
     }
 
-    // ─── 2. OS UTILITIES ───
-    function copyText(text, btn) {
-      navigator.clipboard.writeText(text);
-      const old = btn.innerText;
-      btn.innerText = "COPIED!";
-      setTimeout(() => btn.innerText = old, 2000);
+    function toggleSidebar() {
+      const sb = document.getElementById('main-sidebar');
+      const mb = document.getElementById('menu-btn');
+      sb.classList.toggle('closed');
+      if (sb.classList.contains('closed')) mb.classList.add('show');
+      else mb.classList.remove('show');
     }
 
     function switchView(viewName) {
@@ -213,12 +152,12 @@
         shell.classList.remove('justify-end');
         shell.classList.add('justify-center');
         centerGroup.classList.add('flex-col');
-        shell.style.paddingBottom = '15vh'; 
+        shell.style.paddingBottom = '15vh';
       }
     }
 
     function startNewChat() {
-      window.speechSynthesis.cancel(); // 🚨 VOICE STOP ON NEW CHAT
+      window.speechSynthesis.cancel();
       chatMemory = [];
       localStorage.removeItem('doa_chat_cache');
       document.getElementById('chat-history').innerHTML = '';
@@ -226,51 +165,17 @@
       switchView('chat');
     }
 
-    function toggleSidebar() {
-      const sb = document.getElementById('main-sidebar');
-      const mb = document.getElementById('menu-btn');
-      sb.classList.toggle('closed');
-      if (sb.classList.contains('closed')) mb.classList.add('show');
-      else mb.classList.remove('show');
-    }
-
-    function toggleVoice() {
-      voiceActive = !voiceActive;
-      localStorage.setItem('voice_active', JSON.stringify(voiceActive));
-      updateVoiceUI();
-      if (voiceActive) speak("Live voice active. My name is Doaa.");
-      else window.speechSynthesis.cancel();
-    }
-
-    function updateVoiceUI() { 
-        const knob = document.getElementById('voice-knob'); 
-        const bg = document.getElementById('voice-switch'); 
-        if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
-    }
-
-    function executeTask(command, value) {
-      if (command === 'OPEN_TAB') switchView(value.toLowerCase());
-      if (command === 'RESEARCH' || command === 'OPEN_URL') {
-        let url = value;
-        if (!url.startsWith('http')) url = `https://www.google.com/search?q=${encodeURIComponent(value)}`;
-        window.open(url, '_blank');
-      }
-    }
-
-    // ─── 3. CHAT LOGIC ───
     async function handleMessage() {
-      window.speechSynthesis.cancel(); // 🚨 VOICE STOP ON NEW ENTRY
+      window.speechSynthesis.cancel();
       if (isThinking) return;
       const input = document.getElementById('user-input');
       const rawText = input.value.trim();
       if (!rawText) return;
-
       setChatMode(true); 
       addMessage('user', rawText);
       input.value = '';
       isThinking = true;
       document.getElementById('status-text').innerText = "Doa is thinking...";
-
       try {
         const res = await fetch(CLOUDFLARE_URL, { 
           method: 'POST', 
@@ -279,67 +184,29 @@
         });
         const data = await res.json();
         let responseText = data.response;
-
-        const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
-        const matches = [...responseText.matchAll(actionRegex)];
-        matches.forEach(match => executeTask(match[1], match[2]));
-
-        let displayContent = responseText.replace(actionRegex, "").trim();
-        addMessage('doa', displayContent, matches);
-        
+        let displayContent = responseText.replace(/\[ACTION:.*?\]/g, "").trim();
+        addMessage('doa', displayContent);
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
         speak(displayContent);
-
-      } catch (error) { addMessage('doa', "OS Link Disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
+      } catch (error) { addMessage('doa', "OS Link Error."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
-    function addMessage(sender, text, actions = []) {
+    function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const content = sender === 'doa' ? text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`) : text;
-
-      let html = `<div class="max-w-[85%] group">
-        <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${content}</div>`;
-
+      let html = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>`;
       if (sender === 'doa') {
-        html += `<div class="flex gap-4 mt-2 px-1">
-          <button class="bubble-action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button>
-          <button class="bubble-action-btn" onclick="copyText('${text.replace(/'/g, "\\'")}', this)">📋 Copy</button>
-          <button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
-        </div>`;
-      }
-
-      if (actions.length > 0 && sender === 'doa') {
-        actions.forEach(match => {
-          html += `<div class="action-card" onclick="window.open('${match[2]}', '_blank')"><div class="w-6 h-6 bg-[#00E676] rounded-lg text-white flex items-center justify-center text-[10px]">⚡</div><div class="flex flex-col ml-2"><span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">OS Task</span><span class="text-[11px] font-bold text-gray-800">${match[3].toUpperCase()}</span></div></div>`;
-        });
+        html += `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')">📋 Copy</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>`;
       }
       html += `</div>`; row.innerHTML = html; history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'); const bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
-    
-    window.onload = () => { 
-      updateVoiceUI(); 
-      loadVoices();
-      const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      if (chatMemory.length > 0) {
-        chatMemory.forEach(msg => {
-           const actionRegex = /\[ACTION:.*?\]/g;
-           if(msg.role === 'user') addMessage('user', msg.content);
-           else addMessage('doa', msg.content.replace(actionRegex, "").trim());
-        });
-        if (lastView === 'chat') setChatMode(true);
-      } else {
-        setChatMode(false);
-      }
-      switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed');
-    };
+    window.onload = () => { updateVoiceUI(); loadVoices(); switchView(localStorage.getItem('doa_active_view') || 'chat'); };
   </script>
 </body>
 </html>
