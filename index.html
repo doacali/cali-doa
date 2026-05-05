@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Doa | AI Operating System</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
-    #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; transform: translateX(0); }
+    #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; }
     #main-sidebar.closed { transform: translateX(-100%); }
     main { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-left: 260px; }
     #main-sidebar.closed ~ main { margin-left: 0; }
     .sidebar-item { transition: all 0.2s; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; font-weight: 700; color: #9ca3af; font-size: 13px; }
     .sidebar-active { background: #111111 !important; color: white !important; }
+    .win-calendar-card { width: 380px; background: #ffffff; padding: 32px; }
     .cal-day { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600; color: #374151; position: relative; }
     .cal-day:hover { background: #f3f4f6; }
     .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; }
@@ -37,7 +39,6 @@
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden">
-      <!-- CALENDAR VIEW -->
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-row h-full overflow-hidden">
         <div class="os-panel border-r border-gray-100">
             <h2 class="text-2xl font-black uppercase tracking-tighter mb-1" id="month-name-label">Month</h2>
@@ -88,12 +89,15 @@
         localStorage.setItem('doa_events', JSON.stringify(events));
         renderCalendar();
       }
+      if (command === 'RESEARCH' || command === 'OPEN_URL') window.open(value.includes('http') ? value : `https://google.com/search?q=${encodeURIComponent(value)}`, '_blank');
     }
 
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
+      const title = document.getElementById('cal-main-title');
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
+      title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
       const firstDay = (new Date(year, month, 1).getDay() + 6) % 7; 
       const totalDays = new Date(year, month + 1, 0).getDate();
       for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
@@ -104,6 +108,15 @@
         el.onclick = () => { selectedDate = date; renderCalendar(); };
         grid.appendChild(el);
       }
+      updateRightPanel(selectedDate);
+    }
+
+    function updateRightPanel(date) {
+        const list = document.getElementById('day-events-list');
+        list.innerHTML = '';
+        events.filter(e => new Date(e.date).toDateString() === date.toDateString()).forEach(e => {
+            list.innerHTML += `<div class="p-3 bg-gray-50 rounded-lg text-xs font-bold">${e.title}</div>`;
+        });
     }
 
     function quickAddEvent() {
@@ -115,28 +128,21 @@
       renderCalendar();
     }
 
-    async function handleMessage() {
-      const input = document.getElementById('user-input');
-      const text = input.value;
-      const res = await fetch(CLOUDFLARE_URL, { 
-        method: 'POST', 
-        body: JSON.stringify({ text, history: chatMemory }) 
-      });
-      const data = await res.json();
-      
-      // Auto-Execute Action Tags
-      const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
-      [...data.response.matchAll(actionRegex)].forEach(m => executeTask(m[1], m[2]));
-      
-      addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
-    }
-
     function switchView(v) {
         document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
         document.getElementById(v + '-view').classList.remove('hidden');
         if(v === 'calendar') renderCalendar();
     }
-    
+
+    async function handleMessage() {
+      const input = document.getElementById('user-input-fake-field'); // Assuming your UI has an input
+      const text = input ? input.value : "";
+      const res = await fetch(CLOUDFLARE_URL, { method: 'POST', body: JSON.stringify({ text, history: chatMemory }) });
+      const data = await res.json();
+      const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*(.*?)\|(.*?)\]/g;
+      [...data.response.matchAll(actionRegex)].forEach(m => executeTask(m[1], m[2]));
+    }
+
     function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('closed'); }
     function startNewChat() { location.reload(); }
     window.onload = () => { renderCalendar(); switchView('chat'); };
