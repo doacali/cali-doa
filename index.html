@@ -158,6 +158,17 @@
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
 
+    // --- NEW: Date Parsing Function ---
+    function parseNaturalDate(text) {
+        const lower = text.toLowerCase();
+        let today = new Date();
+        let target = new Date();
+        if (lower.includes('today')) return today;
+        if (lower.includes('tomorrow')) target.setDate(today.getDate() + 1);
+        else if (lower.includes('next week')) target.setDate(today.getDate() + 7);
+        return target;
+    }
+
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
       const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
@@ -325,6 +336,17 @@
       if (!rawText) return;
       setChatMode(true); addMessage('user', rawText); input.value = '';
       isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
+      // ---  EVENT CREATION INTERCEPTION ---
+      if (rawText.toLowerCase().includes('add') || rawText.toLowerCase().includes('remind') || rawText.toLowerCase().includes('schedule')) {
+            const date = parseNaturalDate(rawText);
+            const title = rawText.replace(/(add|remind|me|to|schedule|on|for|today|tomorrow|next week)/gi, '').trim() || "New Event";
+            events.push({ title: title, date: date.toISOString() });
+            localStorage.setItem('doa_events', JSON.stringify(events));
+            renderCalendar();
+            addMessage('doa', `OK. I've added "${title}" to your calendar for ${date.toDateString()}.`);
+            return; // Stop further processing for this message
+      }
+      // ---  DEFAULT CHAT LOGIC ---
       try {
         const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
         const data = await res.json();
