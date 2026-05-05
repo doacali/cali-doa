@@ -60,18 +60,18 @@
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
-        <button onclick="toggleSidebar()" class="text-gray-300 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
+        <button id="hide-sidebar-btn" class="text-gray-300 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
       </div>
       <nav class="flex-1 px-4 space-y-1">
-        <button onclick="startNewChat()" class="sidebar-item hover:bg-gray-50 mb-4 text-black border border-gray-100 transition-all active:scale-95">+ New Chat</button>
-        <button onclick="switchView('chat')" id="btn-chat" class="sidebar-item">💬 Chat With Doa</button>
-        <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
-        <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
+        <button id="new-chat-btn" class="sidebar-item hover:bg-gray-50 mb-4 text-black border border-gray-100 transition-all active:scale-95">+ New Chat</button>
+        <button id="chat-btn" class="sidebar-item">💬 Chat With Doa</button>
+        <button id="calendar-btn" class="sidebar-item">📅 Calendar</button>
+        <button id="apps-btn" class="sidebar-item">📱 App Factory</button>
       </nav>
       <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.6</span></div>
     </aside>
 
-    <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
+    <button id="menu-btn" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
         <span class="text-[#00E676] font-black italic tracking-tighter text-sm uppercase">Doa</span>
         <div class="flex flex-col gap-[3px]"><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div></div>
     </button>
@@ -95,12 +95,12 @@
                   <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
                   <div class="flex items-center gap-3">
                     <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Voice</span>
-                    <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
+                    <div id="voice-switch" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
                   </div>
                 </div>
                 <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[32px] p-3 flex items-center mx-2">
                   <textarea id="user-input" rows="1" class="flex-1 px-5 outline-none text-sm resize-none hide-scrollbar py-2" placeholder="Ask Doa anything..."></textarea>
-                  <button onclick="handleMessage()" class="bg-black text-white w-12 h-12 rounded-full font-bold ml-2 hover:bg-gray-800 transition-all flex items-center justify-center">→</button>
+                  <button id="send-btn" class="bg-black text-white w-12 h-12 rounded-full font-bold ml-2 hover:bg-gray-800 transition-all flex items-center justify-center">→</button>
                 </div>
             </div>
           </div>
@@ -123,8 +123,8 @@
                 <div class="flex justify-between items-center mb-8">
                     <h1 class="text-xl font-black uppercase tracking-tighter" id="cal-main-title">May 2026</h1>
                     <div class="flex gap-4">
-                        <button onclick="changeMonth(-1)" class="text-gray-300 hover:text-[#00E676] font-bold">↑</button>
-                        <button onclick="changeMonth(1)" class="text-gray-300 hover:text-[#00E676] font-bold">↓</button>
+                        <button id="prev-month-btn" class="text-gray-300 hover:text-[#00E676] font-bold">↑</button>
+                        <button id="next-month-btn" class="text-gray-300 hover:text-[#00E676] font-bold">↓</button>
                     </div>
                 </div>
                 <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black text-gray-300 uppercase mb-4">
@@ -140,7 +140,7 @@
             <div id="day-events-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2 mb-6"></div>
             <div class="mt-auto space-y-3 pt-6 border-t border-gray-50">
                 <input id="quick-add-input" type="text" placeholder="Quick add event..." class="w-full text-sm p-4 outline-none bg-gray-50 border border-transparent focus:border-[#00E676] rounded-2xl transition-all">
-                <button onclick="quickAddEvent()" class="w-full text-[11px] font-black uppercase bg-[#00E676] text-black p-4 rounded-2xl shadow-lg active:scale-95 transition-all">Save Event</button>
+                <button id="quick-add-btn" class="w-full text-[11px] font-black uppercase bg-[#00E676] text-black p-4 rounded-2xl shadow-lg active:scale-95 transition-all">Save Event</button>
             </div>
         </div>
       </div>
@@ -150,93 +150,306 @@
   </div>
 
   <script>
+    // Constants
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-    let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
-    let messageRegistry = []; 
-    let events = JSON.parse(localStorage.getItem('doa_events')) || [];
-    let isThinking = false, selectedVoice = null;
-    let viewDate = new Date(), selectedDate = new Date();
+    const VOICE_STORAGE_KEY = 'voice_active';
+    const CHAT_CACHE_KEY = 'doa_chat_cache';
+    const EVENTS_STORAGE_KEY = 'doa_events';
+    const ACTIVE_VIEW_KEY = 'doa_active_view';
 
+    // State
+    let voiceActive = JSON.parse(localStorage.getItem(VOICE_STORAGE_KEY)) || false;
+    let chatMemory = JSON.parse(localStorage.getItem(CHAT_CACHE_KEY)) || [];
+    let messageRegistry = [];
+    let events = JSON.parse(localStorage.getItem(EVENTS_STORAGE_KEY)) || [];
+    let isThinking = false;
+    let selectedVoice = null;
+    let viewDate = new Date();
+    let selectedDate = new Date(); // To hold the day selected on Calendar.
+
+    // ─── UTILITY FUNCTIONS ───
+    function getFirstDayOfMonth(year, month) {
+        let d = new Date(year, month, 1).getDay();
+        return d === 0 ? 6 : d - 1;
+    }
+
+    function formatDate(date) {
+        return date.toLocaleDateString('default', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    }
+
+    // ─── VOICE FUNCTIONS ───
     function loadVoices() {
-      const v = window.speechSynthesis.getVoices();
-      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
-      for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
+        if (!window.speechSynthesis) return; // Prevent errors if no speech support.
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoices = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
+        for (const voiceName of preferredVoices) {
+            const voice = voices.find(v => v.name.includes(voiceName));
+            if (voice) {
+                selectedVoice = voice;
+                break;
+            }
+        }
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
 
-    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
+    function speak(text) {
+        if (!voiceActive || !text) return;
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/\[ACTION:.*?\]/g, "")
+                            .replace(/https?:\/\/\S+/g, "")
+                            .replace(/\bDoa\b/gi, "Doaa")
+                            .replace(/[*#`_~]/g, "").trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        if (selectedVoice) utterance.voice = selectedVoice;
+        utterance.pitch = 1.35;
+        utterance.rate = 0.95;
+        utterance.volume = 1.0;
 
+        utterance.onstart = () => {
+          // Keep the voice from cutting off
+            const intervalId = setInterval(() => {
+                if (!window.speechSynthesis.speaking) {
+                    clearInterval(intervalId);
+                } else {
+                    window.speechSynthesis.pause();
+                    window.speechSynthesis.resume();
+                }
+            }, 10000); // Resume every 10 seconds
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleVoice() {
+      voiceActive = !voiceActive;
+      localStorage.setItem(VOICE_STORAGE_KEY, voiceActive);
+      updateVoiceUI();
+      if (voiceActive) speak("Voice active.");
+      else window.speechSynthesis.cancel();
+    }
+
+    function updateVoiceUI() {
+        const knob = document.getElementById('voice-knob');
+        const bg = document.getElementById('voice-switch');
+        if (knob && bg) {
+            knob.style.left = voiceActive ? "18px" : "2px";
+            bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
+        }
+    }
+
+    // ─── SIDEBAR FUNCTIONS ───
+    function toggleSidebar() {
+        const sidebar = document.getElementById('main-sidebar');
+        const menuBtn = document.getElementById('menu-btn');
+        sidebar.classList.toggle('closed');
+        menuBtn.classList.toggle('show');
+    }
+
+    // ─── VIEW MANAGEMENT ───
+    function switchView(viewName) {
+        localStorage.setItem(ACTIVE_VIEW_KEY, viewName);
+        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
+        const targetView = document.getElementById(`${viewName}-view`);
+        if (targetView) targetView.classList.remove('hidden');
+        const activeButton = document.getElementById(`btn-${viewName}`);
+        if (activeButton) activeButton.classList.add('sidebar-active');
+        // Close sidebar if it's not closed.
+        const sidebar = document.getElementById('main-sidebar');
+        if (!sidebar.classList.contains('closed')) toggleSidebar();
+        // Additional setup per view
+        if (viewName === 'chat') setChatMode(chatMemory.length > 0);
+        if (viewName === 'calendar') renderCalendar();
+    }
+
+    // ─── CHAT FUNCTIONS ───
+    function setChatMode(isChatting) {
+        const heroSection = document.getElementById('hero-section');
+        const chatHistory = document.getElementById('chat-history');
+        const chatShell = document.getElementById('chat-shell');
+        const centerGroup = document.getElementById('center-group');
+        if (isChatting) {
+            heroSection.style.display = 'none';
+            chatHistory.classList.remove('hidden');
+            chatHistory.style.display = 'flex';
+            chatShell.classList.remove('justify-center');
+            chatShell.classList.add('justify-end');
+            centerGroup.classList.remove('flex-col');
+            chatShell.style.paddingBottom = '0';
+        } else {
+            heroSection.style.display = 'block';
+            chatHistory.classList.add('hidden');
+            chatShell.classList.remove('justify-end');
+            chatShell.classList.add('justify-center');
+            centerGroup.classList.add('flex-col');
+            chatShell.style.paddingBottom = '15vh';
+        }
+    }
+
+    function startNewChat() {
+      window.speechSynthesis.cancel();
+      chatMemory = [];
+      messageRegistry = [];
+      localStorage.removeItem(CHAT_CACHE_KEY);
+      document.getElementById('chat-history').innerHTML = '';
+      setChatMode(false);
+      switchView('chat');
+    }
+
+    async function handleMessage() {
+        window.speechSynthesis.cancel();
+        if (isThinking) return;
+        const userInput = document.getElementById('user-input');
+        const rawText = userInput.value.trim();
+        if (!rawText) return;
+        setChatMode(true);
+        addMessage('user', rawText);
+        userInput.value = '';
+
+        isThinking = true;
+        document.getElementById('status-text').innerText = "Doa is thinking...";
+        try {
+            const response = await fetch(CLOUDFLARE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
+            chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
+            localStorage.setItem(CHAT_CACHE_KEY, JSON.stringify(chatMemory));
+            speak(data.response);
+        } catch (error) {
+            console.error("Error communicating with the API:", error);
+            addMessage('doa', "OS Connection disrupted."); // More user-friendly error message.
+        } finally {
+            isThinking = false;
+            document.getElementById('status-text').innerText = "";
+        }
+    }
+
+    function addMessage(sender, text) {
+        const history = document.getElementById('chat-history');
+        const messageIndex = messageRegistry.push(text) - 1; // get the new index
+        const row = document.createElement('div');
+        row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
+        row.innerHTML = `<div class="max-w-[85%] group">
+                            <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>
+                            ${sender === 'doa' ?
+                              `<div class="flex gap-4 mt-2 px-1">
+                                <button class="bubble-action-btn" onclick="speak(messageRegistry[${messageIndex}])">🔊 Speak</button>
+                                <button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${messageIndex}])">📋 Copy</button>
+                                <button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
+                              </div>`
+                              : ''
+                            }
+                        </div>`;
+        history.appendChild(row);
+        history.scrollTop = history.scrollHeight;
+    }
+
+    // ─── CALENDAR FUNCTIONS ───
     function renderCalendar() {
-      const grid = document.getElementById('calendar-grid');
-      const title = document.getElementById('cal-main-title');
-      const monthLabel = document.getElementById('month-name-label');
-      const today = new Date(); today.setHours(0,0,0,0);
-      
-      grid.innerHTML = '';
-      const month = viewDate.getMonth(), year = viewDate.getFullYear();
-      const monthName = viewDate.toLocaleString('default', { month: 'long' });
-      title.innerText = monthName + " " + year;
-      monthLabel.innerText = monthName;
+        const grid = document.getElementById('calendar-grid');
+        const title = document.getElementById('cal-main-title');
+        const monthLabel = document.getElementById('month-name-label');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today.
 
-      const firstDay = getFirstDayOfMonth(year, month);
-      const totalDays = new Date(year, month + 1, 0).getDate();
+        grid.innerHTML = '';
+        const month = viewDate.getMonth(), year = viewDate.getFullYear();
+        const monthName = viewDate.toLocaleString('default', { month: 'long' });
+        title.innerText = `${monthName} ${year}`;
+        monthLabel.innerText = monthName;
 
-      for (let i = 0; i < firstDay; i++) {
-          grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
-      }
+        const firstDay = getFirstDayOfMonth(year, month);
+        const totalDays = new Date(year, month + 1, 0).getDate();
 
-      for (let d = 1; d <= totalDays; d++) {
-        const date = new Date(year, month, d);
-        date.setHours(0,0,0,0);
-        const el = document.createElement('div');
-        el.className = 'cal-day';
-        el.innerText = d;
-
-        if (date < today) el.classList.add('past-date');
-        if (date.getTime() === today.getTime()) el.classList.add('today');
-        if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
-        
-        // ─── INFO SPEAKER ICON ───
-        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-        if (dayEvents.length > 0) {
-            const speaker = document.createElement('div');
-            speaker.className = 'day-speak';
-            speaker.innerHTML = '🔊';
-            speaker.onclick = (e) => {
-                e.stopPropagation();
-                const text = `On ${date.toLocaleString('default', {month:'long', day:'numeric'})}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
-                speak(text);
-            };
-            el.appendChild(speaker);
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'cal-day opacity-0 pointer-events-none';
+            grid.appendChild(emptyDay);
         }
 
-        el.onclick = () => { selectedDate = date; renderCalendar(); };
-        grid.appendChild(el);
-      }
-      updateRightPanel(selectedDate);
-      updateLeftPanel();
+        for (let day = 1; day <= totalDays; day++) {
+            const date = new Date(year, month, day);
+            date.setHours(0, 0, 0, 0); // Normalize date.
+            const dayElement = document.createElement('div');
+            dayElement.className = 'cal-day';
+            dayElement.innerText = day;
+
+            if (date < today) dayElement.classList.add('past-date');
+            if (date.getTime() === today.getTime()) dayElement.classList.add('today');
+            if (date.getTime() === selectedDate.getTime()) dayElement.classList.add('selected'); // Check against selectedDate
+
+            // Speaker Icon
+            const dayEvents = events.filter(e => formatDate(new Date(e.date)) === formatDate(date));
+            if (dayEvents.length > 0) {
+                const speaker = document.createElement('div');
+                speaker.className = 'day-speak';
+                speaker.innerHTML = '🔊';
+                speaker.onclick = (e) => {
+                    e.stopPropagation(); // Prevent the day click
+                    const eventText = dayEvents.map(ev => ev.title).join(', ');
+                    const textToSpeak = `On ${date.toLocaleDateString('default', { month: 'long', day: 'numeric' })}, you have: ${eventText}`;
+                    speak(textToSpeak);
+                };
+                dayElement.appendChild(speaker);
+            }
+
+            dayElement.onclick = () => {
+                selectedDate = date; // Update the selected date.
+                renderCalendar(); // Re-render to reflect selection.
+            };
+            grid.appendChild(dayElement);
+        }
+        updateRightPanel(selectedDate);
+        updateLeftPanel();
     }
 
     function updateLeftPanel() {
         const list = document.getElementById('month-summary-list');
         list.innerHTML = '';
-        const today = new Date(); today.setHours(0,0,0,0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const monthUpcoming = events.filter(e => {
-            const d = new Date(e.date);
-            return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear() && d >= today;
-        }).sort((a,b) => new Date(a.date) - new Date(b.date));
+            const eventDate = new Date(e.date);
+            return eventDate.getMonth() === viewDate.getMonth() &&
+                eventDate.getFullYear() === viewDate.getFullYear() &&
+                eventDate >= today;
+        }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
-        else monthUpcoming.forEach(e => {
-            const d = new Date(e.date);
-            const div = document.createElement('div');
-            div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
-            div.onclick = () => { selectedDate = d; renderCalendar(); };
-            div.innerHTML = `<div class="flex flex-col items-center min-w-[35px]"><span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${d.toLocaleString('default',{month:'short'})}</span><span class="text-sm font-black text-gray-800">${d.getDate()}</span></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p></div>`;
-            list.appendChild(div);
-        });
+        if (monthUpcoming.length === 0) {
+            list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
+        } else {
+            monthUpcoming.forEach(event => {
+                const eventDate = new Date(event.date);
+                const div = document.createElement('div');
+                div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
+                div.onclick = () => {
+                    selectedDate = eventDate;
+                    renderCalendar();
+                };
+                div.innerHTML = `<div class="flex flex-col items-center min-w-[35px]">
+                                    <span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${eventDate.toLocaleDateString('default', { month: 'short' })}</span>
+                                    <span class="text-sm font-black text-gray-800">${eventDate.getDate()}</span>
+                                  </div>
+                                  <div class="flex-1">
+                                    <p class="text-[13px] font-bold text-gray-800 leading-tight">${event.title}</p>
+                                  </div>`;
+                list.appendChild(div);
+            });
+        }
     }
 
     function updateRightPanel(date) {
@@ -244,120 +457,80 @@
         const header = document.getElementById('selected-date-header');
         list.innerHTML = '';
         header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
-        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-        
-        if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
-        else dayEvents.forEach(e => {
-            const div = document.createElement('div');
-            div.className = "flex items-start gap-4 animate-fadeIn group";
-            div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1 flex items-center justify-between"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p><div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="speak('${e.title}')" class="text-[#00E676] text-xs">🔊</button><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400">✕</button></div></div>`;
-            list.appendChild(div);
-        });
+        const dayEvents = events.filter(e => formatDate(new Date(e.date)) === formatDate(date));
+        if (dayEvents.length === 0) {
+            list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
+        } else {
+            dayEvents.forEach(event => {
+                const div = document.createElement('div');
+                div.className = "flex items-start gap-4 animate-fadeIn group";
+                div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div>
+                                <div class="flex-1 flex items-center justify-between">
+                                  <p class="text-[13px] font-bold text-gray-800 leading-tight">${event.title}</p>
+                                  <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="speak('${event.title}')" class="text-[#00E676] text-xs">🔊</button>
+                                    <button onclick="deleteEvent('${event.date}', '${event.title}')" class="text-gray-200 hover:text-red-400">✕</button>
+                                  </div>
+                                </div>`;
+                list.appendChild(div);
+            });
+        }
     }
 
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
         if (!input.value) return;
         events.push({ title: input.value, date: selectedDate.toISOString() });
-        localStorage.setItem('doa_events', JSON.stringify(events));
+        localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
         input.value = '';
         renderCalendar();
     }
 
     function deleteEvent(dateStr, title) {
         events = events.filter(e => !(e.date === dateStr && e.title === title));
-        localStorage.setItem('doa_events', JSON.stringify(events));
+        localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+        renderCalendar();
+        updateRightPanel(selectedDate); // Refresh the right panel.
+    }
+
+    function changeMonth(direction) {
+        viewDate.setMonth(viewDate.getMonth() + direction);
         renderCalendar();
     }
 
-    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
+    // ─── INITIALIZATION ───
+    document.addEventListener('DOMContentLoaded', () => {
+        // Event Listeners (Using addEventListener)
+        document.getElementById('hide-sidebar-btn').addEventListener('click', toggleSidebar);
+        document.getElementById('new-chat-btn').addEventListener('click', startNewChat);
+        document.getElementById('chat-btn').addEventListener('click', () => switchView('chat'));
+        document.getElementById('calendar-btn').addEventListener('click', () => switchView('calendar'));
+        document.getElementById('apps-btn').addEventListener('click', () => switchView('apps'));
+        document.getElementById('voice-switch').addEventListener('click', toggleVoice);
+        document.getElementById('send-btn').addEventListener('click', handleMessage);
+        document.getElementById('quick-add-btn').addEventListener('click', quickAddEvent);
+        document.getElementById('prev-month-btn').addEventListener('click', () => changeMonth(-1));
+        document.getElementById('next-month-btn').addEventListener('click', () => changeMonth(1));
+        document.getElementById('user-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { // Allow multiline with shift+enter
+                e.preventDefault();
+                handleMessage();
+            }
+        });
 
-    function speak(text) {
-      if (!voiceActive || !text) return;
-      window.speechSynthesis.cancel();
-      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
-      const u = new SpeechSynthesisUtterance(clean);
-      if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
-      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
-      window.speechSynthesis.speak(u);
-    }
-
-    function toggleSidebar() {
-      const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
-      sb.classList.toggle('closed');
-      if (sb.classList.contains('closed')) mb.classList.add('show'); else mb.classList.remove('show');
-    }
-
-    function switchView(viewName) {
-      localStorage.setItem('doa_active_view', viewName);
-      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
-      const target = document.getElementById(viewName + '-view');
-      if(target) target.classList.remove('hidden');
-      const btn = document.getElementById('btn-' + viewName);
-      if(btn) btn.classList.add('sidebar-active');
-      const sidebar = document.getElementById('main-sidebar');
-      if (!sidebar.classList.contains('closed')) toggleSidebar();
-      if (viewName === 'chat') setChatMode(chatMemory.length > 0);
-      if (viewName === 'calendar') renderCalendar();
-    }
-
-    function setChatMode(isChatting) {
-      const hero = document.getElementById('hero-section'), history = document.getElementById('chat-history'), shell = document.getElementById('chat-shell'), centerGroup = document.getElementById('center-group');
-      if (isChatting) {
-        hero.style.display = 'none'; history.classList.remove('hidden'); history.style.display = 'flex';
-        shell.classList.remove('justify-center'); shell.classList.add('justify-end');
-        centerGroup.classList.remove('flex-col'); shell.style.paddingBottom = '0';
-      } else {
-        hero.style.display = 'block'; history.classList.add('hidden');
-        shell.classList.remove('justify-end'); shell.classList.add('justify-center');
-        centerGroup.classList.add('flex-col'); shell.style.paddingBottom = '15vh';
-      }
-    }
-
-    function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
-
-    async function handleMessage() {
-      window.speechSynthesis.cancel();
-      if (isThinking) return;
-      const input = document.getElementById('user-input'), rawText = input.value.trim();
-      if (!rawText) return;
-      setChatMode(true); addMessage('user', rawText); input.value = '';
-      isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
-      try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
-        const data = await res.json();
-        addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
-        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
-        localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
-        speak(data.response);
-      } catch (e) { addMessage('doa', "OS Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
-    }
-
-    function addMessage(sender, text) {
-      const history = document.getElementById('chat-history');
-      const idx = messageRegistry.push(text) - 1;
-      const row = document.createElement('div');
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
-      history.appendChild(row); history.scrollTop = history.scrollHeight;
-    }
-
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
-    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
-    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
-    
-    window.onload = () => { 
-      updateVoiceUI(); loadVoices(); 
-      const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      if (chatMemory.length > 0) {
-        chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
-        if (lastView === 'chat') setChatMode(true);
-      } else { setChatMode(false); }
-      switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed'); 
-    };
+        // Initialize UI
+        updateVoiceUI();
+        loadVoices();
+        const lastView = localStorage.getItem(ACTIVE_VIEW_KEY) || 'chat';
+        if (chatMemory.length > 0) {
+            chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
+            if (lastView === 'chat') setChatMode(true);
+        } else {
+            setChatMode(false);
+        }
+        switchView(lastView);
+        document.getElementById('main-sidebar').classList.remove('closed'); // Ensure sidebar is open on load (if not closed).
+    });
   </script>
 </body>
 </html>
