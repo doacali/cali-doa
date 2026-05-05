@@ -300,7 +300,9 @@
       const sidebar = document.getElementById('main-sidebar');
       if (!sidebar.classList.contains('closed')) toggleSidebar();
       if (viewName === 'chat') setChatMode(chatMemory.length > 0);
-      if (viewName === 'calendar') renderCalendar();
+      if (viewName === 'calendar') {
+          renderCalendar();
+      }
     }
 
     function setChatMode(isChatting) {
