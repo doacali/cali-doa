@@ -5,358 +5,101 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Doa | AI Operating System</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     
-    .os-scrollbar::-webkit-scrollbar { width: 4px; }
-    .os-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .os-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-    .os-scrollbar::-webkit-scrollbar-thumb:hover { background: #00E676; }
-
-    /* Sidebar Physics */
-    #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; transform: translateX(0); }
+    /* Layout */
+    #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; }
     #main-sidebar.closed { transform: translateX(-100%); }
-    
-    main { transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding-left: 260px; }
-    #main-sidebar.closed ~ main { padding-left: 0; }
+    main { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-left: 260px; }
+    #main-sidebar.closed ~ main { margin-left: 0; }
 
     .sidebar-item { transition: all 0.2s; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; font-weight: 700; color: #9ca3af; font-size: 13px; }
     .sidebar-active { background: #111111 !important; color: white !important; }
     
-    #chat-history { display: flex; flex-direction: column; overflow-y: auto; scroll-behavior: smooth; width: 100%; max-width: 42rem; margin: 0 auto; padding-bottom: 20px; }
-    .chat-bubble { animation: fadeIn 0.2s ease-out forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .bubble-action-btn { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; transition: 0.2s; cursor: pointer; }
-    
-    #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
-    #menu-btn.show { opacity: 1; pointer-events: auto; }
-
-    /* Centered Calendar Card */
-    .win-calendar-card { width: 380px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 40px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.03); }
+    /* Calendar Grid */
+    .win-calendar-card { width: 380px; background: #ffffff; padding: 32px; }
     .cal-day { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600; color: #374151; position: relative; }
     .cal-day:hover { background: #f3f4f6; }
-    
-    .cal-day.past-date { opacity: 0.3; color: #9ca3af; }
-    .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; opacity: 1 !important; }
+    .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; }
     .cal-day.selected { border: 2px solid #00E676; }
     
-    /* Speaker Icon on Date */
-    .day-speak { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: #00E676; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; color: black; opacity: 0.8; }
-    .day-speak:hover { transform: scale(1.2); opacity: 1; }
-
-    /* Split Pane Layout */
-    .left-os-panel { width: 340px; border-right: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
-    .right-os-panel { width: 360px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
+    /* Panels */
+    .os-panel { width: 340px; height: 100%; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; flex-shrink: 0; }
   </style>
 </head>
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden relative">
     
-    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
-        <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
-        <button onclick="toggleSidebar()" class="text-gray-300 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
+        <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase">DOA CALI</h1>
+        <button onclick="toggleSidebar()" class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">Hide</button>
       </div>
       <nav class="flex-1 px-4 space-y-1">
-        <button onclick="startNewChat()" class="sidebar-item hover:bg-gray-50 mb-4 text-black border border-gray-100 transition-all active:scale-95">+ New Chat</button>
-        <button onclick="switchView('chat')" id="btn-chat" class="sidebar-item">💬 Chat With Doa</button>
+        <button onclick="startNewChat()" class="sidebar-item mb-4 text-black border border-gray-100">+ New Chat</button>
+        <button onclick="switchView('chat')" id="btn-chat" class="sidebar-item">💬 Chat</button>
         <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
-        <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
-      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.6</span></div>
     </aside>
 
-    <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
-        <span class="text-[#00E676] font-black italic tracking-tighter text-sm uppercase">Doa</span>
-        <div class="flex flex-col gap-[3px]"><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div></div>
-    </button>
-
-    <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
-      <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
-        <button class="hover:text-black">Login</button>
-        <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Sign Up</button>
-      </header>
-
-      <!-- CHAT VIEW -->
-      <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
-        <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
-          <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
-          <div id="center-group" class="flex flex-col w-full">
-            <div id="hero-section" class="text-center">
-                <h1 class="text-6xl font-black mb-10 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
-            </div>
-            <div id="input-area" class="w-full bg-white pb-10">
-                <div class="flex justify-between items-center mb-3 px-4">
-                  <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
-                  <div class="flex items-center gap-3">
-                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Voice</span>
-                    <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
-                  </div>
-                </div>
-                <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[32px] p-3 flex items-center mx-2">
-                  <textarea id="user-input" rows="1" class="flex-1 px-5 outline-none text-sm resize-none hide-scrollbar py-2" placeholder="Ask Doa anything..."></textarea>
-                  <button onclick="handleMessage()" class="bg-black text-white w-12 h-12 rounded-full font-bold ml-2 hover:bg-gray-800 transition-all flex items-center justify-center">→</button>
-                </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CALENDAR VIEW (THREE-PANE LAYOUT) -->
-      <div id="calendar-view" class="view-container hidden flex-1 flex flex-row overflow-hidden h-full">
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+      <!-- CALENDAR VIEW -->
+      <div id="calendar-view" class="view-container hidden flex-1 flex flex-row h-full overflow-hidden">
         
-        <!-- LEFT PANEL: Month Upcoming Summary -->
-        <div class="left-os-panel">
+        <!-- Left Panel: Upcoming -->
+        <div class="os-panel border-r border-gray-100">
             <h2 class="text-2xl font-black uppercase tracking-tighter mb-1" id="month-name-label">Month</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase mb-8 tracking-widest">Upcoming highlights</p>
-            <div id="month-summary-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2"></div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase mb-8">Highlights</p>
+            <div id="month-summary-list" class="flex-1 overflow-y-auto space-y-4"></div>
         </div>
 
-        <!-- CENTER: Calendar Grid -->
-        <div class="flex-1 flex flex-col items-center justify-center pb-20">
+        <!-- Center: Grid -->
+        <div class="flex-1 flex items-center justify-center">
             <div class="win-calendar-card">
                 <div class="flex justify-between items-center mb-8">
                     <h1 class="text-xl font-black uppercase tracking-tighter" id="cal-main-title">May 2026</h1>
                     <div class="flex gap-4">
-                        <button onclick="changeMonth(-1)" class="text-gray-300 hover:text-[#00E676] font-bold">↑</button>
-                        <button onclick="changeMonth(1)" class="text-gray-300 hover:text-[#00E676] font-bold">↓</button>
+                        <button onclick="changeMonth(-1)" class="font-bold">↑</button>
+                        <button onclick="changeMonth(1)" class="font-bold">↓</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black text-gray-300 uppercase mb-4">
+                <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black text-gray-400 uppercase mb-4">
                     <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
                 </div>
                 <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
             </div>
         </div>
 
-        <!-- RIGHT PANEL: Selected Day Details -->
-        <div class="right-os-panel">
-            <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-6">Today</h2>
-            <div id="day-events-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2 mb-6"></div>
-            <div class="mt-auto space-y-3 pt-6 border-t border-gray-50">
-                <input id="quick-add-input" type="text" placeholder="Quick add event..." class="w-full text-sm p-4 outline-none bg-gray-50 border border-transparent focus:border-[#00E676] rounded-2xl transition-all">
-                <button onclick="quickAddEvent()" class="w-full text-[11px] font-black uppercase bg-[#00E676] text-black p-4 rounded-2xl shadow-lg active:scale-95 transition-all">Save Event</button>
+        <!-- Right Panel: Schedule -->
+        <div class="os-panel border-l border-gray-100">
+            <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-1">Today</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase mb-8">OS Schedule</p>
+            <div id="day-events-list" class="flex-1 overflow-y-auto space-y-4"></div>
+            <div class="pt-6 border-t border-gray-50">
+                <input id="quick-add-input" type="text" placeholder="Add event..." class="w-full text-sm p-4 bg-gray-50 rounded-2xl mb-2">
+                <button onclick="quickAddEvent()" class="w-full text-[11px] font-black uppercase bg-[#00E676] py-4 rounded-2xl">Save Event</button>
             </div>
         </div>
       </div>
-
-      <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto"><h1 class="text-4xl font-black">📱 App Factory</h1></div>
+      
+      <!-- Placeholder Chat/Apps Views -->
+      <div id="chat-view" class="view-container flex-1 flex flex-col items-center justify-center p-10">
+        <h1 class="text-6xl font-black">How can Doa help you?</h1>
+        <div id="chat-history" class="w-full max-w-2xl overflow-y-auto"></div>
+      </div>
+      <div id="apps-view" class="view-container hidden flex-1 p-10"><h1>Apps</h1></div>
     </main>
   </div>
 
   <script>
-    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
-    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-    let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
-    let messageRegistry = []; 
-    let events = JSON.parse(localStorage.getItem('doa_events')) || [];
-    let isThinking = false, selectedVoice = null;
-    let viewDate = new Date(), selectedDate = new Date();
-
-    function loadVoices() {
-      const v = window.speechSynthesis.getVoices();
-      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
-      for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
-    }
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    loadVoices();
-
-    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
-
-    function renderCalendar() {
-      const grid = document.getElementById('calendar-grid');
-      const title = document.getElementById('cal-main-title');
-      const monthLabel = document.getElementById('month-name-label');
-      const today = new Date(); today.setHours(0,0,0,0);
-      
-      grid.innerHTML = '';
-      const month = viewDate.getMonth(), year = viewDate.getFullYear();
-      const monthName = viewDate.toLocaleString('default', { month: 'long' });
-      title.innerText = monthName + " " + year;
-      monthLabel.innerText = monthName;
-
-      const firstDay = getFirstDayOfMonth(year, month);
-      const totalDays = new Date(year, month + 1, 0).getDate();
-
-      for (let i = 0; i < firstDay; i++) {
-          grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
-      }
-
-      for (let d = 1; d <= totalDays; d++) {
-        const date = new Date(year, month, d);
-        date.setHours(0,0,0,0);
-        const el = document.createElement('div');
-        el.className = 'cal-day';
-        el.innerText = d;
-
-        if (date < today) el.classList.add('past-date');
-        if (date.getTime() === today.getTime()) el.classList.add('today');
-        if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
-        
-        // ─── INFO SPEAKER ICON ───
-        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-        if (dayEvents.length > 0) {
-            const speaker = document.createElement('div');
-            speaker.className = 'day-speak';
-            speaker.innerHTML = '🔊';
-            speaker.onclick = (e) => {
-                e.stopPropagation();
-                const text = `On ${date.toLocaleString('default', {month:'long', day:'numeric'})}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
-                speak(text);
-            };
-            el.appendChild(speaker);
-        }
-
-        el.onclick = () => { selectedDate = date; renderCalendar(); };
-        grid.appendChild(el);
-      }
-      updateRightPanel(selectedDate);
-      updateLeftPanel();
-    }
-
-    function updateLeftPanel() {
-        const list = document.getElementById('month-summary-list');
-        list.innerHTML = '';
-        const today = new Date(); today.setHours(0,0,0,0);
-        const monthUpcoming = events.filter(e => {
-            const d = new Date(e.date);
-            return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear() && d >= today;
-        }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
-        if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
-        else monthUpcoming.forEach(e => {
-            const d = new Date(e.date);
-            const div = document.createElement('div');
-            div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
-            div.onclick = () => { selectedDate = d; renderCalendar(); };
-            div.innerHTML = `<div class="flex flex-col items-center min-w-[35px]"><span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${d.toLocaleString('default',{month:'short'})}</span><span class="text-sm font-black text-gray-800">${d.getDate()}</span></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p></div>`;
-            list.appendChild(div);
-        });
-    }
-
-    function updateRightPanel(date) {
-        const list = document.getElementById('day-events-list');
-        const header = document.getElementById('selected-date-header');
-        list.innerHTML = '';
-        header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
-        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-        
-        if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
-        else dayEvents.forEach(e => {
-            const div = document.createElement('div');
-            div.className = "flex items-start gap-4 animate-fadeIn group";
-            div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1 flex items-center justify-between"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p><div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="speak('${e.title}')" class="text-[#00E676] text-xs">🔊</button><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400">✕</button></div></div>`;
-            list.appendChild(div);
-        });
-    }
-
-    function quickAddEvent() {
-        const input = document.getElementById('quick-add-input');
-        if (!input.value) return;
-        events.push({ title: input.value, date: selectedDate.toISOString() });
-        localStorage.setItem('doa_events', JSON.stringify(events));
-        input.value = '';
-        renderCalendar();
-    }
-
-    function deleteEvent(dateStr, title) {
-        events = events.filter(e => !(e.date === dateStr && e.title === title));
-        localStorage.setItem('doa_events', JSON.stringify(events));
-        renderCalendar();
-    }
-
-    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
-
-    function speak(text) {
-      if (!voiceActive || !text) return;
-      window.speechSynthesis.cancel();
-      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
-      const u = new SpeechSynthesisUtterance(clean);
-      if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
-      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
-      window.speechSynthesis.speak(u);
-    }
-
-    function toggleSidebar() {
-      const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
-      sb.classList.toggle('closed');
-      if (sb.classList.contains('closed')) mb.classList.add('show'); else mb.classList.remove('show');
-    }
-
-    function switchView(viewName) {
-      localStorage.setItem('doa_active_view', viewName);
-      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
-      const target = document.getElementById(viewName + '-view');
-      if(target) target.classList.remove('hidden');
-      const btn = document.getElementById('btn-' + viewName);
-      if(btn) btn.classList.add('sidebar-active');
-      const sidebar = document.getElementById('main-sidebar');
-      if (!sidebar.classList.contains('closed')) toggleSidebar();
-      if (viewName === 'chat') setChatMode(chatMemory.length > 0);
-      if (viewName === 'calendar') renderCalendar();
-    }
-
-    function setChatMode(isChatting) {
-      const hero = document.getElementById('hero-section'), history = document.getElementById('chat-history'), shell = document.getElementById('chat-shell'), centerGroup = document.getElementById('center-group');
-      if (isChatting) {
-        hero.style.display = 'none'; history.classList.remove('hidden'); history.style.display = 'flex';
-        shell.classList.remove('justify-center'); shell.classList.add('justify-end');
-        centerGroup.classList.remove('flex-col'); shell.style.paddingBottom = '0';
-      } else {
-        hero.style.display = 'block'; history.classList.add('hidden');
-        shell.classList.remove('justify-end'); shell.classList.add('justify-center');
-        centerGroup.classList.add('flex-col'); shell.style.paddingBottom = '15vh';
-      }
-    }
-
-    function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
-
-    async function handleMessage() {
-      window.speechSynthesis.cancel();
-      if (isThinking) return;
-      const input = document.getElementById('user-input'), rawText = input.value.trim();
-      if (!rawText) return;
-      setChatMode(true); addMessage('user', rawText); input.value = '';
-      isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
-      try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
-        const data = await res.json();
-        addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
-        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
-        localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
-        speak(data.response);
-      } catch (e) { addMessage('doa', "OS Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
-    }
-
-    function addMessage(sender, text) {
-      const history = document.getElementById('chat-history');
-      const idx = messageRegistry.push(text) - 1;
-      const row = document.createElement('div');
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
-      history.appendChild(row); history.scrollTop = history.scrollHeight;
-    }
-
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
-    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
-    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
-    
+    // ... (Your existing JavaScript logic for renderCalendar, handleMessage, etc.)
+    // Note: ensure renderCalendar() and updateLeftPanel() / updateRightPanel() are called inside window.onload
     window.onload = () => { 
-      updateVoiceUI(); loadVoices(); 
-      const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      if (chatMemory.length > 0) {
-        chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
-        if (lastView === 'chat') setChatMode(true);
-      } else { setChatMode(false); }
-      switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed'); 
+        renderCalendar();
+        switchView(localStorage.getItem('doa_active_view') || 'chat');
     };
   </script>
 </body>
