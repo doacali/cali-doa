@@ -336,7 +336,6 @@
       if (isThinking) return;
       const input = document.getElementById('user-input'), rawText = input.value.trim();
       if (!rawText) return;
-      setChatMode(true); addMessage('user', rawText); input.value = '';
       isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
 
         // ---  EVENT CREATION INTERCEPTION ---
@@ -347,9 +346,12 @@
             localStorage.setItem('doa_events', JSON.stringify(events));
             renderCalendar();
             speak(`OK. I've added "${title}" to your calendar for ${date.toDateString()}.`); // <--- ADDED THIS LINE
+            setChatMode(true);  // <--- ADDED THIS LINE
             return; // Stop further processing for this message
         }
       // ---  DEFAULT CHAT LOGIC ---
+        setChatMode(true); //Ensure Chat Mode is enabled.
+        addMessage('user', rawText);
       try {
         const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
         const data = await res.json();
