@@ -10,11 +10,16 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     
+    /* Custom Scrollbar for Right Panel */
+    .os-scrollbar::-webkit-scrollbar { width: 4px; }
+    .os-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .os-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+    .os-scrollbar::-webkit-scrollbar-thumb:hover { background: #00E676; }
+
     /* Sidebar & Workspace Physics */
     #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; transform: translateX(0); }
     #main-sidebar.closed { transform: translateX(-100%); }
     
-    /* Dynamic Workspace Shift */
     main { transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding-left: 260px; }
     #main-sidebar.closed ~ main { padding-left: 0; }
 
@@ -32,19 +37,18 @@
     #menu-btn.show { opacity: 1; pointer-events: auto; }
 
     /* Centered Calendar Card */
-    .win-calendar-card { width: 360px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 40px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.03); }
+    .win-calendar-card { width: 380px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 40px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.03); }
     .cal-day { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600; color: #374151; position: relative; }
     .cal-day:hover { background: #f3f4f6; }
     
-    /* Temporal States */
-    .cal-day.past-date { opacity: 0.35; color: #9ca3af; }
+    .cal-day.past-date { opacity: 0.3; color: #9ca3af; }
     .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; opacity: 1 !important; }
     .cal-day.selected { border: 2px solid #00E676; }
     .cal-day.has-event::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: #00E676; border-radius: 50%; }
     .cal-day.today.has-event::after { background: #000; }
 
     /* Fixed Right Panel */
-    .right-os-panel { width: 340px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
+    .right-os-panel { width: 360px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
 
     #chat-shell { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
@@ -53,7 +57,6 @@
 
   <div class="flex h-screen w-screen overflow-hidden relative">
     
-    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
@@ -66,24 +69,21 @@
         <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
       <div class="p-6 text-center border-t border-gray-50">
-        <span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.3</span>
+        <span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.4</span>
       </div>
     </aside>
 
-    <!-- Floating Menu Button -->
     <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
         <span class="text-[#00E676] font-black italic tracking-tighter text-sm uppercase">Doa</span>
         <div class="flex flex-col gap-[3px]"><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div><div class="w-4 h-[2px] bg-gray-400 rounded-full"></div></div>
     </button>
 
-    <!-- Main Workspace -->
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
         <button class="hover:text-black">Login</button>
         <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Sign Up</button>
       </header>
 
-      <!-- CHAT VIEW -->
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
@@ -108,9 +108,8 @@
         </div>
       </div>
 
-      <!-- CALENDAR VIEW -->
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-row overflow-hidden h-full">
-        <div class="flex-1 flex flex-col items-center justify-center pb-24">
+        <div class="flex-1 flex flex-col items-center justify-center pb-20">
             <div class="win-calendar-card">
                 <div class="flex justify-between items-center mb-8">
                     <h1 class="text-xl font-black uppercase tracking-tighter" id="cal-main-title">May 2026</h1>
@@ -119,17 +118,19 @@
                         <button onclick="changeMonth(1)" class="text-gray-300 hover:text-[#00E676] font-bold">↓</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 uppercase mb-4">
+                <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black text-gray-300 uppercase mb-4">
                     <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
                 </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
             </div>
         </div>
 
-        <div class="right-os-panel shadow-sm">
-            <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-1">Today</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase mb-8 tracking-widest">OS Schedule</p>
-            <div id="day-events-list" class="flex-1 space-y-6 overflow-y-auto hide-scrollbar mb-6"></div>
+        <div class="right-os-panel">
+            <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-6">Today</h2>
+            
+            <!-- List with Visible Scrollbar -->
+            <div id="day-events-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2 mb-6"></div>
+            
             <div class="mt-auto space-y-3 pt-6 border-t border-gray-50">
                 <input id="quick-add-input" type="text" placeholder="Quick add event..." class="w-full text-sm p-4 outline-none bg-gray-50 border border-transparent focus:border-[#00E676] rounded-2xl transition-all">
                 <button onclick="quickAddEvent()" class="w-full text-[11px] font-black uppercase bg-[#00E676] text-black p-4 rounded-2xl shadow-lg active:scale-95 transition-all">Save Event</button>
@@ -150,45 +151,43 @@
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
 
-    // ─── 1. CALENDAR ENGINE (WITH TEMPORAL MARKERS) ───
-    function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
+    function loadVoices() {
+      const v = window.speechSynthesis.getVoices();
+      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
+      for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
     function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
 
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       const title = document.getElementById('cal-main-title');
-      const today = new Date();
-      today.setHours(0,0,0,0);
+      const today = new Date(); today.setHours(0,0,0,0);
       
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
       title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
       const firstDay = getFirstDayOfMonth(year, month);
-      const totalDays = getDaysInMonth(year, month);
+      const totalDays = new Date(year, month + 1, 0).getDate();
 
       for (let i = 0; i < firstDay; i++) {
-          const empty = document.createElement('div');
-          empty.className = 'cal-day opacity-0';
-          grid.appendChild(empty);
+          grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
       }
 
       for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d);
         date.setHours(0,0,0,0);
-        
         const el = document.createElement('div');
         el.className = 'cal-day';
         el.innerText = d;
 
-        // Apply Markers
         if (date < today) el.classList.add('past-date');
         if (date.getTime() === today.getTime()) el.classList.add('today');
         if (date.getTime() === selectedDate.setHours(0,0,0,0)) el.classList.add('selected');
-        
-        if (events.some(e => new Date(e.date).toDateString() === date.toDateString())) {
-            el.classList.add('has-event');
-        }
+        if (events.some(e => new Date(e.date).toDateString() === date.toDateString())) el.classList.add('has-event');
 
         el.onclick = () => { selectedDate = date; renderCalendar(); updateRightPanel(date); };
         grid.appendChild(el);
@@ -202,13 +201,22 @@
         list.innerHTML = '';
         header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-        if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
-        else dayEvents.forEach(e => {
-            const div = document.createElement('div');
-            div.className = "flex items-start gap-4 animate-fadeIn";
-            div.innerHTML = `<div class="w-1 h-10 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight mb-1">${e.title}</p><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">OS Schedule</p></div><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400 text-xs">✕</button>`;
-            list.appendChild(div);
-        });
+        
+        if (dayEvents.length === 0) {
+            list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
+        } else {
+            dayEvents.forEach(e => {
+                const div = document.createElement('div');
+                div.className = "flex items-start gap-4 animate-fadeIn group";
+                div.innerHTML = `
+                    <div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div>
+                    <div class="flex-1">
+                        <p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p>
+                    </div>
+                    <button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400 transition-colors">✕</button>`;
+                list.appendChild(div);
+            });
+        }
     }
 
     function quickAddEvent() {
@@ -228,15 +236,6 @@
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
-    // ─── 2. DOUGHA VOICE ENGINE ───
-    function loadVoices() {
-      const v = window.speechSynthesis.getVoices();
-      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
-      for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
-    }
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    loadVoices();
-
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
@@ -248,7 +247,6 @@
       window.speechSynthesis.speak(u);
     }
 
-    // ─── 3. NAVIGATION & UI ───
     function toggleSidebar() {
       const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
       sb.classList.toggle('closed');
