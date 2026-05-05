@@ -22,15 +22,16 @@
     #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
     #menu-btn.show { opacity: 1; pointer-events: auto; }
 
-    /* Calendar Grid Physics */
-    .cal-day { aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; position: relative; font-size: 1rem; font-weight: 700; }
-    .cal-day:hover { background: #f9fafb; border-color: #f3f4f6; }
-    .cal-day.today { background: #00E676; color: black; }
-    .cal-day.has-event::after { content: ''; width: 5px; height: 5px; background: #00E676; border-radius: 50%; position: absolute; bottom: 8px; }
-    .cal-day.today.has-event::after { background: black; }
-    
-    .upcoming-chip { background: #f9fafb; border: 1px solid #f3f4f6; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-    .upcoming-chip:hover { border-color: #00E676; background: white; }
+    /* Centered Windows 11 Calendar Card */
+    .win-calendar-card { width: 340px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 24px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
+    .cal-grid { display: grid; grid-cols: 7; gap: 4px; text-align: center; }
+    .cal-day { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 600; color: #374151; }
+    .cal-day:hover { background: #f3f4f6; }
+    .cal-day.today { background: #00E676; color: #000; font-weight: 800; }
+    .cal-day.selected { border: 2px solid #00E676; }
+    .cal-day.has-event { position: relative; }
+    .cal-day.has-event::after { content: ''; position: absolute; bottom: 4px; width: 3px; height: 3px; background: #9ca3af; border-radius: 50%; }
+    .cal-day.today.has-event::after { background: #000; }
 
     #chat-shell { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
@@ -47,7 +48,7 @@
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
-        <button onclick="toggleSidebar()" class="text-gray-300 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
+        <button onclick="toggleSidebar()" class="text-gray-400 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
       </div>
       <nav class="flex-1 px-4 space-y-1">
         <button onclick="startNewChat()" class="sidebar-item hover:bg-gray-50 mb-4 text-black border border-gray-100 transition-all active:scale-95">+ New Chat</button>
@@ -55,7 +56,7 @@
         <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
         <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
-      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v2.9</span></div>
+      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.0</span></div>
     </aside>
 
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
@@ -87,50 +88,31 @@
         </div>
       </div>
 
-      <!-- CALENDAR VIEW -->
-      <div id="calendar-view" class="view-container hidden flex-1 flex flex-col p-8 overflow-hidden">
-        <div class="flex flex-1 gap-8 overflow-hidden">
-            <div class="flex-[3] flex flex-col overflow-hidden">
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <h1 class="text-4xl font-black uppercase tracking-tighter mb-2" id="cal-main-title">Calendar</h1>
-                        <!-- Upcoming Highlights under label -->
-                        <div id="upcoming-highlights" class="flex gap-2 overflow-x-auto hide-scrollbar pb-4"></div>
-                    </div>
-                    <div class="flex gap-4 items-center">
-                        <button onclick="toggleCalendarView()" id="view-toggle-btn" class="bg-gray-50 text-[10px] font-black uppercase px-4 py-2 rounded-xl hover:bg-gray-100">Year View</button>
-                        <div id="month-nav-controls" class="flex gap-1">
-                            <button onclick="changeMonth(-1)" class="w-8 h-8 hover:bg-gray-100 rounded-full font-bold">←</button>
-                            <button onclick="changeMonth(1)" class="w-8 h-8 hover:bg-gray-100 rounded-full font-bold">→</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="calendar-content-area" class="flex-1 overflow-y-auto hide-scrollbar">
-                    <div id="single-month-container" class="h-full flex flex-col">
-                        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 uppercase mb-2">
-                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                        </div>
-                        <div id="calendar-grid" class="grid grid-cols-7 gap-1 flex-1"></div>
-                    </div>
-                    <div id="year-view-container" class="hidden grid grid-cols-3 lg:grid-cols-4 gap-4"></div>
+      <!-- WINDOWS STYLE CENTERED CALENDAR VIEW -->
+      <div id="calendar-view" class="view-container hidden flex-1 flex flex-col items-center justify-center bg-gray-50/30 overflow-y-auto">
+        <div class="win-calendar-card">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-lg font-black uppercase tracking-tighter" id="cal-main-title">May 2026</h1>
+                <div class="flex gap-2">
+                    <button onclick="changeMonth(-1)" class="hover:text-[#00E676] font-bold">↑</button>
+                    <button onclick="changeMonth(1)" class="hover:text-[#00E676] font-bold">↓</button>
                 </div>
             </div>
+            
+            <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 uppercase mb-4">
+                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 mb-6"></div>
 
-            <!-- Event Sidebar -->
-            <div class="w-80 bg-gray-50 rounded-[40px] p-8 flex flex-col shadow-sm border border-gray-100">
-                <h2 class="text-2xl font-black mb-1 uppercase tracking-tighter" id="selected-date-label">Today</h2>
-                <p class="text-[10px] font-bold text-gray-400 uppercase mb-8">OS Schedule</p>
-                <div id="event-list" class="flex-1 overflow-y-auto hide-scrollbar space-y-3 mb-6"></div>
-                <div class="mt-auto space-y-3">
-                    <input id="event-input" type="text" placeholder="Event name..." class="w-full bg-white border border-gray-100 p-4 rounded-2xl text-sm outline-none shadow-sm focus:border-[#00E676] transition-all">
-                    <select id="event-recurrence" class="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[11px] font-bold uppercase outline-none shadow-sm cursor-pointer">
-                        <option value="none">None</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                    </select>
-                    <button onclick="saveEvent()" class="w-full bg-[#00E676] text-black font-black uppercase py-5 rounded-2xl text-[11px] tracking-widest active:scale-95 transition-all shadow-lg shadow-[#00E676]/20">Save Event</button>
-                </div>
+            <div class="border-t border-gray-100 pt-6">
+                <h2 class="text-[11px] font-black uppercase text-gray-400 tracking-widest mb-4" id="upcoming-label">Upcoming</h2>
+                <div id="upcoming-events-list" class="space-y-4 max-h-[200px] overflow-y-auto hide-scrollbar"></div>
+            </div>
+            
+            <!-- Quick Add UI -->
+            <div class="mt-6 pt-4 border-t border-gray-50">
+                <input id="quick-add-input" type="text" placeholder="Quick add event..." class="w-full text-xs p-2 outline-none bg-gray-50 rounded-lg mb-2">
+                <button onclick="quickAddEvent()" class="w-full text-[10px] font-black uppercase bg-[#00E676] p-2 rounded-lg">Save</button>
             </div>
         </div>
       </div>
@@ -145,18 +127,13 @@
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
     let events = JSON.parse(localStorage.getItem('doa_events')) || [];
     let isThinking = false, selectedVoice = null;
-    let viewDate = new Date(), selectedDate = new Date(), isYearView = false;
+    let viewDate = new Date(), selectedDate = new Date();
 
-    // ─── CALENDAR ENGINE (MON-SUN) ───
+    // ─── 1. CALENDAR ENGINE (Windows 11 Style) ───
     function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
-    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
-    function isSameDay(d1, d2) { return d1.toDateString() === d2.toDateString(); }
-
-    function matchesEvent(event, date) {
-        const evDate = new Date(event.date);
-        if (event.recurrence === 'monthly') return evDate.getDate() === date.getDate() && date >= evDate;
-        if (event.recurrence === 'yearly') return evDate.getDate() === date.getDate() && evDate.getMonth() === date.getMonth() && date >= evDate;
-        return isSameDay(evDate, date);
+    function getFirstDayOfMonth(year, month) { 
+        let d = new Date(year, month, 1).getDay(); 
+        return d === 0 ? 6 : d - 1; // Mon-Sun
     }
 
     function renderCalendar() {
@@ -164,92 +141,64 @@
       const title = document.getElementById('cal-main-title');
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
-      title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase();
+      title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
       const firstDay = getFirstDayOfMonth(year, month);
       const totalDays = getDaysInMonth(year, month);
 
-      for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+      for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement('div');
+          empty.className = 'cal-day text-gray-200 opacity-0';
+          grid.appendChild(empty);
+      }
+
       for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d);
         const el = document.createElement('div');
         el.className = 'cal-day';
         el.innerText = d;
-        if (isSameDay(date, new Date())) el.classList.add('today');
-        if (isSameDay(date, selectedDate)) el.style.border = '2px solid #00E676';
-        if (events.some(e => matchesEvent(e, date))) el.classList.add('has-event');
-        el.onclick = () => selectDate(date);
+        if (date.toDateString() === new Date().toDateString()) el.classList.add('today');
+        if (date.toDateString() === selectedDate.toDateString()) el.classList.add('selected');
+        if (events.some(e => new Date(e.date).toDateString() === date.toDateString())) el.classList.add('has-event');
+        el.onclick = () => { selectedDate = date; renderCalendar(); renderUpcomingForDay(date); };
         grid.appendChild(el);
       }
-      renderEvents();
-      renderUpcoming();
+      renderUpcomingForDay(selectedDate);
     }
 
-    function saveEvent() {
-      const input = document.getElementById('event-input');
-      const rec = document.getElementById('event-recurrence').value;
-      if (!input.value) return;
-      events.push({ title: input.value, date: selectedDate.toISOString(), recurrence: rec });
-      localStorage.setItem('doa_events', JSON.stringify(events));
-      input.value = '';
-      renderCalendar(); 
-    }
-
-    function renderEvents() {
-      const list = document.getElementById('event-list');
-      list.innerHTML = '';
-      const dayEvents = events.filter(e => matchesEvent(e, selectedDate));
-      if (dayEvents.length === 0) list.innerHTML = `<p class="text-[11px] text-gray-300 italic">No schedules.</p>`;
-      dayEvents.forEach((e) => {
-        const div = document.createElement('div');
-        div.className = "bg-white p-4 rounded-2xl text-[11px] font-bold flex justify-between items-center shadow-sm";
-        div.innerHTML = `<span>${e.title}</span><button onclick="deleteEvent(${events.indexOf(e)})" class="text-red-200 hover:text-red-400">✕</button>`;
-        list.appendChild(div);
-      });
-    }
-
-    function renderUpcoming() {
-      const highlights = document.getElementById('upcoming-highlights');
-      highlights.innerHTML = '';
-      const now = new Date().setHours(0,0,0,0);
-      const sorted = events.filter(e => new Date(e.date) >= now || e.recurrence !== 'none')
-                          .sort((a,b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
-      
-      sorted.forEach(e => {
-        const chip = document.createElement('div');
-        chip.className = "upcoming-chip";
-        const d = new Date(e.date).toLocaleDateString('default', {month:'short', day:'numeric'});
-        chip.innerText = `${e.recurrence !== 'none' ? '↻' : d} ${e.title}`;
-        chip.onclick = () => { viewDate = new Date(e.date); selectedDate = new Date(e.date); renderCalendar(); };
-        highlights.appendChild(chip);
-      });
-    }
-
-    function deleteEvent(idx) { events.splice(idx, 1); localStorage.setItem('doa_events', JSON.stringify(events)); renderCalendar(); }
-    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
-    function selectDate(date) { selectedDate = date; document.getElementById('selected-date-label').innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' }); renderCalendar(); }
-    
-    function toggleCalendarView() {
-        const single = document.getElementById('single-month-container'), year = document.getElementById('year-view-container'), nav = document.getElementById('month-nav-controls'), btn = document.getElementById('view-toggle-btn');
-        isYearView = !isYearView;
-        if (isYearView) { single.classList.add('hidden'); year.classList.remove('hidden'); nav.classList.add('invisible'); btn.innerText = "Month View"; renderYearView();
-        } else { single.classList.remove('hidden'); year.classList.add('hidden'); nav.classList.remove('invisible'); btn.innerText = "Year View"; renderCalendar(); }
-    }
-
-    function renderYearView() {
-        const container = document.getElementById('year-view-container');
-        container.innerHTML = '';
-        const currentYear = viewDate.getFullYear();
-        for (let m = 0; m < 12; m++) {
-            const div = document.createElement('div');
-            div.className = 'mini-month';
-            div.innerHTML = `<p class="text-[10px] font-black uppercase mb-1 text-[#00E676]">${new Date(currentYear, m).toLocaleString('default', {month:'short'})}</p>`;
-            div.onclick = () => { viewDate = new Date(currentYear, m, 1); toggleCalendarView(); };
-            container.appendChild(div);
+    function renderUpcomingForDay(date) {
+        const list = document.getElementById('upcoming-events-list');
+        const label = document.getElementById('upcoming-label');
+        list.innerHTML = '';
+        label.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' }) + ' Upcoming';
+        
+        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
+        if (dayEvents.length === 0) {
+            list.innerHTML = `<p class="text-[11px] text-gray-300 italic">No events scheduled.</p>`;
+            return;
         }
+
+        dayEvents.forEach((e, idx) => {
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-3 animate-fadeIn";
+            div.innerHTML = `<div class="w-1 h-6 bg-[#00E676] rounded-full mt-1"></div>
+                             <div><p class="text-xs font-bold">${e.title}</p><p class="text-[9px] text-gray-400 font-bold uppercase">Schedule</p></div>`;
+            list.appendChild(div);
+        });
     }
 
-    // ─── DOUGHA VOICE ENGINE ───
+    function quickAddEvent() {
+        const input = document.getElementById('quick-add-input');
+        if (!input.value) return;
+        events.push({ title: input.value, date: selectedDate.toISOString() });
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        input.value = '';
+        renderCalendar();
+    }
+
+    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
+
+    // ─── 2. DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
       const n = ["Samantha", "Karen", "Aria", "Google US English Female"];
@@ -269,7 +218,7 @@
       window.speechSynthesis.speak(u);
     }
 
-    // ─── UI & CHAT ───
+    // ─── 3. UI & NAVIGATION ───
     function toggleSidebar() {
       const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
       sb.classList.toggle('closed');
@@ -288,9 +237,16 @@
     }
 
     function setChatMode(chatting) {
-      const hero = document.getElementById('hero-section'), history = document.getElementById('chat-history'), shell = document.getElementById('chat-shell');
-      if (chatting) { hero.style.display = 'none'; history.classList.remove('hidden'); history.style.display = 'flex'; shell.classList.remove('justify-center'); shell.classList.add('justify-end'); shell.style.paddingBottom = '0';
-      } else { hero.style.display = 'block'; history.classList.add('hidden'); shell.classList.remove('justify-end'); shell.classList.add('justify-center'); shell.style.paddingBottom = '15vh'; }
+      const hero = document.getElementById('hero-section'), history = document.getElementById('chat-history'), shell = document.getElementById('chat-shell'), centerGroup = document.getElementById('center-group');
+      if (chatting) {
+        hero.style.display = 'none'; history.classList.remove('hidden'); history.style.display = 'flex';
+        shell.classList.remove('justify-center'); shell.classList.add('justify-end');
+        shell.style.paddingBottom = '0'; centerGroup.classList.remove('flex-col');
+      } else {
+        hero.style.display = 'block'; history.classList.add('hidden');
+        shell.classList.remove('justify-end'); shell.classList.add('justify-center');
+        centerGroup.classList.add('flex-col'); shell.style.paddingBottom = '15vh';
+      }
     }
 
     function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
@@ -317,9 +273,7 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const content = text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
-      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${content}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
+      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
       history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
