@@ -255,42 +255,101 @@
         });
     }
 
-    function simulateDoaTyping(text, inputElement) {
-        let i = 0;
-        let currentText = "";
-
-        clearInterval(typingInterval); // Clear any existing interval
-
-        typingInterval = setInterval(() => {
-            if (i < text.length) {
-                currentText += text.charAt(i);
-                inputElement.value = currentText; // Update the input field
-                i++;
-            } else {
-                clearInterval(typingInterval); // Stop when the typing is done
-            }
-        }, 50 + Math.random() * 50); // Adjust typing speed (milliseconds)
-    }
-
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
-        const inputText = input.value.trim(); // Get the user input
-        if (!inputText) return; // Prevent saving if input is empty
+        if (!input.value) return;
+        events.push({ title: input.value, date: selectedDate.toISOString() });
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        input.value = '';
+        renderCalendar();
+    }
 
-        // Start Doa typing animation in the input field
-        simulateDoaTyping(inputText, input);
+    function deleteEvent(dateStr, title) {
+        events = events.filter(e => !(e.date === dateStr && e.title === title));
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        renderCalendar();
+    }
 
-        // Save the event after a short delay (to let typing finish)
-        setTimeout(() => {
-            saveEvent(inputText);
-            input.value = '';  // Clear the input after saving
-        }, 800 + (inputText.length * 50) ); // Add a delay based on text length
+    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
+
+    function speak(text) {
+      if (!voiceActive || !text) return;
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
+      const u = new SpeechSynthesisUtterance(clean);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
+      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
+      window.speechSynthesis.speak(u);
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
+      sb.classList.toggle('closed');
+      if (sb.classList.contains('closed')) mb.classList.add('show'); else mb.classList.remove('show');
+    }
+
+    function switchView(viewName) {
+      localStorage.setItem('doa_active_view', viewName);
+      document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
+      const target = document.getElementById(viewName + '-view');
+      if(target) target.classList.remove('hidden');
+      const btn = document.getElementById('btn-' + viewName);
+      if(btn) btn.classList.add('sidebar-active');
+      const sidebar = document.getElementById('main-sidebar');
+      if (!sidebar.classList.contains('closed')) toggleSidebar();
+      if (viewName === 'chat') setChatMode(chatMemory.length > 0);
+      if (viewName === 'calendar') renderCalendar();
+    }
+
+    function setChatMode(isChatting) {
+      const hero = document.getElementById('hero-section'), history = document.getElementById('chat-history'), shell = document.getElementById('chat-shell'), centerGroup = document.getElementById('center-group');
+      if (isChatting) {
+        hero.style.display = 'none'; history.classList.remove('hidden'); history.style.display = 'flex';
+        shell.classList.remove('justify-center'); shell.classList.add('justify-end');
+        centerGroup.classList.remove('flex-col'); shell.style.paddingBottom = '0';
+      } else {
+        hero.style.display = 'block'; history.classList.add('hidden');
+        shell.classList.remove('justify-end'); shell.classList.add('justify-center');
+        centerGroup.classList.add('flex-col'); shell.style.paddingBottom = '15vh';
+      }
+    }
+
+    function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
+
+    async function handleMessage() {
+      window.speechSynthesis.cancel();
+      if (isThinking) return;
+      const input = document.getElementById('user-input'), rawText = input.value.trim();
+      if (!rawText) return;
+      setChatMode(true); addMessage('user', rawText); input.value = '';
+      isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
+      try {
+        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
+        const data = await res.json();
+        addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
+        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
+        localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
+
+        // Check if the response includes the event creation instruction
+        if (data.response.includes("[ACTION:CREATE_EVENT]")) {
+            // Save the raw user input as the event title.
+            const eventText = rawText;
+            // Default: use the selected date if the worker does not return with one.
+            const eventDate = selectedDate;
+            saveEvent(eventText, eventDate);
+
+            switchView('calendar'); // Switch to calendar view
+        }
+        speak(data.response);
+      } catch (e) { addMessage('doa', "OS Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
    // Function to handle saving the event
-    function saveEvent(text) {
+    function saveEvent(text, eventDate) {
         if (!text) return; // Ensure there's text to save
-        const selectedDateISO = selectedDate.toISOString(); // Get selected date
+        const selectedDateISO = eventDate.toISOString(); // Get selected date
 
         // Check for multiple events (separated by newlines or commas)
         const eventTexts = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
@@ -372,42 +431,21 @@
         addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
+
+        // Check if the response includes the event creation instruction
+        if (data.response.includes("[ACTION:CREATE_EVENT]")) {
+            // Save the raw user input as the event title.
+            const eventText = rawText;
+
+            // Default: use the selected date if the worker does not return with one.
+            const eventDate = selectedDate; // Use the selected date.
+            saveEvent(eventText, eventDate);
+
+            switchView('calendar'); // Switch to calendar view
+        }
         speak(data.response);
       } catch (e) { addMessage('doa', "OS Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
-
-    function addMessage(sender, text) {
-      const history = document.getElementById('chat-history');
-      const idx = messageRegistry.push(text) - 1;
-      const row = document.createElement('div');
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
-      history.appendChild(row); history.scrollTop = history.scrollHeight;
-    }
-
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
-    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
-    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
-
-    // Add event listener for Enter key on quick add input
-    document.getElementById('quick-add-input').addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault(); // Prevent the default form submission (if any)
-            quickAddEvent(); // Call your function to add the event
-        }
-    });
-
-
-    window.onload = () => {
-      updateVoiceUI(); loadVoices();
-      const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      if (chatMemory.length > 0) {
-        chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
-        if (lastView === 'chat') setChatMode(true);
-      } else { setChatMode(false); }
-      switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed');
-    };
   </script>
 </body>
 </html>
