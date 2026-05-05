@@ -31,7 +31,7 @@
     
     .bubble-action-btn { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; transition: 0.2s; cursor: pointer; }
     
-    #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
+    #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 60; transition: 0.2s; opacity: 0; pointer-events: none; /* Initially hidden */ }
     #menu-btn.show { opacity: 1; pointer-events: auto; }
 
     /* Centered Calendar Card */
@@ -247,6 +247,7 @@
         const sidebar = document.getElementById('main-sidebar');
         const menuBtn = document.getElementById('menu-btn');
         sidebar.classList.toggle('closed');
+        // ** Correctly toggle the 'show' class on the menu button **
         menuBtn.classList.toggle('show');
     }
 
