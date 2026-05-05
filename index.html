@@ -338,6 +338,8 @@
       if (isThinking) return;
       const input = document.getElementById('user-input'), rawText = input.value.trim();
       if (!rawText) return;
+        // Display the user's message immediately
+        addMessage('user', rawText);
       isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
 
         // ---  EVENT CREATION INTERCEPTION ---
@@ -352,8 +354,6 @@
             return; // Stop further processing for this message
         }
       // ---  DEFAULT CHAT LOGIC ---
-        setChatMode(true);  // Ensure we are in chat mode before any API calls.
-        addMessage('user', rawText);
       try {
         const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
         const data = await res.json();
