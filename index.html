@@ -21,17 +21,18 @@
     
     #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
     #menu-btn.show { opacity: 1; pointer-events: auto; }
-    #chat-shell { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
-    /* Calendar Grid Fixes */
+    /* Calendar Grid Physics */
     .cal-day { aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; position: relative; font-size: 1rem; font-weight: 700; }
     .cal-day:hover { background: #f9fafb; border-color: #f3f4f6; }
     .cal-day.today { background: #00E676; color: black; }
     .cal-day.has-event::after { content: ''; width: 5px; height: 5px; background: #00E676; border-radius: 50%; position: absolute; bottom: 8px; }
     .cal-day.today.has-event::after { background: black; }
     
-    .mini-month { background: white; padding: 12px; border-radius: 20px; transition: 0.2s; cursor: pointer; border: 1px solid #f3f4f6; }
-    .mini-month:hover { border-color: #00E676; transform: translateY(-2px); }
+    .upcoming-chip { background: #f9fafb; border: 1px solid #f3f4f6; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .upcoming-chip:hover { border-color: #00E676; background: white; }
+
+    #chat-shell { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
 </head>
 <body class="bg-white">
@@ -46,7 +47,7 @@
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
-        <button onclick="toggleSidebar()" class="text-gray-400 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
+        <button onclick="toggleSidebar()" class="text-gray-300 text-[10px] font-bold uppercase tracking-widest hover:text-black">Hide</button>
       </div>
       <nav class="flex-1 px-4 space-y-1">
         <button onclick="startNewChat()" class="sidebar-item hover:bg-gray-50 mb-4 text-black border border-gray-100 transition-all active:scale-95">+ New Chat</button>
@@ -54,7 +55,7 @@
         <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
         <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
-      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-300 font-bold uppercase">OS Engine v2.8</span></div>
+      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v2.9</span></div>
     </aside>
 
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
@@ -90,28 +91,33 @@
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-col p-8 overflow-hidden">
         <div class="flex flex-1 gap-8 overflow-hidden">
             <div class="flex-[3] flex flex-col overflow-hidden">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-start mb-2">
                     <div>
-                        <h1 class="text-4xl font-black uppercase tracking-tighter inline-block mr-4" id="cal-main-title">Calendar</h1>
-                        <button onclick="toggleCalendarView()" id="view-toggle-btn" class="bg-gray-50 text-[10px] font-black uppercase px-4 py-2 rounded-xl hover:bg-gray-100">Show 12 Months</button>
+                        <h1 class="text-4xl font-black uppercase tracking-tighter mb-2" id="cal-main-title">Calendar</h1>
+                        <!-- Upcoming Highlights under label -->
+                        <div id="upcoming-highlights" class="flex gap-2 overflow-x-auto hide-scrollbar pb-4"></div>
                     </div>
-                    <div id="month-nav-controls" class="flex gap-2">
-                        <button onclick="changeMonth(-1)" class="w-10 h-10 hover:bg-gray-100 rounded-full font-bold">←</button>
-                        <button onclick="changeMonth(1)" class="w-10 h-10 hover:bg-gray-100 rounded-full font-bold">→</button>
+                    <div class="flex gap-4 items-center">
+                        <button onclick="toggleCalendarView()" id="view-toggle-btn" class="bg-gray-50 text-[10px] font-black uppercase px-4 py-2 rounded-xl hover:bg-gray-100">Year View</button>
+                        <div id="month-nav-controls" class="flex gap-1">
+                            <button onclick="changeMonth(-1)" class="w-8 h-8 hover:bg-gray-100 rounded-full font-bold">←</button>
+                            <button onclick="changeMonth(1)" class="w-8 h-8 hover:bg-gray-100 rounded-full font-bold">→</button>
+                        </div>
                     </div>
                 </div>
 
                 <div id="calendar-content-area" class="flex-1 overflow-y-auto hide-scrollbar">
                     <div id="single-month-container" class="h-full flex flex-col">
-                        <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black text-gray-400 uppercase mb-4">
+                        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 uppercase mb-2">
                             <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
                         </div>
-                        <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-1 flex-1"></div>
                     </div>
-                    <div id="year-view-container" class="hidden grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+                    <div id="year-view-container" class="hidden grid grid-cols-3 lg:grid-cols-4 gap-4"></div>
                 </div>
             </div>
 
+            <!-- Event Sidebar -->
             <div class="w-80 bg-gray-50 rounded-[40px] p-8 flex flex-col shadow-sm border border-gray-100">
                 <h2 class="text-2xl font-black mb-1 uppercase tracking-tighter" id="selected-date-label">Today</h2>
                 <p class="text-[10px] font-bold text-gray-400 uppercase mb-8">OS Schedule</p>
@@ -120,17 +126,12 @@
                     <input id="event-input" type="text" placeholder="Event name..." class="w-full bg-white border border-gray-100 p-4 rounded-2xl text-sm outline-none shadow-sm focus:border-[#00E676] transition-all">
                     <select id="event-recurrence" class="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[11px] font-bold uppercase outline-none shadow-sm cursor-pointer">
                         <option value="none">None</option>
-                        <option value="monthly">Repeat Monthly</option>
-                        <option value="yearly">Repeat Yearly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
                     </select>
                     <button onclick="saveEvent()" class="w-full bg-[#00E676] text-black font-black uppercase py-5 rounded-2xl text-[11px] tracking-widest active:scale-95 transition-all shadow-lg shadow-[#00E676]/20">Save Event</button>
                 </div>
             </div>
-        </div>
-
-        <div class="h-28 mt-6 border-t border-gray-100 pt-6">
-            <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">Coming Up</p>
-            <div id="upcoming-list" class="flex gap-4 overflow-x-auto hide-scrollbar"></div>
         </div>
       </div>
 
@@ -146,13 +147,9 @@
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date(), isYearView = false;
 
-    // ─── 1. CALENDAR ENGINE (RECURRENCE & MON-SUN) ───
+    // ─── CALENDAR ENGINE (MON-SUN) ───
     function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
-    function getFirstDayOfMonth(year, month) { 
-        let day = new Date(year, month, 1).getDay(); 
-        return day === 0 ? 6 : day - 1; 
-    }
-
+    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
     function isSameDay(d1, d2) { return d1.toDateString() === d2.toDateString(); }
 
     function matchesEvent(event, date) {
@@ -173,7 +170,6 @@
       const totalDays = getDaysInMonth(year, month);
 
       for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
-
       for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d);
         const el = document.createElement('div');
@@ -196,36 +192,36 @@
       events.push({ title: input.value, date: selectedDate.toISOString(), recurrence: rec });
       localStorage.setItem('doa_events', JSON.stringify(events));
       input.value = '';
-      renderCalendar(); // This triggers both RenderEvents and RenderUpcoming
+      renderCalendar(); 
     }
 
     function renderEvents() {
       const list = document.getElementById('event-list');
       list.innerHTML = '';
       const dayEvents = events.filter(e => matchesEvent(e, selectedDate));
-      if (dayEvents.length === 0) list.innerHTML = `<p class="text-[11px] text-gray-300 italic">Clear schedule.</p>`;
+      if (dayEvents.length === 0) list.innerHTML = `<p class="text-[11px] text-gray-300 italic">No schedules.</p>`;
       dayEvents.forEach((e) => {
         const div = document.createElement('div');
-        div.className = "bg-white p-4 rounded-2xl text-[11px] font-bold flex justify-between items-center shadow-sm border border-gray-50";
-        div.innerHTML = `<span>${e.title}</span><button onclick="deleteEvent(${events.indexOf(e)})" class="text-gray-200 hover:text-red-400">✕</button>`;
+        div.className = "bg-white p-4 rounded-2xl text-[11px] font-bold flex justify-between items-center shadow-sm";
+        div.innerHTML = `<span>${e.title}</span><button onclick="deleteEvent(${events.indexOf(e)})" class="text-red-200 hover:text-red-400">✕</button>`;
         list.appendChild(div);
       });
     }
 
     function renderUpcoming() {
-      const list = document.getElementById('upcoming-list');
-      list.innerHTML = '';
+      const highlights = document.getElementById('upcoming-highlights');
+      highlights.innerHTML = '';
       const now = new Date().setHours(0,0,0,0);
       const sorted = events.filter(e => new Date(e.date) >= now || e.recurrence !== 'none')
-                          .sort((a,b) => new Date(a.date) - new Date(b.date)).slice(0, 10);
+                          .sort((a,b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
       
       sorted.forEach(e => {
-        const div = document.createElement('div');
-        div.className = "min-w-[140px] bg-gray-50 p-4 rounded-[20px] cursor-pointer border border-transparent hover:border-[#00E676] transition-all";
-        const dateStr = new Date(e.date).toLocaleDateString('default', {month:'short', day:'numeric'});
-        div.innerHTML = `<p class="text-[9px] font-black text-[#00E676] mb-1 uppercase">${e.recurrence !== 'none' ? '↻ ' + e.recurrence : dateStr}</p><p class="text-[11px] font-bold truncate">${e.title}</p>`;
-        div.onclick = () => { viewDate = new Date(e.date); selectedDate = new Date(e.date); if(isYearView) toggleCalendarView(); else renderCalendar(); };
-        list.appendChild(div);
+        const chip = document.createElement('div');
+        chip.className = "upcoming-chip";
+        const d = new Date(e.date).toLocaleDateString('default', {month:'short', day:'numeric'});
+        chip.innerText = `${e.recurrence !== 'none' ? '↻' : d} ${e.title}`;
+        chip.onclick = () => { viewDate = new Date(e.date); selectedDate = new Date(e.date); renderCalendar(); };
+        highlights.appendChild(chip);
       });
     }
 
@@ -236,8 +232,8 @@
     function toggleCalendarView() {
         const single = document.getElementById('single-month-container'), year = document.getElementById('year-view-container'), nav = document.getElementById('month-nav-controls'), btn = document.getElementById('view-toggle-btn');
         isYearView = !isYearView;
-        if (isYearView) { single.classList.add('hidden'); year.classList.remove('hidden'); nav.classList.add('invisible'); btn.innerText = "Back to Month"; renderYearView();
-        } else { single.classList.remove('hidden'); year.classList.add('hidden'); nav.classList.remove('invisible'); btn.innerText = "Show 12 Months"; renderCalendar(); }
+        if (isYearView) { single.classList.add('hidden'); year.classList.remove('hidden'); nav.classList.add('invisible'); btn.innerText = "Month View"; renderYearView();
+        } else { single.classList.remove('hidden'); year.classList.add('hidden'); nav.classList.remove('invisible'); btn.innerText = "Year View"; renderCalendar(); }
     }
 
     function renderYearView() {
@@ -247,13 +243,13 @@
         for (let m = 0; m < 12; m++) {
             const div = document.createElement('div');
             div.className = 'mini-month';
-            div.innerHTML = `<p class="text-[10px] font-black uppercase mb-2 text-[#00E676]">${new Date(currentYear, m).toLocaleString('default', {month:'short'})}</p>`;
+            div.innerHTML = `<p class="text-[10px] font-black uppercase mb-1 text-[#00E676]">${new Date(currentYear, m).toLocaleString('default', {month:'short'})}</p>`;
             div.onclick = () => { viewDate = new Date(currentYear, m, 1); toggleCalendarView(); };
             container.appendChild(div);
         }
     }
 
-    // ─── 2. DOUGHA VOICE ENGINE ───
+    // ─── DOUGHA VOICE ENGINE ───
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
       const n = ["Samantha", "Karen", "Aria", "Google US English Female"];
@@ -265,15 +261,15 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const speech = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
-      const u = new SpeechSynthesisUtterance(speech);
+      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
+      const u = new SpeechSynthesisUtterance(clean);
       if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.35; u.rate = 0.95;
+      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
       u.onstart = () => { setInterval(() => { if(window.speechSynthesis.speaking){ window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
     }
 
-    // ─── 3. UI NAVIGATION ───
+    // ─── UI & CHAT ───
     function toggleSidebar() {
       const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
       sb.classList.toggle('closed');
@@ -321,7 +317,9 @@
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const content = text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
+      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${content}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak('${text.replace(/'/g, "\\'")}')">🔊 Speak</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
       history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
