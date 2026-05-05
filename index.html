@@ -175,7 +175,7 @@
         //Simple date matching, could add more
         if (lower.includes('today')) return today;
         if (lower.includes('tomorrow')) target.setDate(today.getDate() + 1);
-        else if (lower.includes('15th')) target.setDate(today.getDate() + 11); // assuming its the 15th, needs real logic
+        else if (lower.includes('15th')) target.setDate(new Date(today.getFullYear(), today.getMonth(), 15).getDate()); //Fixed Date
         return target;
     }
 
