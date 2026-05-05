@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
+    /* ... (Your existing styles remain the same) ... */
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     
@@ -50,9 +51,75 @@
     /* Split Pane Layout */
     .left-os-panel { width: 340px; border-right: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
     .right-os-panel { width: 360px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
+
+    /* Modal Styling */
+    .modal {
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      display: none; /* Hidden by default */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto; /* Auto margin top/bottom */
+      padding: 30px;
+      border: 1px solid #888;
+      width: 40%; /* Could be adjusted */
+      max-width: 500px;
+      border-radius: 15px;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .close-button {
+      color: #aaa;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="bg-white">
+
+  <!-- Login/Signup Modal -->
+  <div id="auth-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-button" id="close-auth-modal">&times;</span>
+      <h2>Log in or Sign Up</h2>
+      <p class="text-sm text-gray-600 mb-6">You'll get smarter responses and can upload files, images, and more.</p>
+
+      <div id="email-form">
+        <input type="email" id="email-input" placeholder="Email address" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <input type="password" id="password-input" placeholder="Password" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <div class="flex justify-between items-center">
+          <button id="email-signin" class="bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors">Sign In</button>
+          <button id="email-signup" class="bg-green-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-green-700 transition-colors">Sign Up</button>
+        </div>
+      </div>
+
+      <div id="profile-form" class="mt-4 hidden">
+        <input type="text" id="name-input" placeholder="Your Name" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <input type="text" id="username-input" placeholder="Username" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <button id="profile-submit" class="w-full bg-green-600 text-white rounded-lg px-4 py-3 font-semibold hover:bg-green-700 transition-colors">Create Profile</button>
+      </div>
+    </div>
 
   <div class="flex h-screen w-screen overflow-hidden relative">
     
@@ -78,25 +145,13 @@
 
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
-        <button class="hover:text-black">Login</button>
-        <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Sign Up</button>
+        <!-- The login/signup button will now trigger the modal -->
+        <button id="login-signup-header-btn" class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Log In / Sign Up</button>
+        <div id="user-info" class="flex items-center gap-4 hidden">
+          <span id="user-name" class="font-bold"></span>
+          <button id="signout-button" class="text-gray-600 hover:text-red-500">Sign Out</button>
+        </div>
       </header>
-
-      <!-- LOGIN FORM -->
-      <div id="login-form" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-md w-96">
-          <h2>Log in or Sign Up</h2>
-          <div id="email-form" class="mt-4">
-              <input type="email" id="email-input" placeholder="Email address" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2">
-              <input type="password" id="password-input" placeholder="Password" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2">
-              <button id="email-signin" class="bg-blue-500 text-white rounded-md px-4 py-2">Sign In</button>
-              <button id="email-signup" class="bg-green-500 text-white rounded-md px-4 py-2 ml-2">Sign Up</button>
-          </div>
-          <div id="profile-form" class="mt-4 hidden">
-              <input type="text" id="name-input" placeholder="Your Name" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2">
-              <input type="text" id="username-input" placeholder="Username" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2">
-              <button id="profile-submit" class="bg-green-500 text-white rounded-md px-4 py-2">Create Profile</button>
-          </div>
-      </div>
 
       <!-- CHAT VIEW -->
       <div id="app-ui" class="flex-1 flex flex-col bg-white h-full relative overflow-hidden hidden">
@@ -182,8 +237,10 @@
     const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo'; // <<< REPLACE WITH YOUR SUPABASE ANON KEY
     const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-    // HTML Elements (Login Form)
-    const loginForm = document.getElementById('login-form');
+    // HTML Elements for Auth Modal
+    const authModal = document.getElementById('auth-modal');
+    const closeAuthModal = document.getElementById('close-auth-modal');
+    const loginSignupHeaderBtn = document.getElementById('login-signup-header-btn');
     const emailForm = document.getElementById('email-form');
     const emailSignin = document.getElementById('email-signin');
     const emailSignup = document.getElementById('email-signup');
@@ -194,7 +251,7 @@
     const usernameInput = document.getElementById('username-input');
     const profileSubmit = document.getElementById('profile-submit');
 
-    // HTML Elements (Main App UI)
+    // HTML Elements for Main App UI
     const appUI = document.getElementById('app-ui');
     const userInfo = document.getElementById('user-info');
     const userNameDisplay = document.getElementById('user-name');
@@ -202,9 +259,23 @@
     const loginButtonHeader = document.querySelector('header button:nth-of-type(1)'); // Select Login button in header
     const signupButtonHeader = document.querySelector('header button:nth-of-type(2)'); // Select Sign Up button in header
 
-    // --- AUTHENTICATION LOGIC ---
-    googleLoginButton?.addEventListener('click', async () => { // Removed Google login as per user request
-        // If you were to add Google login again, this is where it would go.
+    // --- AUTHENTICATION MODAL LOGIC ---
+    loginSignupHeaderBtn?.addEventListener('click', () => {
+        authModal.classList.remove('hidden');
+        // Ensure email form is visible by default
+        emailForm.classList.remove('hidden');
+        profileForm.classList.add('hidden');
+    });
+
+    closeAuthModal?.addEventListener('click', () => {
+        authModal.classList.add('hidden');
+    });
+
+    // Close modal if clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === authModal) {
+            authModal.classList.add('hidden');
+        }
     });
 
     emailLoginButton?.addEventListener('click', () => {
@@ -221,6 +292,7 @@
             alert('Sign-in failed. Please check your credentials.');
         } else {
             checkUserProfile();
+            authModal.classList.add('hidden'); // Close modal on successful sign-in
         }
     });
 
@@ -261,7 +333,7 @@
         } else {
             // Profile created successfully
             profileForm.classList.add('hidden');
-            loginForm.classList.add('hidden'); // Hide the login form entirely
+            authModal.classList.add('hidden'); // Close modal
             updateUIForUser(name || username); // Update UI with user info
             alert('Profile created successfully!');
         }
@@ -304,7 +376,7 @@
             } else {
                // User profile doesn't exist, hide the UI and show profile creation
                 hideUI();
-                profileForm.classList.remove('hidden');
+                profileForm.classList.remove('hidden'); // Show the profile form
             }
         }
     }
@@ -317,13 +389,9 @@
             alert('Sign out failed. Please try again.');
         } else {
             hideUI();
-            // Optionally, redirect or clear the entire UI
             location.reload();
         }
     }
-
-    // Event listener for signout button
-    signoutButton?.addEventListener('click', signOut);
 
     // --- INITIAL LOAD LOGIC ---
     window.onload = () => {
@@ -337,7 +405,7 @@
           } else {
               // User is not signed in, show login form
               loginForm.classList.remove('hidden');
-              appUI.classList.add('hidden'); // Ensure app UI is hidden
+              appUI.classList.add('hidden');
           }
       });
 
@@ -401,7 +469,7 @@
         eventTexts.forEach(async (eventText) => { // Make this async to await Supabase insert
             if (eventText) {
                 const { data, error } = await supabase
-                    .from('events') // Make sure your events table is named 'events'
+                    .from('events') // <<< ENSURE YOUR EVENTS TABLE IS NAMED 'events'
                     .insert([{ title: eventText, date: selectedDateISO, user_id: userId }]);
 
                 if (error) {
@@ -449,7 +517,7 @@
       const btn = document.getElementById('btn-' + viewName);
       if(btn) btn.classList.add('sidebar-active');
       const sidebar = document.getElementById('main-sidebar');
-      if (!sidebar.classList.remove('closed')) toggleSidebar();
+      if (!sidebar.classList.contains('closed')) toggleSidebar();
       if (viewName === 'chat') setChatMode(chatMemory.length > 0);
       if (viewName === 'calendar') renderCalendar();
     }
@@ -499,12 +567,12 @@
                 // If the date is invalid, alert
                 if (isNaN(eventDate.getTime())) {
                     console.error("Invalid date format received from server.");
-                    return;  // Abort event creation
+                    // Do not switch view or try to save if date is invalid
+                } else {
+                    // Save the event using the parsed date
+                    saveEvent(eventTitle, eventDate); // Call saveEvent with title and date
+                    switchView('calendar'); // Switch to calendar view
                 }
-
-                // Save the event using the selected date in the chat.
-                saveEvent(eventTitle, eventDate); // Call saveEvent with title and date
-                switchView('calendar'); // Switch to calendar view
             } else {
                 console.error("Could not parse event details from response:", data.response);
             }
@@ -543,6 +611,9 @@
               // User is not signed in, show login form
               loginForm.classList.remove('hidden');
               appUI.classList.add('hidden');
+              // Ensure header buttons are visible when not logged in
+              loginButtonHeader.classList.remove('hidden');
+              signupButtonHeader.classList.remove('hidden');
           }
       });
 
