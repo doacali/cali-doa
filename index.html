@@ -152,8 +152,8 @@
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-    let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
-    let messageRegistry = []; 
+    let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || [];
+    let messageRegistry = [];
     let events = JSON.parse(localStorage.getItem('doa_events')) || [];
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
@@ -173,7 +173,7 @@
       const title = document.getElementById('cal-main-title');
       const monthLabel = document.getElementById('month-name-label');
       const today = new Date(); today.setHours(0,0,0,0);
-      
+
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
       const monthName = viewDate.toLocaleString('default', { month: 'long' });
@@ -197,7 +197,7 @@
         if (date < today) el.classList.add('past-date');
         if (date.getTime() === today.getTime()) el.classList.add('today');
         if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
-        
+
         // ─── INFO SPEAKER ICON ───
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
         if (dayEvents.length > 0) {
@@ -245,7 +245,7 @@
         list.innerHTML = '';
         header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-        
+
         if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
         else dayEvents.forEach(e => {
             const div = document.createElement('div');
@@ -287,17 +287,23 @@
         }, 800 + (inputText.length * 50) ); // Add a delay based on text length
     }
 
-
-   // Function to handle saving the event 
-   function saveEvent(text) {
-        // Save event logic
+   // Function to handle saving the event
+    function saveEvent(text) {
         if (!text) return; // Ensure there's text to save
         const selectedDateISO = selectedDate.toISOString(); // Get selected date
 
-        events.push({ title: text, date: selectedDateISO });
+        // Check for multiple events (separated by newlines or commas)
+        const eventTexts = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+
+        eventTexts.forEach(eventText => {
+            if (eventText) {  // Ensure the event text isn't empty
+                events.push({ title: eventText, date: selectedDateISO });
+            }
+        });
+
         localStorage.setItem('doa_events', JSON.stringify(events));
         renderCalendar();
-   }
+    }
 
     function deleteEvent(dateStr, title) {
         events = events.filter(e => !(e.date === dateStr && e.title === title));
@@ -382,16 +388,25 @@
     function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
     function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
-    
-    window.onload = () => { 
-      updateVoiceUI(); loadVoices(); 
+
+    // Add event listener for Enter key on quick add input
+    document.getElementById('quick-add-input').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevent the default form submission (if any)
+            quickAddEvent(); // Call your function to add the event
+        }
+    });
+
+
+    window.onload = () => {
+      updateVoiceUI(); loadVoices();
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
       if (chatMemory.length > 0) {
         chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
         if (lastView === 'chat') setChatMode(true);
       } else { setChatMode(false); }
       switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed'); 
+      document.getElementById('main-sidebar').classList.remove('closed');
     };
   </script>
 </body>
