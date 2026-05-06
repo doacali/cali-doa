@@ -9,9 +9,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     
-    <!-- 1. STABLE ENGINE LOADER (Bypasses Module Errors) -->
-    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2"></script>
-
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -27,12 +24,13 @@
         .cal-day { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 14px; font-weight: 600; }
         .cal-day.today { background: #00E676; color: black; }
         .left-os-panel, .right-os-panel { width: 340px; padding: 40px 30px; border-right: 1px solid #f9fafb; height: 100%; }
+        /* Voice Switch Knobs */
+        #voice-knob { transition: all 0.2s; }
     </style>
 </head>
 <body>
 
 <div class="flex h-screen w-screen overflow-hidden relative">
-    <!-- Sidebar -->
     <aside id="main-sidebar">
         <div class="p-6 flex items-center justify-between">
             <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer">DOA CALI</h1>
@@ -48,7 +46,6 @@
     </aside>
 
     <main class="flex-1 flex flex-col bg-white relative">
-        <!-- Header -->
         <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
             <button>Login</button>
             <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold">Sign Up</button>
@@ -68,11 +65,13 @@
                         <div class="flex justify-between items-center mb-3 px-4">
                             <div class="flex items-center gap-2">
                                 <div id="brain-led" class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></div>
-                                <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase italic">Booting Engine...</p>
+                                <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase italic">Linking Neural Bridge...</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-[9px] font-black text-gray-400 uppercase">Voice</span>
-                                <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
+                                <span class="text-[9px] font-black text-gray-400 uppercase">Live Voice</span>
+                                <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer">
+                                    <div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[32px] p-3 flex items-center">
@@ -100,88 +99,88 @@
     </main>
 </div>
 
-<script>
-    // --- CORE VARIABLES ---
-    let pipeline = null;
-    let classifier = null;
-    let voiceActive = false;
+<!-- 1. MODERN NEURAL ENGINE LOADER (V3) -->
+<script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0-alpha.19';
+
+    // State
+    let generator = null;
+    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = [];
     let isThinking = false;
-    let viewDate = new Date();
 
-    // --- 1. ROBUST BOOT SYSTEM ---
-    async function initEngine() {
-        const statusText = document.getElementById('status-text');
-        const led = document.getElementById('brain-led');
+    // UI Elements
+    const statusText = document.getElementById('status-text');
+    const led = document.getElementById('brain-led');
+    const history = document.getElementById('chat-history');
+    const hero = document.getElementById('hero-section');
 
+    async function init() {
         try {
-            statusText.innerText = "LINKING NEURAL CORE...";
-            
-            // Check if library loaded
-            if (typeof transformers === 'undefined') {
-                throw new Error("Library not found. Check internet connection.");
-            }
-
-            // Using the global object 'transformers' from the script tag
-            const { pipeline: transformerPipeline, env } = transformers;
+            // Configure Environment for GitHub Pages
             env.allowLocalModels = false;
+            env.useBrowserCache = true;
 
-            // Load a tiny, highly compatible model (GPT-2 based)
-            classifier = await transformerPipeline('text-generation', 'Xenova/gpt2', {
+            // Load the small, high-quality Qwen2.5 model
+            generator = await pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
+                device: navigator.gpu ? 'webgpu' : 'wasm',
                 progress_callback: (info) => {
-                    if (info.status === 'progress') statusText.innerText = `LOADING: ${Math.round(info.progress)}%`;
+                    if (info.status === 'progress') {
+                        statusText.innerText = `SYNCING BRAIN: ${Math.round(info.progress)}%`;
+                    }
                 }
             });
 
-            statusText.innerText = "DOA ONLINE";
+            statusText.innerText = "DOA ONLINE | PRIVATE";
             led.classList.replace('bg-yellow-400', 'bg-[#00E676]');
             led.classList.remove('animate-pulse');
-
+            updateVoiceUI();
         } catch (err) {
             console.error(err);
-            statusText.innerText = "BOOT ERROR: FALLING BACK TO CLOUD";
+            statusText.innerText = "HARDWARE DISCONNECTED. USE CHROME.";
             led.classList.replace('bg-yellow-400', 'bg-red-500');
         }
     }
 
-    // --- 2. MESSAGE HANDLING ---
-    async function handleMessage() {
-        if (isThinking) return;
+    // Chat Handler
+    window.handleMessage = async function() {
+        if (isThinking || !generator) return;
         const input = document.getElementById('user-input');
         const text = input.value.trim();
         if (!text) return;
 
-        setChatMode(true);
+        // UI Update
+        hero.style.display = 'none';
+        history.classList.remove('hidden');
         addMessage('user', text);
         input.value = '';
         isThinking = true;
-        document.getElementById('status-text').innerText = "DOA THINKING...";
+        statusText.innerText = "DOA IS THINKING...";
 
         try {
-            let replyText = "";
-            if (classifier) {
-                // LOCAL INFERENCE
-                const output = await classifier(text, { max_new_tokens: 50, temperature: 0.7 });
-                replyText = output[0].generated_text;
-            } else {
-                // CLOUD FALLBACK (Simulated)
-                replyText = "Local engine failed to boot. I am running in cloud-proxy mode. How can I help?";
-            }
+            const messages = [
+                { role: 'system', content: 'You are Doaa, a helpful AI OS. No markdown.' },
+                ...chatMemory,
+                { role: 'user', content: text }
+            ];
 
-            addMessage('doa', replyText);
-            if (voiceActive) speak(replyText);
+            const output = await generator(messages, { max_new_tokens: 120, temperature: 0.7 });
+            const reply = output[0].generated_text.at(-1).content;
 
+            addMessage('doa', reply);
+            chatMemory.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
+            if (chatMemory.length > 10) chatMemory.shift();
+            
+            if (voiceActive) speak(reply);
         } catch (e) {
-            addMessage('doa', "Neural link disrupted.");
+            addMessage('doa', "Neural Bridge Disrupted.");
         } finally {
             isThinking = false;
-            document.getElementById('status-text').innerText = "DOA ONLINE";
+            statusText.innerText = "DOA ONLINE";
         }
-    }
+    };
 
-    // --- 3. UI FUNCTIONS ---
     function addMessage(sender, text) {
-        const history = document.getElementById('chat-history');
         const row = document.createElement('div');
         row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
         row.innerHTML = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm shadow-sm">${text}</div></div>`;
@@ -189,47 +188,43 @@
         history.scrollTop = history.scrollHeight;
     }
 
-    function setChatMode(isChatting) {
-        document.getElementById('hero-section').style.display = isChatting ? 'none' : 'block';
-        document.getElementById('chat-history').classList.toggle('hidden', !isChatting);
-    }
-
-    function switchView(viewName) {
-        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
-        document.getElementById(viewName + '-view').classList.remove('hidden');
-        if (viewName === 'calendar') renderCalendar();
-    }
-
-    function renderCalendar() {
-        const grid = document.getElementById('calendar-grid');
-        grid.innerHTML = '';
-        const month = viewDate.getMonth(), year = viewDate.getFullYear();
-        document.getElementById('cal-main-title').innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-        for (let d = 1; d <= 31; d++) {
-            const el = document.createElement('div');
-            el.className = 'cal-day bg-gray-50 rounded-full'; el.innerText = d;
-            grid.appendChild(el);
-        }
-    }
-
+    // Voice Engine
     function speak(text) {
         if (!voiceActive) return;
-        const u = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text.replace(/\bDoa\b/gi, "Doaa"));
         u.pitch = 1.35; u.rate = 0.95;
         window.speechSynthesis.speak(u);
     }
 
-    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('closed'); }
-    function toggleVoice() { 
-        voiceActive = !voiceActive; 
+    window.toggleVoice = function() {
+        voiceActive = !voiceActive;
+        localStorage.setItem('voice_active', voiceActive);
+        updateVoiceUI();
+        if (voiceActive) speak("Voice active.");
+    };
+
+    function updateVoiceUI() {
         const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch');
-        knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
+        knob.style.left = voiceActive ? "18px" : "2px"; 
+        bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6";
     }
 
-    function startNewChat() { location.reload(); }
+    // Sidebar & Navigation
+    window.toggleSidebar = () => document.getElementById('main-sidebar').classList.toggle('closed');
+    window.switchView = (v) => {
+        document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+        document.getElementById(v + '-view').classList.remove('hidden');
+        toggleSidebar();
+    };
+    window.startNewChat = () => location.reload();
 
-    window.onload = initEngine;
-    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    // Listen for Enter
+    document.getElementById('user-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); }
+    });
+
+    init();
 </script>
 </body>
 </html>
