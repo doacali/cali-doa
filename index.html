@@ -5,18 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Doa | AI Operating System</title>
   
-  <!-- UI Libraries -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   
-  <!-- 1. NEURAL ENGINE LOADER (Transformers.js v3) -->
-  <script type="module">
-    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0-alpha.19';
-    window.pipeline = pipeline;
-    env.allowLocalModels = false;
-    env.useBrowserCache = true;
-  </script>
-
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -51,7 +42,6 @@
 
   <div class="flex h-screen w-screen overflow-hidden relative">
     
-    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
@@ -72,7 +62,6 @@
         <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Sign Up</button>
       </header>
 
-      <!-- CHAT VIEW -->
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
           <div id="chat-history" class="hidden hide-scrollbar py-6 overflow-y-auto"></div>
@@ -104,7 +93,6 @@
         </div>
       </div>
 
-      <!-- CALENDAR VIEW -->
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-row overflow-hidden h-full">
         <div class="left-os-panel">
             <h2 class="text-2xl font-black uppercase tracking-tighter mb-1" id="month-name-label">Month</h2>
@@ -140,6 +128,14 @@
     </main>
   </div>
 
+  <!-- NEURAL ENGINE LOADER (Transformers.js v3) -->
+  <script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0-alpha.19';
+    window.pipeline = pipeline;
+    env.allowLocalModels = false;
+    env.useBrowserCache = true;
+  </script>
+
   <script>
     // --- 1. STATE ---
     let doaEngine = null;
@@ -150,44 +146,56 @@
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
 
-    // 2. NEURAL BOOT (Dual-Brain Strategy)
+    // 2. NEURAL BOOT (FIXED: Force assign model on fallback)
     async function bootDoaOS() {
       const ticker = document.getElementById('status-text');
       const led = document.getElementById('brain-led');
       
-      try {
-        if (!window.pipeline) {
-            setTimeout(bootDoaOS, 500);
-            return;
-        }
+      if (!window.pipeline) {
+          setTimeout(bootDoaOS, 500);
+          return;
+      }
 
-        // Phase 1: SmolLM (Lite Brain) - Fast activation
-        ticker.innerText = "LITE CORE ACTIVE";
+      try {
+        ticker.innerText = "LINKING GPU CORE...";
+        // Try WebGPU first
         doaEngine = await window.pipeline('text-generation', 'onnx-community/SmolLM-135M-Instruct', { device: 'webgpu' });
+        ticker.innerText = "DOA ONLINE (GPU)";
         led.classList.replace('bg-yellow-400', 'bg-[#00E676]');
         led.classList.remove('animate-pulse');
+      } catch (e) {
+        // FALLBACK TO CPU (Actually load the model here)
+        ticker.innerText = "GPU UNAVAILABLE. LOADING CPU CORE...";
+        try {
+          doaEngine = await window.pipeline('text-generation', 'onnx-community/SmolLM-135M-Instruct', { device: 'wasm' });
+          ticker.innerText = "DOA ONLINE (CPU)";
+          led.classList.replace('bg-yellow-400', 'bg-blue-400');
+          led.classList.remove('animate-pulse');
+        } catch (err) {
+          ticker.innerText = "CRITICAL BOOT ERROR";
+        }
+      }
 
-        // Phase 2: Qwen (Advanced Brain) in background
-        const advanced = await window.pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
-            device: 'webgpu',
+      // Load Advanced Brain in Background
+      if (doaEngine) {
+        window.pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
+            device: navigator.gpu ? 'webgpu' : 'wasm',
             progress_callback: (info) => {
                 if (info.status === 'progress') ticker.innerText = `OPTIMIZING: ${Math.round(info.progress)}%`;
-                if (info.status === 'ready') {
-                    doaEngine = advanced;
-                    ticker.innerText = "DOA ADVANCED ONLINE";
-                }
+                if (info.status === 'ready') ticker.innerText = "DOA ADVANCED ONLINE";
             }
-        });
-
-      } catch (e) {
-        ticker.innerText = "CPU MODE ACTIVE";
-        console.error(e);
+        }).then(adv => { doaEngine = adv; });
       }
     }
 
-    // 3. CHAT HANDLER
+    // 3. CHAT HANDLER (FIXED: Alert user if not ready)
     async function handleMessage() {
-      if (isThinking || !doaEngine) return;
+      if (isThinking) return;
+      if (!doaEngine) {
+          alert("Doa is still booting up. Please wait for the status to show ONLINE.");
+          return;
+      }
+      
       const input = document.getElementById('user-input');
       const query = input.value.trim();
       if (!query) return;
@@ -224,7 +232,7 @@
       }
     }
 
-    // 4. UI HELPERS (Repaired to match original sitecode)
+    // 4. RESTORED UI FUNCTIONS
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const idx = messageRegistry.push(text) - 1;
@@ -245,6 +253,7 @@
     }
 
     function startNewChat() { 
+        window.speechSynthesis.cancel();
         chatMemory = []; messageRegistry = []; 
         localStorage.removeItem('doa_chat_cache'); 
         document.getElementById('chat-history').innerHTML = ''; 
@@ -260,37 +269,31 @@
       if (viewName === 'calendar') renderCalendar();
     }
 
-    // 5. CALENDAR LOGIC (Restored from your sitecode)
+    // 5. CALENDAR & VOICE
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       const title = document.getElementById('cal-main-title');
       const monthLabel = document.getElementById('month-name-label');
       const today = new Date(); today.setHours(0,0,0,0);
-      
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
       title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
       monthLabel.innerText = viewDate.toLocaleString('default', { month: 'long' });
-
       const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
       const totalDays = new Date(year, month + 1, 0).getDate();
-
       for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div')).className = 'opacity-0';
-
       for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d); date.setHours(0,0,0,0);
         const el = document.createElement('div');
         el.className = `cal-day ${date.getTime() === today.getTime() ? 'today' : ''} ${date.getTime() === selectedDate.getTime() ? 'selected' : ''}`;
         el.innerText = d;
-        
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
         if (dayEvents.length > 0) {
             const speaker = document.createElement('div');
             speaker.className = 'day-speak'; speaker.innerHTML = '🔊';
             speaker.onclick = (e) => {
                 e.stopPropagation();
-                const text = `On ${date.toDateString()}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
-                speak(text);
+                speak(`On ${date.toDateString()}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`);
             };
             el.appendChild(speaker);
         }
@@ -309,12 +312,11 @@
             const d = new Date(e.date);
             return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear() && d >= today;
         }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
         if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
         else monthUpcoming.forEach(e => {
             const d = new Date(e.date);
             const div = document.createElement('div');
-            div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity mb-4";
+            div.className = "flex items-start gap-4 cursor-pointer hover:opacity-70 transition-opacity mb-4";
             div.onclick = () => { selectedDate = d; renderCalendar(); };
             div.innerHTML = `<div class="flex flex-col items-center min-w-[35px]"><span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${d.toLocaleString('default',{month:'short'})}</span><span class="text-sm font-black text-gray-800">${d.getDate()}</span></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p></div>`;
             list.appendChild(div);
@@ -345,8 +347,6 @@
       renderCalendar();
     }
 
-    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
-
     function processActions(text) {
       const actionRegex = /\[ACTION:\s*([^:\]]+):([^|]*)\|([^\]]*)\]/g;
       let match;
@@ -360,7 +360,6 @@
       }
     }
 
-    // 6. VOICE ENGINE (Dougha Settings)
     function speak(text) {
       if (!voiceActive) return;
       window.speechSynthesis.cancel();
@@ -376,9 +375,10 @@
         const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch');
         knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
     }
+    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
     window.onload = () => { 
-        bootDoaOS(); loadVoices(); updateVoiceUI(); 
+        bootDoaOS(); updateVoiceUI(); 
         if(chatMemory.length > 0) { 
             chatMemory.forEach(m => addMessage(m.role === 'user' ? 'user' : 'doa', m.content.replace(/\[ACTION:.*?\]/g, "")));
             setChatMode(true);
