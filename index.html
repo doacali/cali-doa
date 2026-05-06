@@ -285,33 +285,6 @@
       window.speechSynthesis.speak(u);
     }
 
-    function sing(text) {
-      if (!text) return;
-      window.speechSynthesis.cancel();
-      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/[*#`_~]/g, "").trim();
-      // Scale pattern simulates a simple melody (do-re-mi-fa-sol-fa-mi-re loop)
-      const scale = [1.0, 1.15, 1.3, 1.45, 1.6, 1.45, 1.3, 1.15];
-      const words = clean.split(/\s+/);
-      let wordIndex = 0;
-
-      function singNextChunk() {
-        if (wordIndex >= words.length) return;
-        // Sing 2-3 words per utterance for smoother flow
-        const chunkSize = Math.floor(Math.random() * 2) + 2;
-        const chunk = words.slice(wordIndex, wordIndex + chunkSize).join(' ');
-        wordIndex += chunkSize;
-
-        const u = new SpeechSynthesisUtterance(chunk);
-        if (selectedVoice) u.voice = selectedVoice;
-        u.pitch  = scale[wordIndex % scale.length];
-        u.rate   = 0.62;   // slow = more melodic
-        u.volume = 1.0;
-        u.onend  = singNextChunk;
-        window.speechSynthesis.speak(u);
-      }
-      singNextChunk();
-    }
-
     function toggleSidebar() {
       const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
       sb.classList.toggle('closed');
@@ -369,9 +342,6 @@
               renderCalendar();
             }
           }
-        } else if (command === 'SING') {
-          // value is the lyrics to sing
-          sing(value);
         } else if (command === 'OPEN_URL') {
           // handled inline via displayed button
         } else if (command === 'OPEN_TAB') {
