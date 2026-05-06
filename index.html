@@ -270,9 +270,17 @@
     }
 
     function deleteEvent(dateStr, title) {
+        // Filter out the event to be deleted
+        const initialLength = events.length;
         events = events.filter(e => !(e.date === dateStr && e.title === title));
-        localStorage.setItem('doa_events', JSON.stringify(events));
-        renderCalendar();
+        
+        // Check if an event was actually removed
+        if (events.length < initialLength) {
+            localStorage.setItem('doa_events', JSON.stringify(events));
+            renderCalendar(); // Re-render to reflect the removal
+        } else {
+            console.warn(`Event not found for deletion: Title="${title}", Date="${dateStr}"`);
+        }
     }
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
@@ -457,24 +465,32 @@
         
         const data = await res.json();
         let responseText = data.response;
-        const calendarEvent = data.calendarEvent; // Get the calendar event object from the worker response
+        const calendarEvent = data.calendarEvent;       // For adding events
+        const eventToRemove = data.eventToRemove;     // For removing events
 
         // --- Process the AI's response and check for calendar actions ---
         addMessage('doa', responseText); // Display the AI's response (which now includes confirmations from the worker)
         
+        // --- Handle Event Addition ---
         if (calendarEvent) {
-            // The worker has confirmed adding an event by returning a calendarEvent object.
-            // Now, let's add it to our local 'events' array and update the calendar view.
-            const eventDate = new Date(calendarEvent.date); // Parse the date string from the worker
-            
-            // Ensure the date is valid before proceeding
+            const eventDate = new Date(calendarEvent.date); 
             if (!isNaN(eventDate.getTime())) {
-                saveEvent(calendarEvent.title, eventDate); // Use your existing saveEvent function
-                renderCalendar(); // Re-render to show the new event
+                saveEvent(calendarEvent.title, eventDate); 
+                renderCalendar(); 
             } else {
                 console.error("Invalid date format received from worker for calendar event:", calendarEvent.date);
-                // Optionally, add a message to the chat indicating the parsing failure on the frontend
-                addMessage('doa', "[Error: Could not parse calendar event details. Please specify date and time clearly.]");
+                addMessage('doa', "[Error: Could not parse calendar event details for adding. Please specify date and time clearly.]");
+            }
+        } 
+        // --- Handle Event Removal ---
+        else if (eventToRemove) { // Use 'else if' to ensure only one action is processed
+            const eventDateToRemove = new Date(eventToRemove.date);
+            if (!isNaN(eventDateToRemove.getTime())) {
+                deleteEvent(eventToRemove.date, eventToRemove.title); // Use your existing deleteEvent function
+                renderCalendar(); 
+            } else {
+                console.error("Invalid date format received from worker for event removal:", eventToRemove.date);
+                addMessage('doa', "[Error: Could not parse calendar event details for removal. Please specify date and time clearly.]");
             }
         }
         
