@@ -469,14 +469,23 @@
         const eventToRemove = data.eventToRemove;     // For removing events
 
         // --- Process the AI's response and check for calendar actions ---
-        addMessage('doa', responseText); // Display the AI's response (which now includes confirmations from the worker)
         
+        // 1. Display the raw AI response first.
+        addMessage('doa', responseText); 
+        
+        let confirmationAdded = false; // Flag to track if we added our own confirmation
+
         // --- Handle Event Addition ---
         if (calendarEvent) {
             const eventDate = new Date(calendarEvent.date); 
             if (!isNaN(eventDate.getTime())) {
                 saveEvent(calendarEvent.title, eventDate); 
                 renderCalendar(); 
+                // Check if AI's response *already* contains a confirmation. If not, add our own brief one.
+                if (!responseText.toLowerCase().includes("added") && !responseText.toLowerCase().includes("scheduled")) {
+                    addMessage('doa', `Confirmed: "${calendarEvent.title}" added for ${eventDate.toLocaleDateString('default', { month: 'short', day: 'numeric' })}.`);
+                    confirmationAdded = true;
+                }
             } else {
                 console.error("Invalid date format received from worker for calendar event:", calendarEvent.date);
                 addMessage('doa', "[Error: Could not parse calendar event details for adding. Please specify date and time clearly.]");
@@ -488,6 +497,11 @@
             if (!isNaN(eventDateToRemove.getTime())) {
                 deleteEvent(eventToRemove.date, eventToRemove.title); // Use your existing deleteEvent function
                 renderCalendar(); 
+                // Check if AI's response already confirms removal.
+                if (!responseText.toLowerCase().includes("removed") && !responseText.toLowerCase().includes("deleted")) {
+                    addMessage('doa', `Confirmed: "${eventToRemove.title}" removed for ${eventDateToRemove.toLocaleDateString('default', { month: 'short', day: 'numeric' })}.`);
+                    confirmationAdded = true;
+                }
             } else {
                 console.error("Invalid date format received from worker for event removal:", eventToRemove.date);
                 addMessage('doa', "[Error: Could not parse calendar event details for removal. Please specify date and time clearly.]");
