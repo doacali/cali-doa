@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    /* ... (Your existing styles remain the same) ... */
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     
@@ -145,7 +144,7 @@
 
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
-        <!-- The login/signup button will now trigger the modal -->
+        <!-- Header Login/Sign Up Button will trigger the modal -->
         <button id="login-signup-header-btn" class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Log In / Sign Up</button>
         <div id="user-info" class="flex items-center gap-4 hidden">
           <span id="user-name" class="font-bold"></span>
@@ -224,7 +223,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+    const CLOUDFLARE_URL = 'YOUR_DEPLOYED_WORKER_URL'; // <<< REPLACE WITH YOUR DEPLOYED WORKER URL
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || [];
     let messageRegistry = [];
@@ -233,8 +232,8 @@
     let viewDate = new Date(), selectedDate = new Date();
 
     // Supabase initialization (get these from your Supabase project)
-    const supabaseUrl = 'https://dfsmqnwnqnkbpoeeqkvv.supabase.co'; // <<< REPLACE WITH YOUR SUPABASE URL
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmc21xbnducW5rYnBvZWVxa3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDYwNDksImV4cCI6MjA5MjkyMjA0OX0.AEFsq60miF5NQr9jcdiY13V65SgcYq9wDlKFEL3HORo'; // <<< REPLACE WITH YOUR SUPABASE ANON KEY
+    const supabaseUrl = 'YOUR_SUPABASE_URL'; // <<< REPLACE WITH YOUR SUPABASE URL
+    const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'; // <<< REPLACE WITH YOUR SUPABASE ANON KEY
     const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
     // HTML Elements for Auth Modal
@@ -256,8 +255,7 @@
     const userInfo = document.getElementById('user-info');
     const userNameDisplay = document.getElementById('user-name');
     const signoutButton = document.getElementById('signout-button');
-    const loginButtonHeader = document.querySelector('header button:nth-of-type(1)'); // Select Login button in header
-    const signupButtonHeader = document.querySelector('header button:nth-of-type(2)'); // Select Sign Up button in header
+    const loginButtonHeader = document.getElementById('login-signup-header-btn'); // Target the single button
 
     // --- AUTHENTICATION MODAL LOGIC ---
     loginSignupHeaderBtn?.addEventListener('click', () => {
@@ -278,7 +276,7 @@
         }
     });
 
-    emailLoginButton?.addEventListener('click', () => {
+    emailLoginButton?.addEventListener('click', () => { // This refers to a button that isn't in the code. It's likely meant to be loginSignupHeaderBtn or emailSignin
         emailForm.classList.toggle('hidden');
         profileForm.classList.add('hidden'); // Hide profile form when email login is toggled
     });
@@ -406,6 +404,9 @@
               // User is not signed in, show login form
               loginForm.classList.remove('hidden');
               appUI.classList.add('hidden');
+              // Ensure header buttons are visible when not logged in
+              loginButtonHeader.classList.remove('hidden');
+              signupButtonHeader.classList.remove('hidden'); // This button is not in the provided HTML, so it won't do anything.
           }
       });
 
@@ -494,7 +495,7 @@
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
+      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(clean);
       if (selectedVoice) u.voice = selectedVoice;
       u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
@@ -545,7 +546,15 @@
       setChatMode(true); addMessage('user', rawText); input.value = '';
       isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
       try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
+        const res = await fetch(CLOUDFLARE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // <<< SEND THE USER ID TO THE WORKER >>>
+            'X-User-Id': supabase.auth.user()?.id
+          },
+          body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) })
+        });
         const data = await res.json();
         addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
@@ -566,7 +575,7 @@
 
                 // If the date is invalid, alert
                 if (isNaN(eventDate.getTime())) {
-                    console.error("Invalid date format received from server.");
+                    console.error("Invalid date format received from AI:", eventDateStr);
                     // Do not switch view or try to save if date is invalid
                 } else {
                     // Save the event using the parsed date
@@ -598,25 +607,9 @@
     function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
     function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
-
-    window.onload = () => {
-      updateVoiceUI(); loadVoices();
-
-      // Check session on load to determine initial UI state
-      supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-              // User is already signed in
-              checkUserProfile();
-          } else {
-              // User is not signed in, show login form
-              loginForm.classList.remove('hidden');
-              appUI.classList.add('hidden');
-              // Ensure header buttons are visible when not logged in
-              loginButtonHeader.classList.remove('hidden');
-              signupButtonHeader.classList.remove('hidden');
-          }
-      });
-
+    
+    window.onload = () => { 
+      updateVoiceUI(); loadVoices(); 
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
       if (chatMemory.length > 0) {
         chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
