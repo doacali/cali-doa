@@ -257,15 +257,17 @@
 
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
-        if (!input.value) return;
-        events.push({ title: input.value, date: selectedDate.toISOString() });
+        if (!input.value.trim()) return;
+        // Store date as toDateString() for consistent matching across all event sources
+        events.push({ title: input.value.trim(), date: selectedDate.toDateString() });
         localStorage.setItem('doa_events', JSON.stringify(events));
         input.value = '';
         renderCalendar();
     }
 
     function deleteEvent(dateStr, title) {
-        events = events.filter(e => !(e.date === dateStr && e.title === title));
+        const normalTarget = new Date(dateStr).toDateString();
+        events = events.filter(e => !(new Date(e.date).toDateString() === normalTarget && e.title === title));
         localStorage.setItem('doa_events', JSON.stringify(events));
         renderCalendar();
     }
@@ -318,6 +320,36 @@
 
     function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
 
+    function processActions(responseText) {
+      // Match all [ACTION: COMMAND:VALUE|Label] tags
+      const actionRegex = /\[ACTION:\s*([^:\]]+):([^|]*)\|([^\]]*)\]/g;
+      let match;
+      while ((match = actionRegex.exec(responseText)) !== null) {
+        const command = match[1].trim().toUpperCase();
+        const value   = match[2].trim();
+        const label   = match[3].trim();
+
+        if (command === 'ADD_EVENT') {
+          // value format: "EventTitle,YYYY-MM-DD"
+          const commaIdx = value.lastIndexOf(',');
+          if (commaIdx !== -1) {
+            const title    = value.substring(0, commaIdx).trim();
+            const dateStr  = value.substring(commaIdx + 1).trim();
+            const dateObj  = new Date(dateStr + 'T00:00:00');
+            if (!isNaN(dateObj.getTime())) {
+              events.push({ title: title, date: dateObj.toDateString() });
+              localStorage.setItem('doa_events', JSON.stringify(events));
+              renderCalendar();
+            }
+          }
+        } else if (command === 'OPEN_URL') {
+          // handled inline via displayed button
+        } else if (command === 'OPEN_TAB') {
+          if (['chat','calendar','apps'].includes(value.toLowerCase())) switchView(value.toLowerCase());
+        }
+      }
+    }
+
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -326,12 +358,16 @@
       setChatMode(true); addMessage('user', rawText); input.value = '';
       isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
       try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
+        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10), localTime: new Date().toLocaleTimeString(), localDate: new Date().toLocaleDateString() }) });
         const data = await res.json();
-        addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
+        // 1. Process action tags FIRST (so ADD_EVENT etc. actually fire)
+        processActions(data.response);
+        // 2. Then strip tags for display
+        const cleanResponse = data.response.replace(/\[ACTION:[^\]]*\]/g, "").trim();
+        addMessage('doa', cleanResponse);
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
-        speak(data.response);
+        speak(cleanResponse);
       } catch (e) { addMessage('doa', "OS Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
