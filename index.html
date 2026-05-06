@@ -170,43 +170,55 @@
     // Engine State
     let localAIEngine = null;
     let isLocalReady = false;
+    
+    // Global Status Manager (Fixes the UI overwriting bug)
+    let currentSystemStatus = "Initializing OS...";
+    let currentSystemColor = "#9ca3af";
 
-    // Memory Initialization: Ensure the System Prompt is always Index [0]
+    function updateSystemStatus(text, color = "#9ca3af") {
+        currentSystemStatus = text;
+        currentSystemColor = color;
+        // Only update the UI if Doa isn't currently typing a message
+        if (!isThinking) {
+            const statusEl = document.getElementById('status-text');
+            if (statusEl) {
+                statusEl.innerText = text;
+                statusEl.style.color = color;
+            }
+        }
+    }
+
+    // Memory Initialization
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache'));
     if (!Array.isArray(chatMemory) || chatMemory.length === 0) {
         chatMemory = [getSystemPrompt()];
     } else if (chatMemory[0].role !== 'system') {
         chatMemory.unshift(getSystemPrompt());
     } else {
-        chatMemory[0] = getSystemPrompt(); // Keep date refreshed
+        chatMemory[0] = getSystemPrompt(); 
     }
 
     // --- 2. BOOT LOCAL ENGINE (BACKGROUND) ---
     async function bootUnlimitedAgent() {
         try {
-            // Import WebLLM correctly
+            updateSystemStatus("Requesting WebGPU...");
             const webllm = await import("https://esm.run/@mlc-ai/web-llm");
-            localAIEngine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
+            
+            // FIX: Using q4f32_1 variant. This bypasses the shader-f16 requirement that causes Windows/Edge to fail!
+            localAIEngine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f32_1-MLC", {
                 initProgressCallback: (report) => {
                     const percent = Math.round(report.progress * 100);
-                    const statusEl = document.getElementById('status-text');
-                    if(statusEl) {
-                        statusEl.innerText = `Syncing Brain: ${percent}%`;
-                        if (report.progress === 1) {
-                            isLocalReady = true;
-                            statusEl.innerText = "Doa: Unlimited Mode Active";
-                            statusEl.style.color = "#00E676";
-                        }
+                    if (report.progress === 1) {
+                        isLocalReady = true;
+                        updateSystemStatus("Doa: Unlimited Mode Active", "#00E676");
+                    } else {
+                        updateSystemStatus(`Syncing Brain: ${percent}%`, "#9ca3af");
                     }
                 }
             });
         } catch (e) {
-            console.log("WebGPU not supported. Using Cloud Mode.", e);
-            const statusEl = document.getElementById('status-text');
-            if (statusEl) {
-                statusEl.innerText = "Cloud Mode Active";
-                statusEl.style.color = "#9ca3af";
-            }
+            console.error("WebGPU Initialization Failed:", e);
+            updateSystemStatus("Cloud Mode Active", "#9ca3af");
         }
     }
 
@@ -218,14 +230,11 @@
         messageRegistry =[];
         document.getElementById('chat-history').innerHTML = '';
         setChatMode(false);
-        const statusText = document.getElementById('status-text');
         
         if (isLocalReady) {
-            statusText.innerText = "Doa: Fresh State Active";
-            statusText.style.color = "#00E676";
+            updateSystemStatus("Doa: Fresh State Active", "#00E676");
         } else {
-            statusText.innerText = "Memory Wiped. Cloud Mode Active.";
-            statusText.style.color = "#9ca3af";
+            updateSystemStatus("Memory Wiped. Cloud Mode Active.", "#9ca3af");
         }
     }
 
@@ -254,27 +263,24 @@
       
       isThinking = true; 
       const statusEl = document.getElementById('status-text');
-      const prevStatus = statusEl.innerText;
-      const prevColor = statusEl.style.color;
       statusEl.innerText = "DOA IS ANALYZING...";
       statusEl.style.color = "#9ca3af";
 
       try {
-        // Ensure memory is robust
         if (!chatMemory || chatMemory.length === 0) chatMemory = [getSystemPrompt()];
         chatMemory.push({ role: 'user', content: rawText });
 
         let responseText = "";
 
         if (isLocalReady && localAIEngine) {
-            // --- METHOD A: LOCAL GPU (UNLIMITED & FAST) ---
+            // --- METHOD A: LOCAL GPU ---
             const reply = await localAIEngine.chat.completions.create({ 
                 messages: chatMemory,
                 temperature: 0.7 
             });
             responseText = reply.choices[0].message.content;
         } else {
-            // --- METHOD B: POLLINATIONS CLOUD (INSTANT STARTUP) ---
+            // --- METHOD B: CLOUD FALLBACK ---
             const res = await fetch(`https://text.pollinations.ai/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -287,7 +293,6 @@
             } catch(e) {
                 responseText = raw;
             }
-            // Strip any thought tags if backend returns them
             responseText = responseText.replace(/<thought>[\s\S]*?<\/thought>/gi, '').replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
         }
 
@@ -304,12 +309,13 @@
           addMessage('doa', "OS Error. Could not connect to brain."); 
       } finally { 
           isThinking = false; 
-          statusEl.innerText = prevStatus;
-          statusEl.style.color = prevColor;
+          // FIX: Restore the globally managed status, not the overridden one
+          statusEl.innerText = currentSystemStatus;
+          statusEl.style.color = currentSystemColor;
       }
     }
 
-    // UI and Peripheral Functionality
+    // --- REMAINDER OF UI CODE (Unchanged) ---
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
       const n =["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
@@ -420,7 +426,6 @@
       const sidebar = document.getElementById('main-sidebar');
       if (!sidebar.classList.contains('closed')) toggleSidebar();
       
-      // If history length > 1, we actually have user conversation
       if (viewName === 'chat') setChatMode(chatMemory.length > 1);
       if (viewName === 'calendar') renderCalendar();
     }
@@ -481,7 +486,6 @@
       
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
       
-      // Render previous chat messages excluding the System prompt (index 0)
       if (chatMemory.length > 1) {
         chatMemory.forEach(msg => {
             if (msg.role !== 'system') {
