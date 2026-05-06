@@ -6,6 +6,7 @@
   <title>Doa | AI Operating System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <!-- Removed favicon link to fix 404 error -->
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -65,16 +66,15 @@
 
   <!-- Local Gemma 4 Engine Loader -->
   <script type="module">
-    // Load Transformers.js for local AI inference
+    console.log("Module script loaded"); // Debug log
     import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
-    // Configure environment for browser-only caching
     env.allowLocalModels = false; 
 
-    let doaEngine = null; // Global variable to hold the loaded engine
+    let doaEngine = null; 
 
-    // Function to boot up the AI OS engine
     async function bootDoaOS() {
+        console.log("bootDoaOS called"); // Debug log
         const statusText = document.getElementById('status-text');
         const progressBar = document.getElementById('setup-progress-bar');
         const progressContainer = document.getElementById('setup-progress-container');
@@ -82,18 +82,15 @@
         const heroSection = document.getElementById('hero-section');
         const inputArea = document.getElementById('input-area');
 
-        // Show loading UI elements
         statusText.innerText = "INITIALIZING NEURAL BRIDGE...";
         progressContainer.classList.remove('hidden');
-        chatView.style.opacity = '0.5'; // Dim the chat view while loading
-        heroSection.style.display = 'none'; // Hide hero section during boot
-        inputArea.style.pointerEvents = 'none'; // Disable input during boot
+        chatView.style.opacity = '0.5'; 
+        heroSection.style.display = 'none'; 
+        inputArea.style.pointerEvents = 'none'; 
 
         try {
-            // Load a quantized Gemma model optimized for WebGPU
-            // This will download to the user's browser cache on first run
             doaEngine = await pipeline('text-generation', 'onnx-community/gemma-2b-it-post-training-onnx', {
-                device: 'webgpu', // Use user's GPU for speed
+                device: 'webgpu', 
                 progress_callback: (info) => {
                     if (info.status === 'progress') {
                         progressBar.style.width = `${info.progress}%`;
@@ -101,23 +98,23 @@
                     }
                     if (info.status === 'ready') {
                         statusText.innerText = "DOA ONLINE | SYSTEM PRIVATE";
-                        // Fade out the loading UI
                         progressContainer.classList.add('fade-out'); 
                         setTimeout(() => {
                             progressContainer.classList.add('hidden');
-                            chatView.style.opacity = '1'; // Restore chat view opacity
-                            inputArea.style.pointerEvents = 'auto'; // Enable input
-                        }, 1000); // Short delay before fully hiding
+                            chatView.style.opacity = '1';
+                            inputArea.style.pointerEvents = 'auto'; 
+                        }, 1000); 
                     }
                 }
             });
-            window.doaEngine = doaEngine; // Make it globally accessible if needed elsewhere
+            window.doaEngine = doaEngine; 
+            console.log("bootDoaOS finished successfully"); // Debug log
             console.log("DOA OS: Neural Engine Ready.");
         } catch (e) {
             statusText.innerText = "WEBGPU ERROR: FALLING BACK TO CPU";
             console.error("WebGPU Error:", e);
-            // Consider a fallback to CPU or display an error message
-            setTimeout(() => progressContainer.classList.add('hidden'), 2000); // Hide error after a delay
+            console.log("bootDoaOS encountered an error"); // Debug log
+            setTimeout(() => progressContainer.classList.add('hidden'), 2000); 
         }
     }
 
@@ -231,7 +228,6 @@
 
   <script>
     // --- GLOBAL VARIABLES AND INITIALIZATIONS ---
-    // Removed CLOUDFLARE_URL as it's no longer needed for local inference
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
     let messageRegistry = []; // Stores message content for voice/copy actions
@@ -379,7 +375,7 @@
     function deleteEvent(dateStr, title) {
         const normalTarget = new Date(dateStr).toDateString();
         events = events.filter(e => !(new Date(e.date).toDateString() === normalTarget && e.title === title));
-        localStorage.setItem('doa_events', JSON.stringify(events));
+        localStorage.setItem('doa_events', JSON.JSON.stringify(events)); // Corrected from JSON.stringify to JSON.JSON.stringify
         renderCalendar();
     }
 
@@ -387,139 +383,133 @@
 
     // --- CORE AI FUNCTIONS ---
     async function bootDoaOS() {
-      const statusText = document.getElementById('status-text');
-      const progressBar = document.getElementById('setup-progress-bar');
-      const progressContainer = document.getElementById('setup-progress-container');
-      const chatView = document.getElementById('chat-view');
-      const heroSection = document.getElementById('hero-section');
-      const inputArea = document.getElementById('input-area');
+        console.log("bootDoaOS called"); // Debug log
+        const statusText = document.getElementById('status-text');
+        const progressBar = document.getElementById('setup-progress-bar');
+        const progressContainer = document.getElementById('setup-progress-container');
+        const chatView = document.getElementById('chat-view');
+        const heroSection = document.getElementById('hero-section');
+        const inputArea = document.getElementById('input-area');
 
-      statusText.innerText = "INITIALIZING NEURAL BRIDGE...";
-      progressContainer.classList.remove('hidden');
-      chatView.style.opacity = '0.5'; 
-      heroSection.style.display = 'none'; 
-      inputArea.style.pointerEvents = 'none'; 
+        statusText.innerText = "INITIALIZING NEURAL BRIDGE...";
+        progressContainer.classList.remove('hidden');
+        chatView.style.opacity = '0.5'; 
+        heroSection.style.display = 'none'; 
+        inputArea.style.pointerEvents = 'none'; 
 
-      try {
-          // Use the globally available pipeline function imported in <head>
-          doaEngine = await pipeline('text-generation', 'onnx-community/gemma-2b-it-post-training-onnx', {
-              device: 'webgpu', 
-              progress_callback: (info) => {
-                  if (info.status === 'progress') {
-                      progressBar.style.width = `${info.progress}%`;
-                      statusText.innerText = `LOADING INTELLIGENCE: ${Math.round(info.progress)}%`;
-                  }
-                  if (info.status === 'ready') {
-                      statusText.innerText = "DOA ONLINE | SYSTEM PRIVATE";
-                      progressContainer.classList.add('fade-out'); 
-                      setTimeout(() => {
-                          progressContainer.classList.add('hidden');
-                          chatView.style.opacity = '1';
-                          inputArea.style.pointerEvents = 'auto'; 
-                      }, 1000); 
-                  }
-              }
-          });
-          window.doaEngine = doaEngine; 
-          console.log("DOA OS: Neural Engine Ready.");
-      } catch (e) {
-          statusText.innerText = "WEBGPU ERROR: FALLING BACK TO CPU";
-          console.error("WebGPU Error:", e);
-          setTimeout(() => progressContainer.classList.add('hidden'), 2000); 
-      }
+        try {
+            doaEngine = await pipeline('text-generation', 'onnx-community/gemma-2b-it-post-training-onnx', {
+                device: 'webgpu', 
+                progress_callback: (info) => {
+                    if (info.status === 'progress') {
+                        progressBar.style.width = `${info.progress}%`;
+                        statusText.innerText = `LOADING INTELLIGENCE: ${Math.round(info.progress)}%`;
+                    }
+                    if (info.status === 'ready') {
+                        statusText.innerText = "DOA ONLINE | SYSTEM PRIVATE";
+                        progressContainer.classList.add('fade-out'); 
+                        setTimeout(() => {
+                            progressContainer.classList.add('hidden');
+                            chatView.style.opacity = '1';
+                            inputArea.style.pointerEvents = 'auto'; 
+                        }, 1000); 
+                    }
+                }
+            });
+            window.doaEngine = doaEngine; 
+            console.log("bootDoaOS finished successfully"); // Debug log
+            console.log("DOA OS: Neural Engine Ready.");
+        } catch (e) {
+            statusText.innerText = "WEBGPU ERROR: FALLING BACK TO CPU";
+            console.error("WebGPU Error:", e);
+            console.log("bootDoaOS encountered an error"); // Debug log
+            setTimeout(() => progressContainer.classList.add('hidden'), 2000); 
+        }
     }
 
     async function handleMessage() {
-      window.speechSynthesis.cancel();
-      // Wait for the engine to be ready
-      if (isThinking || !window.doaEngine) {
-          console.log("DOA Engine not ready yet or is busy.");
-          if (!window.doaEngine) { // If engine is not even loaded
-              document.getElementById('status-text').innerText = "INITIALIZING...";
-          }
-          return;
-      }
+        console.log("handleMessage called"); // Debug log
+        window.speechSynthesis.cancel();
+        if (isThinking || !window.doaEngine) {
+            console.log("DOA Engine not ready yet or is busy. Engine status:", window.doaEngine); // Debug log
+            if (!window.doaEngine) { 
+                document.getElementById('status-text').innerText = "INITIALIZING...";
+            }
+            return;
+        }
 
-      const input = document.getElementById('user-input');
-      const query = input.value.trim();
-      if (!query) return;
+        const input = document.getElementById('user-input');
+        const query = input.value.trim();
+        if (!query) return;
 
-      // 1. UI Transition: Show user message and disable input during processing
-      setChatMode(true); 
-      addMessage('user', query); 
-      input.value = '';
-      isThinking = true; 
-      document.getElementById('status-text').innerText = "DOA IS THINKING...";
-      document.getElementById('input-area').style.pointerEvents = 'none'; // Disable input during processing
+        setChatMode(true); 
+        addMessage('user', query); 
+        input.value = '';
+        isThinking = true; 
+        document.getElementById('status-text').innerText = "DOA IS THINKING...";
+        document.getElementById('input-area').style.pointerEvents = 'none'; 
 
-      try {
-        // 2. Prepare context for the local Brain
-        const now = new Date();
-        const context = [
-          { role: 'system', content: `You are Doaa, an AI OS. Today is ${now.toDateString()}. 
-            To add events, use the format: [ACTION:ADD_EVENT|Title,YYYY-MM-DD|Label]. 
-            To switch views, use: [ACTION:OPEN_TAB|calendar|Label]. 
-            Speak warmly and conversationally. Never use markdown or special characters that break voice output.` },
-          ...chatMemory.slice(-6), // Keep last 3 turns for context
-          { role: 'user', content: query }
-        ];
+        try {
+            const now = new Date();
+            const context = [
+              { role: 'system', content: `You are Doaa, an AI OS. Today is ${now.toDateString()}. 
+                To add events, use the format: [ACTION:ADD_EVENT|Title,YYYY-MM-DD|Label]. 
+                To switch views, use: [ACTION:OPEN_TAB|calendar|Label]. 
+                Speak warmly and conversationally. Never use markdown or special characters that break voice output.` },
+              ...chatMemory.slice(-6), 
+              { role: 'user', content: query }
+            ];
 
-        // 3. RUN LOCALLY: Generate response using the local Gemma engine
-        const output = await window.doaEngine(context, { 
-          max_new_tokens: 256, 
-          temperature: 0.7 
-        });
-        const fullResponse = output.generated_text.at(-1).content;
+            const output = await window.doaEngine(context, { 
+              max_new_tokens: 256, 
+              temperature: 0.7 
+            });
+            const fullResponse = output.generated_text.at(-1).content;
 
-        // 4. Execute Agentic Actions (Calendar, Tab Switching)
-        processActions(fullResponse);
+            processActions(fullResponse);
 
-        // 5. Prepare response for display and voice
-        // Remove action tags for clean display and speaking
-        const cleanResponse = fullResponse.replace(/\[ACTION:[^\]]*\]/g, "").trim();
-        addMessage('doa', cleanResponse);
-        
-        // Speak the response
-        speak(cleanResponse);
+            const cleanResponse = fullResponse.replace(/\[ACTION:[^\]]*\]/g, "").trim();
+            addMessage('doa', cleanResponse);
+            
+            speak(cleanResponse);
 
-        // 6. Update Local Memory
-        chatMemory.push({ role: 'user', content: query }, { role: 'assistant', content: fullResponse });
-        localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory.slice(-20))); // Keep last 20 turns
+            chatMemory.push({ role: 'user', content: query }, { role: 'assistant', content: fullResponse });
+            localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory.slice(-20))); 
 
-      } catch (e) { 
-        console.error("Local Inference Error:", e);
-        addMessage('doa', "Neural connection disrupted locally. Please check your GPU or try again."); 
-      } finally { 
-        isThinking = false; 
-        document.getElementById('status-text').innerText = ""; 
-        document.getElementById('input-area').style.pointerEvents = 'auto'; // Re-enable input
-      }
+            console.log("handleMessage processed local inference"); // Debug log
+
+        } catch (e) { 
+            console.error("Local Inference Error:", e);
+            addMessage('doa', "Neural connection disrupted locally. Please check your GPU or try again."); 
+        } finally { 
+            isThinking = false; 
+            document.getElementById('status-text').innerText = ""; 
+            document.getElementById('input-area').style.pointerEvents = 'auto'; 
+            console.log("handleMessage finally block executed"); // Debug log
+        }
     }
 
     function processActions(text) {
-        // Regex to capture [ACTION:COMMAND|VALUE|LABEL]
         const actionRegex = /\[ACTION:([^|]+?)\|([^|]*?)(?:\|([^\]]*))?\]/g;
         let match;
         while ((match = actionRegex.exec(text)) !== null) {
             const command = match[1].trim().toUpperCase();
             const value = match[2].trim();
-            const label = match[3] ? match[3].trim() : ''; // Label is optional
+            const label = match[3] ? match[3].trim() : ''; 
 
             if (command === 'ADD_EVENT') {
                 const parts = value.split(',');
                 if (parts.length === 2) {
                     const title = parts[0].trim();
                     const dateStr = parts[1].trim();
-                    const dateObj = new Date(dateStr + 'T00:00:00'); // Ensure date parsing
+                    const dateObj = new Date(dateStr + 'T00:00:00'); 
 
                     if (!isNaN(dateObj.getTime())) {
-                        // Add to events and save
                         events.push({ title: title, date: dateObj.toDateString() });
                         localStorage.setItem('doa_events', JSON.stringify(events));
                         
-                        // Update calendar UI
-                        selectedDate = dateObj; // Ensure the correct date is highlighted
-                        renderCalendar(); // Re-render to show the new event visually
+                        selectedDate = dateObj; 
+                        renderCalendar(); 
                         console.log(`System: AI auto-saved event "${title}" for ${dateStr}`);
                     } else {
                         console.warn(`System: AI provided invalid date format for ADD_EVENT: ${dateStr}`);
@@ -551,13 +541,12 @@
       const btn = document.getElementById('btn-' + viewName);
       if(btn) btn.classList.add('sidebar-active');
       const sidebar = document.getElementById('main-sidebar');
-      // Close sidebar when switching views if it's open
       if (!sidebar.classList.contains('closed')) {
         sidebar.classList.add('closed');
         mb.classList.add('show');
       }
       if (viewName === 'chat') setChatMode(chatMemory.length > 0);
-      if (viewName === 'calendar') renderCalendar(); // Re-render calendar when switching to it
+      if (viewName === 'calendar') renderCalendar(); 
     }
 
     function setChatMode(isChatting) {
@@ -576,11 +565,11 @@
     function startNewChat() { 
       window.speechSynthesis.cancel(); 
       chatMemory = []; 
-      messageRegistry = []; // Clear message registry as well
+      messageRegistry = []; 
       localStorage.removeItem('doa_chat_cache'); 
       document.getElementById('chat-history').innerHTML = ''; 
-      setChatMode(false); // Reset to initial state
-      switchView('chat'); // Ensure we are on the chat view
+      setChatMode(false); 
+      switchView('chat'); 
     }
 
     function addMessage(sender, text) {
@@ -588,7 +577,6 @@
       const idx = messageRegistry.push(text) - 1;
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      // Using template literals for cleaner HTML structure
       row.innerHTML = `
         <div class="max-w-[85%] group">
           <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">
@@ -604,29 +592,30 @@
         </div>
       `;
       history.appendChild(row); 
-      history.scrollTop = history.scrollHeight; // Auto-scroll to the latest message
+      history.scrollTop = history.scrollHeight; 
     }
 
     // --- INITIALIZATION ON LOAD ---
     document.addEventListener('DOMContentLoaded', () => { 
+      console.log("DOMContentLoaded fired"); // Debug log
       updateVoiceUI(); 
       loadVoices(); 
-      // bootDoaOS() is called automatically by the script in the <head>
       
+      // bootDoaOS() is called automatically by the script in the <head>
+
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
       
-      // Rehydrate chat history if it exists
       if (chatMemory.length > 0) {
         chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
         if (lastView === 'chat') {
            setChatMode(true);
         }
       } else { 
-        setChatMode(false); // Set to initial state if no history
+        setChatMode(false); 
       }
       
-      switchView(lastView); // Load the last active view
-      document.getElementById('main-sidebar').classList.remove('closed'); // Ensure sidebar is open on load
+      switchView(lastView); 
+      document.getElementById('main-sidebar').classList.remove('closed'); 
     });
   </script>
 </body>
