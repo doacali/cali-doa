@@ -50,9 +50,75 @@
     /* Split Pane Layout */
     .left-os-panel { width: 340px; border-right: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
     .right-os-panel { width: 360px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
+
+    /* Modal Styling */
+    .modal {
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      display: none; /* Hidden by default */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto; /* Auto margin top/bottom */
+      padding: 30px;
+      border: 1px solid #888;
+      width: 40%; /* Could be adjusted */
+      max-width: 500px;
+      border-radius: 15px;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .close-button {
+      color: #aaa;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="bg-white">
+
+  <!-- Login/Signup Modal -->
+  <div id="auth-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-button" id="close-auth-modal">&times;</span>
+      <h2>Log in or Sign Up</h2>
+      <p class="text-sm text-gray-600 mb-6">You'll get smarter responses and can upload files, images, and more.</p>
+
+      <div id="email-form">
+        <input type="email" id="email-input" placeholder="Email address" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <input type="password" id="password-input" placeholder="Password" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <div class="flex justify-between items-center">
+          <button id="email-signin" class="bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors">Sign In</button>
+          <button id="email-signup" class="bg-green-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-green-700 transition-colors">Sign Up</button>
+        </div>
+      </div>
+
+      <div id="profile-form" class="mt-4 hidden">
+        <input type="text" id="name-input" placeholder="Your Name" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <input type="text" id="username-input" placeholder="Username" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 text-sm focus:ring-green-500 focus:border-green-500">
+        <button id="profile-submit" class="w-full bg-green-600 text-white rounded-lg px-4 py-3 font-semibold hover:bg-green-700 transition-colors">Create Profile</button>
+      </div>
+    </div>
 
   <div class="flex h-screen w-screen overflow-hidden relative">
     
@@ -78,30 +144,36 @@
 
     <main class="flex-1 flex flex-col bg-white h-full relative overflow-hidden">
       <header class="w-full px-8 py-5 flex justify-end items-center gap-8 text-[11px] font-black uppercase text-gray-400">
-        <button class="hover:text-black">Login</button>
-        <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Sign Up</button>
+        <!-- Header Login/Sign Up Button will trigger the modal -->
+        <button id="login-signup-header-btn" class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Log In / Sign Up</button>
+        <div id="user-info" class="flex items-center gap-4 hidden">
+          <span id="user-name" class="font-bold"></span>
+          <button id="signout-button" class="text-gray-600 hover:text-red-500">Sign Out</button>
+        </div>
       </header>
 
       <!-- CHAT VIEW -->
-      <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
-        <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
-          <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
-          <div id="center-group" class="flex flex-col w-full">
-            <div id="hero-section" class="text-center">
-                <h1 class="text-6xl font-black mb-10 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
-            </div>
-            <div id="input-area" class="w-full bg-white pb-10">
-                <div class="flex justify-between items-center mb-3 px-4">
-                  <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
-                  <div class="flex items-center gap-3">
-                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Voice</span>
-                    <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
+      <div id="app-ui" class="flex-1 flex flex-col bg-white h-full relative overflow-hidden hidden">
+        <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
+          <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
+            <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
+            <div id="center-group" class="flex flex-col w-full">
+              <div id="hero-section" class="text-center">
+                  <h1 class="text-6xl font-black mb-10 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
+              </div>
+              <div id="input-area" class="w-full bg-white pb-10">
+                  <div class="flex justify-between items-center mb-3 px-4">
+                    <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
+                    <div class="flex items-center gap-3">
+                      <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Voice</span>
+                      <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
+                    </div>
                   </div>
-                </div>
-                <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[32px] p-3 flex items-center mx-2">
-                  <textarea id="user-input" rows="1" class="flex-1 px-5 outline-none text-sm resize-none hide-scrollbar py-2" placeholder="Ask Doa anything..."></textarea>
-                  <button onclick="handleMessage()" class="bg-black text-white w-12 h-12 rounded-full font-bold ml-2 hover:bg-gray-800 transition-all flex items-center justify-center">→</button>
-                </div>
+                  <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[32px] p-3 flex items-center mx-2">
+                    <textarea id="user-input" rows="1" class="flex-1 px-5 outline-none text-sm resize-none hide-scrollbar py-2" placeholder="Ask Doa anything..."></textarea>
+                    <button onclick="handleMessage()" class="bg-black text-white w-12 h-12 rounded-full font-bold ml-2 hover:bg-gray-800 transition-all flex items-center justify-center">→</button>
+                  </div>
+              </div>
             </div>
           </div>
         </div>
@@ -149,9 +221,9 @@
     </main>
   </div>
 
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const CLOUDFLARE_URL = 'YOUR_DEPLOYED_WORKER_URL'; // <<< REPLACE WITH YOUR DEPLOYED WORKER URL
+    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <<< REPLACE WITH YOUR DEPLOYED WORKER URL
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || [];
     let messageRegistry = [];
@@ -159,268 +231,117 @@
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
 
-    // Supabase initialization (get these from your Supabase project)
-    const supabaseUrl = 'YOUR_SUPABASE_URL'; // <<< REPLACE WITH YOUR SUPABASE URL
-    const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'; // <<< REPLACE WITH YOUR SUPABASE ANON KEY
-    const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+    function loadVoices() {
+      const v = window.speechSynthesis.getVoices();
+      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
+      for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
 
-    // HTML Elements for Auth Modal
-    const authModal = document.getElementById('auth-modal');
-    const closeAuthModal = document.getElementById('close-auth-modal');
-    const loginSignupHeaderBtn = document.getElementById('login-signup-header-btn');
-    const emailForm = document.getElementById('email-form');
-    const emailSignin = document.getElementById('email-signin');
-    const emailSignup = document.getElementById('email-signup');
-    const emailInput = document.getElementById('email-input');
-    const passwordInput = document.getElementById('password-input');
-    const profileForm = document.getElementById('profile-form');
-    const nameInput = document.getElementById('name-input');
-    const usernameInput = document.getElementById('username-input');
-    const profileSubmit = document.getElementById('profile-submit');
+    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
 
-    // HTML Elements for Main App UI
-    const appUI = document.getElementById('app-ui');
-    const userInfo = document.getElementById('user-info');
-    const userNameDisplay = document.getElementById('user-name');
-    const signoutButton = document.getElementById('signout-button');
-    const loginButtonHeader = document.getElementById('login-signup-header-btn'); // Target the single button
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const title = document.getElementById('cal-main-title');
+      const monthLabel = document.getElementById('month-name-label');
+      const today = new Date(); today.setHours(0,0,0,0);
+      
+      grid.innerHTML = '';
+      const month = viewDate.getMonth(), year = viewDate.getFullYear();
+      const monthName = viewDate.toLocaleString('default', { month: 'long' });
+      title.innerText = monthName + " " + year;
+      monthLabel.innerText = monthName;
 
-    // --- AUTHENTICATION MODAL LOGIC ---
-    loginSignupHeaderBtn?.addEventListener('click', () => {
-        authModal.classList.remove('hidden');
-        // Ensure email form is visible by default
-        emailForm.classList.remove('hidden');
-        profileForm.classList.add('hidden');
-    });
+      const firstDay = getFirstDayOfMonth(year, month);
+      const totalDays = new Date(year, month + 1, 0).getDate();
 
-    closeAuthModal?.addEventListener('click', () => {
-        authModal.classList.add('hidden');
-    });
+      for (let i = 0; i < firstDay; i++) {
+          grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
+      }
 
-    // Close modal if clicking outside
-    window.addEventListener('click', (event) => {
-        if (event.target === authModal) {
-            authModal.classList.add('hidden');
-        }
-    });
+      for (let d = 1; d <= totalDays; d++) {
+        const date = new Date(year, month, d);
+        date.setHours(0,0,0,0);
+        const el = document.createElement('div');
+        el.className = 'cal-day';
+        el.innerText = d;
 
-    // Removed emailLoginButton listener as it's not used and likely a remnant
-    // emailLoginButton?.addEventListener('click', () => { ... });
-
-    emailSignin?.addEventListener('click', async () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            console.error('Email Sign-In Error:', error.message);
-            alert('Sign-in failed. Please check your credentials.');
-        } else {
-            checkUserProfile();
-            authModal.classList.add('hidden'); // Close modal on successful sign-in
-        }
-    });
-
-    emailSignup?.addEventListener('click', async () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        const { data, error } = await supabase.auth.signUp({ email, password });
-
-        if (error) {
-            console.error('Email Sign-Up Error:', error.message);
-            alert('Sign-up failed. Please try again.');
-        } else {
-            // User signed up, now show the profile form
-            emailForm.classList.add('hidden');
-            profileForm.classList.remove('hidden');
-        }
-    });
-
-    profileSubmit?.addEventListener('click', async () => {
-        const name = nameInput.value;
-        const username = usernameInput.value;
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-            console.error("Session Error:", sessionError);
-            alert("Session error during profile creation");
-            return;
+        if (date < today) el.classList.add('past-date');
+        if (date.getTime() === today.getTime()) el.classList.add('today');
+        if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
+        
+        // ─── INFO SPEAKER ICON ───
+        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
+        if (dayEvents.length > 0) {
+            const speaker = document.createElement('div');
+            speaker.className = 'day-speak';
+            speaker.innerHTML = '🔊';
+            speaker.onclick = (e) => {
+                e.stopPropagation();
+                const text = `On ${date.toLocaleString('default', {month:'long', day:'numeric'})}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
+                speak(text);
+            };
+            el.appendChild(speaker);
         }
 
-        // Get current user ID from Supabase Auth for profile creation
-        const userId = supabase.auth.user()?.id;
-        if (!userId) {
-            console.error("User ID not found during profile submission.");
-            alert("Could not get user ID. Please log in again.");
-            return;
-        }
-
-      const { data: userData, error: userError } = await supabase
-          .from('users')
-          .insert([{ id: userId, name: name, username: username, email: supabase.auth.user()?.email }])
-          .select();
-
-        if (userError) {
-            console.error('Profile Creation Error:', userError);
-            alert('Profile creation failed. Please try a different username.');
-        } else {
-            // Profile created successfully
-            profileForm.classList.add('hidden');
-            authModal.classList.add('hidden'); // Close modal
-            updateUIForUser(name || username); // Update UI with user info
-            alert('Profile created successfully!');
-        }
-    });
-
-    // Function to check if the user has a profile and show profile creation if they do not
-    async function checkUserProfile() {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-            console.error("Session Error:", sessionError);
-            alert('Error loading session. Please try again.');
-            hideUI();
-            return;
-        }
-
-        if (!sessionData.session) {
-            // User is not logged in
-            hideUI();
-            loginForm.classList.remove('hidden');
-            return;
-        }
-
-        // User is logged in, check for profile
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('name, username')
-            .eq('id', supabase.auth.user()?.id)
-            .single(); // Use single() as we expect only one row for a user
-
-        if (userError) {
-          console.error("Error fetching user profile:", userError);
-          alert('Error loading profile. Please try again.');
-          hideUI();
-        } else {
-            if (userData) {
-                // User profile exists
-                const userName = userData.name || userData.username || 'User';
-                updateUIForUser(userName);
-            } else {
-               // User profile doesn't exist, hide the UI and show profile creation
-                hideUI();
-                profileForm.classList.remove('hidden'); // Show the profile form
-            }
-        }
+        el.onclick = () => { selectedDate = date; renderCalendar(); };
+        grid.appendChild(el);
+      }
+      updateRightPanel(selectedDate);
+      updateLeftPanel();
     }
 
-    // Log out function
-    async function signOut() {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error('Sign out error:', error.message);
-            alert('Sign out failed. Please try again.');
-        } else {
-            hideUI();
-            location.reload(); // Reload the page to show the login form
-        }
+    function updateLeftPanel() {
+        const list = document.getElementById('month-summary-list');
+        list.innerHTML = '';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const monthUpcoming = events.filter(e => {
+            const d = new Date(e.date);
+            return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear() && d >= today;
+        }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
+        else monthUpcoming.forEach(e => {
+            const d = new Date(e.date);
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
+            div.onclick = () => { selectedDate = d; renderCalendar(); };
+            div.innerHTML = `<div class="flex flex-col items-center min-w-[35px]"><span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${d.toLocaleString('default',{month:'short'})}</span><span class="text-sm font-black text-gray-800">${d.getDate()}</span></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p></div>`;
+            list.appendChild(div);
+        });
     }
 
-    // --- INITIAL LOAD LOGIC ---
-    window.onload = () => {
-      updateVoiceUI(); loadVoices();
-
-      // Check session on load to determine initial UI state
-      supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-              // User is already signed in
-              checkUserProfile();
-          } else {
-              // User is not signed in, show login form
-              loginForm.classList.remove('hidden');
-              appUI.classList.add('hidden');
-              // Ensure header login/signup buttons are visible when not logged in
-              loginButtonHeader.classList.remove('hidden');
-          }
-      });
-
-      const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      if (chatMemory.length > 0) {
-        chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
-        if (lastView === 'chat') setChatMode(true);
-      } else { setChatMode(false); }
-      switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed');
-    };
-
-    // --- CHAT LOGIC ---
-    function simulateDoaTyping(text, inputElement) {
-        let i = 0;
-        let currentText = "";
-
-        clearInterval(typingInterval); // Clear any existing interval
-
-        typingInterval = setInterval(() => {
-            if (i < text.length) {
-                currentText += text.charAt(i);
-                inputElement.value = currentText; // Update the input field
-                i++;
-            } else {
-                clearInterval(typingInterval); // Stop when the typing is done
-            }
-        }, 50 + Math.random() * 50); // Adjust typing speed (milliseconds)
+    function updateRightPanel(date) {
+        const list = document.getElementById('day-events-list');
+        const header = document.getElementById('selected-date-header');
+        list.innerHTML = '';
+        header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
+        
+        if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
+        else dayEvents.forEach(e => {
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-4 animate-fadeIn group";
+            div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1 flex items-center justify-between"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p><div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="speak('${e.title}')" class="text-[#00E676] text-xs">🔊</button><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400">✕</button></div></div>`;
+            list.appendChild(div);
+        });
     }
 
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
         const inputText = input.value.trim(); // Get the user input
         if (!inputText) return; // Prevent saving if input is empty
-
-        // Start Doa typing animation in the input field
-        // simulateDoaTyping(inputText, input); // Commented out for now to avoid confusion with chat input
-
-        // Save the event after a short delay (to let typing finish)
-        setTimeout(() => {
-            saveEvent(inputText, selectedDate); // Use selectedDate for quick add
-            input.value = '';  // Clear the input after saving
-        }, 800 + (inputText.length * 50) ); // Add a delay based on text length
-    }
-
-   // Function to handle saving the event
-    function saveEvent(text, eventDate) {
-        if (!text) return; // Ensure there's text to save
-        const selectedDateISO = eventDate.toISOString(); // Get selected date
-        const userId = supabase.auth.user()?.id; // Get the current user's ID
-
-        if (!userId) {
-            console.error("User ID not found. Cannot save event.");
-            // Handle this case, maybe prompt user to log in
-            return;
-        }
-
-        // Check for multiple events (separated by newlines or commas)
-        const eventTexts = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
-
-        eventTexts.forEach(async (eventText) => { // Make this async to await Supabase insert
-            if (eventText) {
-                const { data, error } = await supabase
-                    .from('events') // <<< ENSURE YOUR EVENTS TABLE IS NAMED 'events'
-                    .insert([{ title: eventText, date: selectedDateISO, user_id: userId }]);
-
-                if (error) {
-                    console.error('Error saving event:', error);
-                } else {
-                    console.log('Event saved successfully!');
-                    // Optionally, re-render the calendar or update the UI
-                    renderCalendar(); // Re-render to show the new event
-                }
-            }
-        });
+        events.push({ title: inputText, date: selectedDate.toISOString() });
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        input.value = '';
+        renderCalendar();
     }
 
     function deleteEvent(dateStr, title) {
-        // This function is for events added through the calendar UI, not chat.
-        // You'll need to implement Supabase delete logic here if you want to delete events from calendar.
-        console.warn("deleteEvent through calendar UI not yet implemented for Supabase.");
+        events = events.filter(e => !(e.date === dateStr && e.title === title));
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        renderCalendar();
     }
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
@@ -555,6 +476,8 @@
               appUI.classList.add('hidden');
               // Ensure header login/signup buttons are visible when not logged in
               loginButtonHeader.classList.remove('hidden');
+              // signupButtonHeader is not present in the HTML, so this will do nothing.
+              // If you add a separate sign-up button, you'd make it visible too.
           }
       });
 
