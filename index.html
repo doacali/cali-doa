@@ -343,12 +343,7 @@
             }
           }
         } else if (command === 'OPEN_URL') {
-          let url = value;
-          if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-          window.open(url, '_blank');
-        } else if (command === 'RESEARCH') {
-          const query = encodeURIComponent(value);
-          window.open('https://www.google.com/search?q=' + query, '_blank');
+          // handled inline via displayed button
         } else if (command === 'OPEN_TAB') {
           if (['chat','calendar','apps'].includes(value.toLowerCase())) switchView(value.toLowerCase());
         }
