@@ -258,7 +258,6 @@
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
         if (!input.value.trim()) return;
-        // Store date as toDateString() for consistent matching across all event sources
         events.push({ title: input.value.trim(), date: selectedDate.toDateString() });
         localStorage.setItem('doa_events', JSON.stringify(events));
         input.value = '';
@@ -321,7 +320,6 @@
     function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
 
     function processActions(responseText) {
-      // Match all [ACTION: COMMAND:VALUE|Label] tags
       const actionRegex = /\[ACTION:\s*([^:\]]+):([^|]*)\|([^\]]*)\]/g;
       let match;
       while ((match = actionRegex.exec(responseText)) !== null) {
@@ -330,7 +328,6 @@
         const label   = match[3].trim();
 
         if (command === 'ADD_EVENT') {
-          // value format: "EventTitle,YYYY-MM-DD"
           const commaIdx = value.lastIndexOf(',');
           if (commaIdx !== -1) {
             const title    = value.substring(0, commaIdx).trim();
@@ -342,14 +339,13 @@
               renderCalendar();
             }
           }
-        } else if (command === 'OPEN_URL') {
-          // handled inline via displayed button
         } else if (command === 'OPEN_TAB') {
           if (['chat','calendar','apps'].includes(value.toLowerCase())) switchView(value.toLowerCase());
         }
       }
     }
 
+    // ─── FIXED: Reliable date/time sent to worker ───
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
@@ -358,11 +354,21 @@
       setChatMode(true); addMessage('user', rawText); input.value = '';
       isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
       try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10), localTime: new Date().toLocaleTimeString(), localDate: new Date().toLocaleDateString() }) });
+        const now = new Date();
+        const res = await fetch(CLOUDFLARE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: rawText,
+            history: chatMemory.slice(-10),
+            localTime: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            localDate: now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+            isoDateTime: now.toISOString(),
+            utcOffset: -now.getTimezoneOffset()
+          })
+        });
         const data = await res.json();
-        // 1. Process action tags FIRST (so ADD_EVENT etc. actually fire)
         processActions(data.response);
-        // 2. Then strip tags for display
         const cleanResponse = data.response.replace(/\[ACTION:[^\]]*\]/g, "").trim();
         addMessage('doa', cleanResponse);
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
