@@ -223,7 +223,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev'; // <<< REPLACE WITH YOUR DEPLOYED WORKER URL
+    const CLOUDFLARE_URL = 'YOUR_DEPLOYED_WORKER_URL'; // <<< REPLACE WITH YOUR DEPLOYED WORKER URL
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || [];
     let messageRegistry = [];
