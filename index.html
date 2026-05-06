@@ -140,55 +140,65 @@
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
 
-    // 1. NEURAL BOOT (REPAIR VERSION)
+    // 1. SELF-HEALING BOOT (GPU -> CPU Fallback)
     async function bootDoaOS() {
       const ticker = document.getElementById('status-text');
       const led = document.getElementById('brain-led');
       
+      if (!window.pipeline) {
+          setTimeout(bootDoaOS, 500);
+          return;
+      }
+
+      // Try GPU first
       try {
-        // Wait for pipeline to be available (CDN check)
-        if (!window.pipeline) {
-            setTimeout(bootDoaOS, 500);
-            return;
-        }
-
-        ticker.innerText = "LITE BRAIN BOOTING...";
-        
-        // Phase 1: SmolLM (Lite Brain)
+        ticker.innerText = "LINKING GPU CORE...";
         currentEngine = await window.pipeline('text-generation', 'onnx-community/SmolLM-135M-Instruct', {
-            device: 'webgpu'
+            device: 'webgpu' 
         });
-
-        ticker.innerText = "DOA ONLINE (LITE)";
+        ticker.innerText = "DOA ONLINE (GPU)";
         led.classList.replace('bg-yellow-400', 'bg-[#00E676]');
         led.classList.remove('animate-pulse');
+        loadAdvancedBrain('webgpu');
 
-        // Phase 2: Gemma 2B (Advanced Brain) in background
-        loadAdvancedBrain();
-
-      } catch (e) {
-        ticker.innerText = "HARDWARE ERROR - USE CHROME";
-        console.error("Boot Error:", e);
+      } catch (gpuError) {
+        console.warn("WebGPU failed, falling back to CPU (WASM)...", gpuError);
+        
+        // Fallback to CPU (WASM)
+        try {
+            ticker.innerText = "GPU FAILED. LOADING CPU CORE...";
+            currentEngine = await window.pipeline('text-generation', 'onnx-community/SmolLM-135M-Instruct', {
+                device: 'wasm' 
+            });
+            ticker.innerText = "DOA ONLINE (LITE CPU)";
+            led.classList.replace('bg-yellow-400', 'bg-blue-400'); // Blue means CPU mode
+            led.classList.remove('animate-pulse');
+            loadAdvancedBrain('wasm');
+        } catch (cpuError) {
+            ticker.innerText = "CRITICAL BOOT ERROR";
+            console.error("Total Boot Failure:", cpuError);
+        }
       }
     }
 
-    async function loadAdvancedBrain() {
+    async function loadAdvancedBrain(preferredDevice) {
         const ticker = document.getElementById('status-text');
         try {
+            // Loading a very light advanced model (Qwen 0.5B) for better stability
             const advanced = await window.pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
-                device: 'webgpu',
+                device: preferredDevice,
                 progress_callback: (info) => {
                     if (info.status === 'progress') ticker.innerText = `UPDATING: ${Math.round(info.progress)}%`;
                 }
             });
             currentEngine = advanced;
-            ticker.innerText = "DOA ADVANCED ONLINE";
+            ticker.innerText = preferredDevice === 'webgpu' ? "DOA ADVANCED (GPU)" : "DOA ADVANCED (CPU)";
         } catch (err) {
             console.warn("Advanced load failed, staying in Lite mode.");
         }
     }
 
-    // 2. MESSAGE HANDLER
+    // --- KEEP ALL OTHER FUNCTIONS (handleMessage, speak, etc.) THE SAME ---
     async function handleMessage() {
       if (isThinking || !currentEngine) return;
       const input = document.getElementById('user-input');
@@ -199,7 +209,7 @@
       addMessage('user', query);
       input.value = '';
       isThinking = true;
-      document.getElementById('status-text').innerText = "DOA IS THINKING...";
+      document.getElementById('status-text').innerText = "THINKING...";
 
       try {
         const context = [
@@ -209,22 +219,22 @@
         ];
 
         const output = await currentEngine(context, { max_new_tokens: 150 });
-        const response = output[0]?.generated_text?.at(-1)?.content || "Error";
+        const response = output[0]?.generated_text?.at(-1)?.content || "OS Busy.";
 
         addMessage('doa', response);
-        chatMemory.push({ role: 'user', content: query }, { role: 'assistant', content: response });
+        chatMemory.push({ role: 'user', content: rawText || query }, { role: 'assistant', content: response });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory.slice(-10)));
         if (voiceActive) speak(response);
 
       } catch (e) {
         addMessage('doa', "Neural bridge failed.");
+        console.error(e);
       } finally {
         isThinking = false;
         document.getElementById('status-text').innerText = "DOA ONLINE";
       }
     }
 
-    // 3. UI HELPERS
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
       const row = document.createElement('div');
