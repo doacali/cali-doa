@@ -30,7 +30,6 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     
     .bubble-action-btn { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; transition: 0.2s; cursor: pointer; }
-    .bubble-action-btn.red { color: #e53e3e; }
     
     #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
     #menu-btn.show { opacity: 1; pointer-events: auto; }
@@ -153,13 +152,12 @@
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-    let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || [];
-    let messageRegistry = []; // Stores actual message content for easy access
+    let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
+    let messageRegistry = []; 
     let events = JSON.parse(localStorage.getItem('doa_events')) || [];
     let isThinking = false, selectedVoice = null;
-    let viewDate = new Date(), selectedDate = new Date(); // For calendar view
+    let viewDate = new Date(), selectedDate = new Date();
 
-    // --- Initialization and Voice Setup ---
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
       const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
@@ -168,15 +166,14 @@
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
 
-    // --- Calendar Rendering and Logic ---
-    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; } // Monday is 0
+    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
 
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       const title = document.getElementById('cal-main-title');
       const monthLabel = document.getElementById('month-name-label');
       const today = new Date(); today.setHours(0,0,0,0);
-
+      
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
       const monthName = viewDate.toLocaleString('default', { month: 'long' });
@@ -186,15 +183,13 @@
       const firstDay = getFirstDayOfMonth(year, month);
       const totalDays = new Date(year, month + 1, 0).getDate();
 
-      // Add empty cells for days before the 1st of the month
       for (let i = 0; i < firstDay; i++) {
           grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
       }
 
-      // Render days
       for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d);
-        date.setHours(0,0,0,0); // Normalize to start of day
+        date.setHours(0,0,0,0);
         const el = document.createElement('div');
         el.className = 'cal-day';
         el.innerText = d;
@@ -202,22 +197,22 @@
         if (date < today) el.classList.add('past-date');
         if (date.getTime() === today.getTime()) el.classList.add('today');
         if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
-
-        // Add speaker icon if there are events on this day
+        
+        // ─── INFO SPEAKER ICON ───
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
         if (dayEvents.length > 0) {
             const speaker = document.createElement('div');
             speaker.className = 'day-speak';
             speaker.innerHTML = '🔊';
             speaker.onclick = (e) => {
-                e.stopPropagation(); // Prevent triggering day selection
+                e.stopPropagation();
                 const text = `On ${date.toLocaleString('default', {month:'long', day:'numeric'})}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
                 speak(text);
             };
             el.appendChild(speaker);
         }
 
-        el.onclick = () => { selectedDate = date; renderCalendar(); }; // Update selected date and re-render
+        el.onclick = () => { selectedDate = date; renderCalendar(); };
         grid.appendChild(el);
       }
       updateRightPanel(selectedDate);
@@ -250,7 +245,7 @@
         list.innerHTML = '';
         header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-
+        
         if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
         else dayEvents.forEach(e => {
             const div = document.createElement('div');
@@ -262,134 +257,32 @@
 
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
-        const inputText = input.value.trim();
-        if (!inputText) return;
-        saveEvent(inputText, selectedDate);
+        if (!input.value) return;
+        events.push({ title: input.value, date: selectedDate.toISOString() });
+        localStorage.setItem('doa_events', JSON.stringify(events));
         input.value = '';
         renderCalendar();
     }
 
     function deleteEvent(dateStr, title) {
-        // Filter out the event to be deleted
-        const initialLength = events.length;
         events = events.filter(e => !(e.date === dateStr && e.title === title));
-        
-        // Check if an event was actually removed
-        if (events.length < initialLength) {
-            localStorage.setItem('doa_events', JSON.stringify(events));
-            renderCalendar(); // Re-render to reflect the removal
-        } else {
-            console.warn(`Event not found for deletion: Title="${title}", Date="${dateStr}"`);
-        }
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        renderCalendar();
     }
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
-    // --- Event Saving and Parsing ---
-    function saveEvent(title, date) {
-        const event = { title, date: date.toISOString() }; // Store as ISO string for consistency
-        events.push(event);
-        localStorage.setItem('doa_events', JSON.stringify(events));
-        console.log("Event saved:", event);
-    }
-
-    // Parses natural language dates and extracts event details.
-    // This is a simplified parser. For robust parsing, consider a library like 'date-fns-parser' or a more complex regex engine.
-    function parseCalendarRequest(text) {
-        let eventTitle = text;
-        let eventDate = new Date(); // Default to today
-        eventDate.setHours(0,0,0,0); // Normalize to start of day
-
-        // Regex to find common date patterns (e.g., "tomorrow", "May 10", "May 10th", "next Tuesday")
-        // This is a basic implementation, can be expanded significantly.
-        const datePatterns = [
-            { regex: /\b(tomorrow)\b/i, modifier: (d) => d.setDate(d.getDate() + 1) },
-            { regex: /\b(the day after tomorrow)\b/i, modifier: (d) => d.setDate(d.getDate() + 2) },
-            { regex: /(\w+)\s+(\d{1,2})(st|nd|rd|th)?/i, handler: (match, month, day) => {
-                const monthIndex = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"].indexOf(month.toLowerCase());
-                if (monthIndex !== -1) {
-                    const tempDate = new Date(viewDate.getFullYear(), monthIndex, parseInt(day));
-                    // If the parsed date is in the past relative to the current month, assume next year
-                    if (tempDate < new Date(viewDate.getFullYear(), viewDate.getMonth(), 1)) {
-                         tempDate.setFullYear(viewDate.getFullYear() + 1);
-                    }
-                    return tempDate;
-                }
-                return null;
-            }},
-            { regex: /\b(next)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i, handler: (match, dayOfWeek) => {
-                const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-                let currentDay = viewDate.getDay();
-                let targetDay = days.indexOf(dayOfWeek.toLowerCase());
-                let diff = targetDay - currentDay;
-                if (diff <= 0) diff += 7; // Move to the next occurrence
-                const tempDate = new Date(viewDate);
-                tempDate.setDate(viewDate.getDate() + diff);
-                return tempDate;
-            }}
-        ];
-
-        for (const pattern of datePatterns) {
-            const match = text.match(pattern.regex);
-            if (match) {
-                if (pattern.handler) {
-                    const parsedDate = pattern.handler(...match);
-                    if (parsedDate) {
-                        eventDate = parsedDate;
-                        // Remove the date part from the title
-                        eventTitle = text.replace(match[0], '').trim();
-                        break; // Stop after finding the first match
-                    }
-                } else if (pattern.modifier) {
-                    const tempDate = new Date(eventDate); // Start with default date
-                    pattern.modifier(tempDate);
-                    eventDate = tempDate;
-                    eventTitle = text.replace(match[0], '').trim();
-                    break; // Stop after finding the first match
-                }
-            }
-        }
-        
-        // Attempt to extract time if present (basic example)
-        const timeMatch = eventTitle.match(/(\d{1,2})(:(\d{2}))?\s*(am|pm)?/i);
-        if (timeMatch) {
-            let hour = parseInt(timeMatch[1]);
-            const minute = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
-            const ampm = timeMatch[4] ? timeMatch[4].toLowerCase() : '';
-
-            if (ampm === 'pm' && hour < 12) hour += 12;
-            if (ampm === 'am' && hour === 12) hour = 0; // 12 AM is midnight
-
-            eventDate.setHours(hour, minute);
-            eventTitle = eventTitle.replace(timeMatch[0], '').trim();
-        }
-
-        return { title: eventTitle, date: eventDate };
-    }
-
-    // --- Speech Synthesis ---
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      // Clean up text for speech: remove actions, URLs, and special markdown characters
       const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(clean);
       if (selectedVoice) u.voice = selectedVoice;
       u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
-      u.onstart = () => {
-          // Keep the speech synthesis active by intermittently pausing and resuming
-          const interval = setInterval(() => {
-              if (!window.speechSynthesis.speaking) clearInterval(interval);
-              else {
-                  window.speechSynthesis.pause();
-                  window.speechSynthesis.resume();
-              }
-          }, 10000); // Check every 10 seconds
-      };
+      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
     }
 
-    // --- UI and View Management ---
     function toggleSidebar() {
       const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
       sb.classList.toggle('closed');
@@ -405,11 +298,9 @@
       const btn = document.getElementById('btn-' + viewName);
       if(btn) btn.classList.add('sidebar-active');
       const sidebar = document.getElementById('main-sidebar');
-      if (!sidebar.classList.contains('closed')) toggleSidebar(); // Close sidebar when switching views
+      if (!sidebar.classList.contains('closed')) toggleSidebar();
       if (viewName === 'chat') setChatMode(chatMemory.length > 0);
-      if (viewName === 'calendar') {
-          renderCalendar(); // Re-render calendar when entering the view
-      }
+      if (viewName === 'calendar') renderCalendar();
     }
 
     function setChatMode(isChatting) {
@@ -425,163 +316,47 @@
       }
     }
 
-    function startNewChat() { 
-        window.speechSynthesis.cancel(); 
-        chatMemory = []; 
-        messageRegistry = []; // Clear message registry too
-        localStorage.removeItem('doa_chat_cache'); 
-        document.getElementById('chat-history').innerHTML = ''; 
-        setChatMode(false); 
-        switchView('chat'); 
-    }
+    function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
 
-    // --- Message Handling and AI Interaction ---
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
       const input = document.getElementById('user-input'), rawText = input.value.trim();
       if (!rawText) return;
-      setChatMode(true); 
-      addMessage('user', rawText); 
-      input.value = '';
-      isThinking = true; 
-      document.getElementById('status-text').innerText = "Doa is thinking...";
+      setChatMode(true); addMessage('user', rawText); input.value = '';
+      isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
       try {
-        // --- IMPORTANT: Include current date/time in the request to the worker ---
-        const currentDate = new Date();
-        const requestBody = JSON.stringify({ 
-            text: rawText, 
-            history: chatMemory.slice(-10),
-            localTime: currentDate.toLocaleTimeString(),
-            localDate: currentDate.toLocaleDateString(),
-            // We're relying on the worker to get the current year for calculations
-        });
-
-        const res = await fetch(CLOUDFLARE_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: requestBody 
-        });
-        
+        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
         const data = await res.json();
-        let responseText = data.response;
-        const calendarEvent = data.calendarEvent;       // For adding events
-        const eventToRemove = data.eventToRemove;     // For removing events
-
-        // --- Process the AI's response and check for calendar actions ---
-        
-        // 1. Display the raw AI response first.
-        addMessage('doa', responseText); 
-        
-        let confirmationAdded = false; // Flag to track if we added our own confirmation
-
-        // --- Handle Event Addition ---
-        if (calendarEvent) {
-            const eventDate = new Date(calendarEvent.date); 
-            if (!isNaN(eventDate.getTime())) {
-                saveEvent(calendarEvent.title, eventDate); 
-                renderCalendar(); 
-                // Check if AI's response *already* contains a confirmation. If not, add our own brief one.
-                if (!responseText.toLowerCase().includes("added") && !responseText.toLowerCase().includes("scheduled")) {
-                    addMessage('doa', `Confirmed: "${calendarEvent.title}" added for ${eventDate.toLocaleDateString('default', { month: 'short', day: 'numeric' })}.`);
-                    confirmationAdded = true;
-                }
-            } else {
-                console.error("Invalid date format received from worker for calendar event:", calendarEvent.date);
-                addMessage('doa', "[Error: Could not parse calendar event details for adding. Please specify date and time clearly.]");
-            }
-        } 
-        // --- Handle Event Removal ---
-        else if (eventToRemove) { // Use 'else if' to ensure only one action is processed
-            const eventDateToRemove = new Date(eventToRemove.date);
-            if (!isNaN(eventDateToRemove.getTime())) {
-                deleteEvent(eventToRemove.date, eventToRemove.title); // Use your existing deleteEvent function
-                renderCalendar(); 
-                // Check if AI's response already confirms removal.
-                if (!responseText.toLowerCase().includes("removed") && !responseText.toLowerCase().includes("deleted")) {
-                    addMessage('doa', `Confirmed: "${eventToRemove.title}" removed for ${eventDateToRemove.toLocaleDateString('default', { month: 'short', day: 'numeric' })}.`);
-                    confirmationAdded = true;
-                }
-            } else {
-                console.error("Invalid date format received from worker for event removal:", eventToRemove.date);
-                addMessage('doa', "[Error: Could not parse calendar event details for removal. Please specify date and time clearly.]");
-            }
-        }
-        
-        // Update chat memory with the AI's response
-        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
+        addMessage('doa', data.response.replace(/\[ACTION:.*?\]/g, ""));
+        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
-        
-        speak(responseText); // Speak the AI's full response
-
-      } catch (e) { 
-        addMessage('doa', "OS Connection disrupted. Please try again."); 
-        console.error("Error fetching response:", e);
-      } finally { 
-        isThinking = false; 
-        document.getElementById('status-text').innerText = ""; 
-      }
+        speak(data.response);
+      } catch (e) { addMessage('doa', "OS Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
-      const idx = messageRegistry.push(text) - 1; // Store message and get its index
+      const idx = messageRegistry.push(text) - 1;
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      row.innerHTML = `<div class="max-w-[85%] group">
-                         <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>
-                         ${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1">
-                                                 <button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button>
-                                                 <button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button>
-                                                 <button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
-                                              </div>` : ''}
-                       </div>`;
-      history.appendChild(row); 
-      history.scrollTop = history.scrollHeight; // Auto-scroll to bottom
+      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
+      history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
-    function toggleVoice() { 
-        voiceActive = !voiceActive; 
-        localStorage.setItem('voice_active', voiceActive); 
-        updateVoiceUI(); 
-        if (voiceActive) speak("Voice active."); 
-        else window.speechSynthesis.cancel(); 
-    }
-    function updateVoiceUI() { 
-        const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); 
-        if(knob && bg) { 
-            knob.style.left = voiceActive ? "18px" : "2px"; 
-            bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
-        } 
-    }
-
-    // --- Event Listeners ---
-    document.getElementById('user-input').addEventListener('keydown', (e) => { 
-        if (e.key === 'Enter' && !e.shiftKey) { 
-            e.preventDefault(); 
-            handleMessage(); 
-        } 
-    });
-
-    // --- On Page Load ---
-    window.onload = () => {
-      updateVoiceUI(); 
-      loadVoices();
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    
+    window.onload = () => { 
+      updateVoiceUI(); loadVoices(); 
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      
-      // Restore chat history if available
       if (chatMemory.length > 0) {
         chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
         if (lastView === 'chat') setChatMode(true);
       } else { setChatMode(false); }
-      
       switchView(lastView);
-      document.getElementById('main-sidebar').classList.remove('closed');
-      
-      // Ensure calendar is rendered if calendar view is the default or restored
-      if (lastView === 'calendar') {
-          renderCalendar();
-      }
+      document.getElementById('main-sidebar').classList.remove('closed'); 
     };
   </script>
 </body>
