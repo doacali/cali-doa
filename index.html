@@ -92,7 +92,15 @@
             </div>
             <div id="input-area" class="w-full bg-white pb-10">
                 <div class="flex justify-between items-center mb-3 px-4">
-                  <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
+                  
+                  <!-- HYBRID UI STATUS AREA -->
+                  <div class="flex flex-col w-full max-w-[50%]">
+                    <p id="status-text" class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cloud AI Active.</p>
+                    <div id="progress-container" class="hidden w-full bg-gray-100 h-1 mt-1 rounded-full overflow-hidden">
+                      <div id="progress-bar" class="h-full bg-[#00E676] w-0 transition-all duration-300"></div>
+                    </div>
+                  </div>
+
                   <div class="flex items-center gap-3">
                     <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Voice</span>
                     <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
@@ -107,17 +115,13 @@
         </div>
       </div>
 
-      <!-- CALENDAR VIEW (THREE-PANE LAYOUT) -->
+      <!-- CALENDAR VIEW -->
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-row overflow-hidden h-full">
-        
-        <!-- LEFT PANEL: Month Upcoming Summary -->
         <div class="left-os-panel">
             <h2 class="text-2xl font-black uppercase tracking-tighter mb-1" id="month-name-label">Month</h2>
             <p class="text-[10px] font-bold text-gray-400 uppercase mb-8 tracking-widest">Upcoming highlights</p>
             <div id="month-summary-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2"></div>
         </div>
-
-        <!-- CENTER: Calendar Grid -->
         <div class="flex-1 flex flex-col items-center justify-center pb-20">
             <div class="win-calendar-card">
                 <div class="flex justify-between items-center mb-8">
@@ -133,8 +137,6 @@
                 <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
             </div>
         </div>
-
-        <!-- RIGHT PANEL: Selected Day Details -->
         <div class="right-os-panel">
             <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-6">Today</h2>
             <div id="day-events-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2 mb-6"></div>
@@ -150,16 +152,59 @@
   </div>
 
  <script>
+    // --- HYBRID AI STATE VARIABLES ---
+    let localAIEngine = null;
+    let isLocalAIReady = false;
+    let isLocalAILoading = false;
+
+    // --- STANDARD APP STATE ---
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
-    let messageRegistry = []; 
-    let events = JSON.parse(localStorage.getItem('doa_events')) || [];
+    let messageRegistry =[]; 
+    let events = JSON.parse(localStorage.getItem('doa_events')) ||[];
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
 
+    // Ensure System Prompt is ALWAYS present at index 0 for API structure
+    if (chatMemory.length === 0 || chatMemory[0].role !== 'system') {
+        chatMemory.unshift({ role: "system", content: "" });
+    }
+
+    // --- BACKGROUND WEBGPU LOADER ---
+    async function initializeLocalAI() {
+        if (isLocalAILoading || isLocalAIReady) return;
+        isLocalAILoading = true;
+        
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('status-text');
+        
+        progressContainer.classList.remove('hidden');
+
+        try {
+            const webllm = await import("https://esm.run/@mlc.ai/webllm");
+            localAIEngine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
+                initProgressCallback: (report) => {
+                    const percent = Math.round(report.progress * 100);
+                    progressBar.style.width = percent + "%";
+                    statusText.innerText = `Downloading Offline Brain: ${percent}%`;
+                }
+            });
+
+            isLocalAIReady = true;
+            statusText.innerText = "Offline AI Ready.";
+            statusText.classList.add('text-[#00E676]');
+            progressContainer.classList.add('hidden');
+        } catch (err) {
+            statusText.innerText = "WebGPU not supported. Using Cloud AI.";
+            console.error("Local AI failed to load:", err);
+            progressContainer.classList.add('hidden');
+        }
+    }
+
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
-      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
+      const n =["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
       for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -267,7 +312,7 @@
       if(btn) btn.classList.add('sidebar-active');
       const sidebar = document.getElementById('main-sidebar');
       if (!sidebar.classList.contains('closed')) toggleSidebar();
-      if (viewName === 'chat') setChatMode(chatMemory.length > 0);
+      if (viewName === 'chat') setChatMode(chatMemory.length > 1);
       if (viewName === 'calendar') renderCalendar();
     }
 
@@ -284,7 +329,15 @@
       }
     }
 
-    function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
+    function startNewChat() { 
+        window.speechSynthesis.cancel(); 
+        chatMemory = [{ role: "system", content: "" }]; 
+        messageRegistry =[]; 
+        localStorage.removeItem('doa_chat_cache'); 
+        document.getElementById('chat-history').innerHTML = ''; 
+        setChatMode(false); 
+        switchView('chat'); 
+    }
 
     function processActions(responseText) {
       const actionRegex = /\[ACTION:\s*([^:\]]+):([^|]*)\|([^\]]*)\]/g;
@@ -310,51 +363,87 @@
       }
     }
 
-    async function callDoaBrain(query) {
-      const systemPrompt = `You are DOA, an AI Operating System. Today: ${new Date().toDateString()}. 
-      IMPORTANT: ALWAYS respond in clean plain text. Never output raw JSON.
-      If adding an event, use this EXACT format: [ACTION: ADD_EVENT:Title,YYYY-MM-DD|Label]
-      Example: "I've added that. [ACTION: ADD_EVENT:Lunch,2026-05-07|Event]"`;
-
-      const messages = [{ role: 'system', content: systemPrompt }, ...chatMemory.slice(-6), { role: 'user', content: query }];
-
+    // CLOUD FALLBACK FUNCTION
+    async function callDoaBrain() {
+      // Send the system prompt + recent messages
+      const recentContext = [chatMemory[0], ...chatMemory.slice(-6)];
       try {
         const res = await fetch(`https://text.pollinations.ai/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: messages, model: 'openai', stream: false })
+          body: JSON.stringify({ messages: recentContext, model: 'openai', stream: false })
         });
         let raw = await res.text();
-        
-        // 1. Try to parse as JSON in case the model wraps its response
         try {
             const parsed = JSON.parse(raw);
             raw = parsed.content || parsed.choices?.[0]?.message?.content || raw;
         } catch(e) {}
-        
-        // 2. Strip reasoning/thinking tags used by models like DeepSeek R1
-        raw = raw.replace(/<thought>[\s\S]*?<\/thought>/gi, '').replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
-        return raw;
+        return raw.replace(/<thought>[\s\S]*?<\/thought>/gi, '').replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
       } catch (e) { return "Connection Error."; }
     }
 
+    // MAIN MESSAGE HANDLER
     async function handleMessage() {
       window.speechSynthesis.cancel();
       if (isThinking) return;
       const input = document.getElementById('user-input'), rawText = input.value.trim();
       if (!rawText) return;
-      setChatMode(true); addMessage('user', rawText); input.value = '';
-      isThinking = true; document.getElementById('status-text').innerText = "DOA IS ANALYZING...";
+      
+      setChatMode(true); 
+      addMessage('user', rawText); 
+      input.value = '';
+      isThinking = true; 
+
+      // 1. SILENTLY START BACKGROUND DOWNLOAD IF NOT STARTED
+      if (!isLocalAILoading && !isLocalAIReady) {
+          initializeLocalAI(); 
+      }
+
+      // Keep user informed if not showing progress bar
+      if (!isLocalAILoading || isLocalAIReady) {
+          document.getElementById('status-text').innerText = "DOA IS ANALYZING...";
+      }
+
+      // 2. UPDATE SYSTEM PROMPT DYNAMICALLY
+      chatMemory[0].content = `You are DOA, an AI Operating System. Today: ${new Date().toDateString()}. Time: ${new Date().toLocaleTimeString()}.
+      IMPORTANT: ALWAYS respond in clean plain text. Never output raw JSON.
+      If adding an event, use this EXACT format:[ACTION: ADD_EVENT:Title,YYYY-MM-DD|Label]
+      Example: "I've added that.[ACTION: ADD_EVENT:Lunch,2026-05-07|Event]"`;
+
+      chatMemory.push({ role: 'user', content: rawText });
+
       try {
-        const responseText = await callDoaBrain(rawText);
+        let responseText = "";
+
+        // 3. HYBRID ROUTING
+        if (isLocalAIReady && localAIEngine) {
+            // Use Instant Offline WebGPU
+            const reply = await localAIEngine.chat.completions.create({ messages: chatMemory });
+            responseText = reply.choices[0].message.content;
+        } else {
+            // Use Cloud Fallback (while downloading)
+            responseText = await callDoaBrain();
+        }
+
+        // 4. PROCESS OUTPUT
         processActions(responseText);
         const cleanResponse = responseText.replace(/\[ACTION:[^\]]*\]/g, "").trim();
         addMessage('doa', cleanResponse);
-        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
+        chatMemory.push({ role: 'assistant', content: responseText });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
         speak(cleanResponse);
-      } catch (e) { addMessage('doa', "OS Error."); }
-      finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
+
+      } catch (e) { 
+        addMessage('doa', "OS Error."); 
+        console.error(e);
+      } finally { 
+        isThinking = false; 
+        if (isLocalAIReady) {
+            document.getElementById('status-text').innerText = "Offline AI Ready.";
+        } else if (!isLocalAILoading) {
+            document.getElementById('status-text').innerText = "Cloud AI Active.";
+        }
+      }
     }
 
     function addMessage(sender, text) {
@@ -369,12 +458,20 @@
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     
     window.onload = () => { 
-      updateVoiceUI(); loadVoices(); const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      if (chatMemory.length > 0) {
-        chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
+      updateVoiceUI(); 
+      loadVoices(); 
+      const lastView = localStorage.getItem('doa_active_view') || 'chat';
+      
+      // Load memory (skipping index 0 which is the system prompt)
+      if (chatMemory.length > 1) {
+        chatMemory.slice(1).forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
         if (lastView === 'chat') setChatMode(true);
-      } else { setChatMode(false); }
-      switchView(lastView); document.getElementById('main-sidebar').classList.remove('closed'); 
+      } else { 
+        setChatMode(false); 
+      }
+      
+      switchView(lastView); 
+      document.getElementById('main-sidebar').classList.remove('closed'); 
     };
 </script>
 </body>
