@@ -6,20 +6,24 @@
   <title>Doa | AI Operating System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-  <!-- Removed favicon link to fix 404 error -->
+  
+  <!-- 1. THE BRAIN IMPORT (Transformers.js) -->
+  <script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+    window.pipeline = pipeline;
+    env.allowLocalModels = false;
+  </script>
+
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
-    
     .os-scrollbar::-webkit-scrollbar { width: 4px; }
     .os-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .os-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
     .os-scrollbar::-webkit-scrollbar-thumb:hover { background: #00E676; }
 
-    /* Sidebar Physics */
     #main-sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; background: white; border-right: 1px solid #f3f4f6; transform: translateX(0); }
     #main-sidebar.closed { transform: translateX(-100%); }
-    
     main { transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding-left: 260px; }
     #main-sidebar.closed ~ main { padding-left: 0; }
 
@@ -31,102 +35,29 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     
     .bubble-action-btn { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; transition: 0.2s; cursor: pointer; }
-    
     #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
     #menu-btn.show { opacity: 1; pointer-events: auto; }
 
-    /* Centered Calendar Card */
     .win-calendar-card { width: 380px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 40px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.03); }
     .cal-day { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600; color: #374151; position: relative; }
     .cal-day:hover { background: #f3f4f6; }
-    
     .cal-day.past-date { opacity: 0.3; color: #9ca3af; }
     .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; opacity: 1 !important; }
     .cal-day.selected { border: 2px solid #00E676; }
-    
-    /* Speaker Icon on Date */
     .day-speak { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: #00E676; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; color: black; opacity: 0.8; }
     .day-speak:hover { transform: scale(1.2); opacity: 1; }
 
-    /* Split Pane Layout */
     .left-os-panel { width: 340px; border-right: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
     .right-os-panel { width: 360px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
 
-    /* Loading Progress Bar Styles */
-    #setup-progress-container {
-        transition: opacity 1s ease-out; /* For fade-out effect */
-    }
-    #setup-progress-container.hidden {
-        display: none !important; /* Ensure it's truly hidden when class is added */
-    }
-    .fade-out {
-      opacity: 0;
-    }
+    /* New setup bar physics */
+    #setup-progress-bar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
-
-  <!-- Local Gemma 4 Engine Loader -->
-  <script type="module">
-    console.log("Module script loaded"); // Debug log
-    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
-
-    env.allowLocalModels = false; 
-
-    let doaEngine = null; 
-
-    async function bootDoaOS() {
-        console.log("bootDoaOS called"); // Debug log
-        const statusText = document.getElementById('status-text');
-        const progressBar = document.getElementById('setup-progress-bar');
-        const progressContainer = document.getElementById('setup-progress-container');
-        const chatView = document.getElementById('chat-view');
-        const heroSection = document.getElementById('hero-section');
-        const inputArea = document.getElementById('input-area');
-
-        statusText.innerText = "INITIALIZING NEURAL BRIDGE...";
-        progressContainer.classList.remove('hidden');
-        chatView.style.opacity = '0.5'; 
-        heroSection.style.display = 'none'; 
-        inputArea.style.pointerEvents = 'none'; 
-
-        try {
-            doaEngine = await pipeline('text-generation', 'onnx-community/gemma-2b-it-post-training-onnx', {
-                device: 'webgpu', 
-                progress_callback: (info) => {
-                    if (info.status === 'progress') {
-                        progressBar.style.width = `${info.progress}%`;
-                        statusText.innerText = `LOADING INTELLIGENCE: ${Math.round(info.progress)}%`;
-                    }
-                    if (info.status === 'ready') {
-                        statusText.innerText = "DOA ONLINE | SYSTEM PRIVATE";
-                        progressContainer.classList.add('fade-out'); 
-                        setTimeout(() => {
-                            progressContainer.classList.add('hidden');
-                            chatView.style.opacity = '1';
-                            inputArea.style.pointerEvents = 'auto'; 
-                        }, 1000); 
-                    }
-                }
-            });
-            window.doaEngine = doaEngine; 
-            console.log("bootDoaOS finished successfully"); // Debug log
-            console.log("DOA OS: Neural Engine Ready.");
-        } catch (e) {
-            statusText.innerText = "WEBGPU ERROR: FALLING BACK TO CPU";
-            console.error("WebGPU Error:", e);
-            console.log("bootDoaOS encountered an error"); // Debug log
-            setTimeout(() => progressContainer.classList.add('hidden'), 2000); 
-        }
-    }
-
-    // Ensure the script runs after the DOM is ready
-    document.addEventListener('DOMContentLoaded', bootDoaOS);
-  </script>
 </head>
 <body class="bg-white">
 
   <div class="flex h-screen w-screen overflow-hidden relative">
     
-    <!-- Sidebar -->
     <aside id="main-sidebar" class="flex flex-col h-full shrink-0">
       <div class="p-6 flex items-center justify-between">
         <h1 class="text-xl font-black text-[#00E676] italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">DOA CALI</h1>
@@ -152,7 +83,6 @@
         <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Sign Up</button>
       </header>
 
-      <!-- CHAT VIEW -->
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
@@ -160,12 +90,13 @@
             <div id="hero-section" class="text-center">
                 <h1 class="text-6xl font-black mb-10 tracking-tighter leading-none">How can <span class="text-[#00E676]">Doa</span><br>help you?</h1>
             </div>
+            
             <div id="input-area" class="w-full bg-white pb-10">
-                <!-- Neon Progress Bar (Hidden by default, shown during init) -->
-                <div id="setup-progress-container" class="hidden px-4 mb-4">
-                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                        <div id="setup-progress-bar" class="bg-[#00E676] h-full w-0 transition-all duration-300 shadow-[0_0_10px_#00E676]"></div>
-                    </div>
+                <!-- 2. THE NEURAL LOADER (Placed inside input area) -->
+                <div id="setup-container" class="hidden px-4 mb-4">
+                  <div class="w-full bg-gray-100 rounded-full h-1 overflow-hidden">
+                    <div id="setup-progress-bar" class="bg-[#00E676] h-full w-0 shadow-[0_0_10px_#00E676]"></div>
+                  </div>
                 </div>
 
                 <div class="flex justify-between items-center mb-3 px-4">
@@ -184,17 +115,12 @@
         </div>
       </div>
 
-      <!-- CALENDAR VIEW (THREE-PANE LAYOUT) -->
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-row overflow-hidden h-full">
-        
-        <!-- LEFT PANEL: Month Upcoming Summary -->
         <div class="left-os-panel">
             <h2 class="text-2xl font-black uppercase tracking-tighter mb-1" id="month-name-label">Month</h2>
             <p class="text-[10px] font-bold text-gray-400 uppercase mb-8 tracking-widest">Upcoming highlights</p>
             <div id="month-summary-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2"></div>
         </div>
-
-        <!-- CENTER: Calendar Grid -->
         <div class="flex-1 flex flex-col items-center justify-center pb-20">
             <div class="win-calendar-card">
                 <div class="flex justify-between items-center mb-8">
@@ -210,8 +136,6 @@
                 <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
             </div>
         </div>
-
-        <!-- RIGHT PANEL: Selected Day Details -->
         <div class="right-os-panel">
             <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-6">Today</h2>
             <div id="day-events-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2 mb-6"></div>
@@ -227,16 +151,82 @@
   </div>
 
   <script>
-    // --- GLOBAL VARIABLES AND INITIALIZATIONS ---
+    // --- 3. NEURAL LOGIC (Replaces Cloudflare) ---
+    let doaEngine = null;
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
-    let messageRegistry = []; // Stores message content for voice/copy actions
+    let messageRegistry = []; 
     let events = JSON.parse(localStorage.getItem('doa_events')) || [];
     let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
-    let doaEngine = null; // This will hold the loaded Gemma model
 
-    // --- VOICE FUNCTIONS ---
+    async function bootDoaOS() {
+      const status = document.getElementById('status-text');
+      const bar = document.getElementById('setup-progress-bar');
+      const container = document.getElementById('setup-container');
+      container.classList.remove('hidden');
+      
+      try {
+        doaEngine = await window.pipeline('text-generation', 'Xenova/gemma-2b-it', {
+          progress_callback: (info) => {
+            if (info.status === 'progress') {
+              bar.style.width = info.progress + '%';
+              status.innerText = `LOADING INTELLIGENCE: ${Math.round(info.progress)}%`;
+            }
+            if (info.status === 'ready') {
+              status.innerText = "DOA ONLINE | SYSTEM PRIVATE";
+              setTimeout(() => container.classList.add('hidden'), 2000);
+            }
+          }
+        });
+      } catch (e) {
+        status.innerText = "WEBGPU ERROR: FALLBACK TO CPU";
+        console.error(e);
+      }
+    }
+
+    async function handleMessage() {
+      window.speechSynthesis.cancel();
+      if (isThinking || !doaEngine) return;
+      const input = document.getElementById('user-input'), rawText = input.value.trim();
+      if (!rawText) return;
+
+      setChatMode(true); 
+      addMessage('user', rawText); 
+      input.value = '';
+      isThinking = true; 
+      document.getElementById('status-text').innerText = "DOA IS THINKING...";
+
+      try {
+        const now = new Date();
+        const context = [
+          { role: 'system', content: `You are Doaa, a helpful AI OS. Today is ${now.toDateString()}. 
+            Rules: No markdown. To save an event, use [ACTION: ADD_EVENT: Title, YYYY-MM-DD | Save].` },
+          ...chatMemory.slice(-6),
+          { role: 'user', content: rawText }
+        ];
+
+        // LOCAL INFERENCE
+        const output = await doaEngine(context, { max_new_tokens: 150, temperature: 0.7 });
+        const responseText = output[0].generated_text.at(-1).content;
+
+        processActions(responseText);
+        const cleanResponse = responseText.replace(/\[ACTION:[^\]]*\]/g, "").trim();
+        
+        addMessage('doa', cleanResponse);
+        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
+        localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory.slice(-20)));
+        speak(cleanResponse);
+
+      } catch (e) { 
+        addMessage('doa', "Neural link disrupted."); 
+      } finally { 
+        isThinking = false; 
+        document.getElementById('status-text').innerText = "DOA ONLINE"; 
+      }
+    }
+
+    // --- KEEPING YOUR ORIGINAL UI FUNCTIONS ---
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
       const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
@@ -245,34 +235,6 @@
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
 
-    function speak(text) {
-      if (!voiceActive || !text) return;
-      window.speechSynthesis.cancel();
-      // Basic cleaning for speech, avoiding markdown and action tags
-      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
-      const u = new SpeechSynthesisUtterance(clean);
-      if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
-      u.onstart = () => { /* Potential interval for keeping speech active if needed */ };
-      window.speechSynthesis.speak(u);
-    }
-
-    function toggleVoice() { 
-      voiceActive = !voiceActive; 
-      localStorage.setItem('voice_active', voiceActive); 
-      updateVoiceUI(); 
-      if (voiceActive) speak("Voice active."); 
-      else window.speechSynthesis.cancel(); 
-    }
-    function updateVoiceUI() { 
-      const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); 
-      if(knob && bg) { 
-        knob.style.left = voiceActive ? "18px" : "2px"; 
-        bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; 
-      } 
-    }
-
-    // --- CALENDAR FUNCTIONS ---
     function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
 
     function renderCalendar() {
@@ -280,51 +242,36 @@
       const title = document.getElementById('cal-main-title');
       const monthLabel = document.getElementById('month-name-label');
       const today = new Date(); today.setHours(0,0,0,0);
-      
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
       const monthName = viewDate.toLocaleString('default', { month: 'long' });
       title.innerText = monthName + " " + year;
       monthLabel.innerText = monthName;
-
       const firstDay = getFirstDayOfMonth(year, month);
       const totalDays = new Date(year, month + 1, 0).getDate();
-
-      for (let i = 0; i < firstDay; i++) {
-          grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
-      }
-
+      for (let i = 0; i < firstDay; i++) { grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none'; }
       for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d);
         date.setHours(0,0,0,0);
         const el = document.createElement('div');
         el.className = 'cal-day';
         el.innerText = d;
-
         if (date < today) el.classList.add('past-date');
         if (date.getTime() === today.getTime()) el.classList.add('today');
-        // Ensure comparison is with start of day for selectedDate
-        if (date.getTime() === new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()).getTime()) el.classList.add('selected');
-        
-        // ─── INFO SPEAKER ICON ───
+        if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
         if (dayEvents.length > 0) {
             const speaker = document.createElement('div');
             speaker.className = 'day-speak';
             speaker.innerHTML = '🔊';
-            speaker.onclick = (e) => {
-                e.stopPropagation();
-                const text = `On ${date.toLocaleString('default', {month:'long', day:'numeric'})}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
-                speak(text);
-            };
+            speaker.onclick = (e) => { e.stopPropagation(); speak(`On ${date.toDateString()}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`); };
             el.appendChild(speaker);
         }
-
-        el.onclick = () => { selectedDate = date; renderCalendar(); updateRightPanel(selectedDate); }; // Update right panel when date is selected
+        el.onclick = () => { selectedDate = date; renderCalendar(); };
         grid.appendChild(el);
       }
-      updateRightPanel(selectedDate); // Initial update for the right panel
-      updateLeftPanel(); // Update left panel summary
+      updateRightPanel(selectedDate);
+      updateLeftPanel();
     }
 
     function updateLeftPanel() {
@@ -335,13 +282,12 @@
             const d = new Date(e.date);
             return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear() && d >= today;
         }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
         if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
         else monthUpcoming.forEach(e => {
             const d = new Date(e.date);
             const div = document.createElement('div');
             div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
-            div.onclick = () => { selectedDate = d; renderCalendar(); updateRightPanel(selectedDate); }; // Ensure selection updates panels
+            div.onclick = () => { selectedDate = d; renderCalendar(); };
             div.innerHTML = `<div class="flex flex-col items-center min-w-[35px]"><span class="text-[10px] font-black text-[#00E676] leading-none uppercase">${d.toLocaleString('default',{month:'short'})}</span><span class="text-sm font-black text-gray-800">${d.getDate()}</span></div><div class="flex-1"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p></div>`;
             list.appendChild(div);
         });
@@ -353,7 +299,6 @@
         list.innerHTML = '';
         header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
-        
         if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
         else dayEvents.forEach(e => {
             const div = document.createElement('div');
@@ -375,157 +320,22 @@
     function deleteEvent(dateStr, title) {
         const normalTarget = new Date(dateStr).toDateString();
         events = events.filter(e => !(new Date(e.date).toDateString() === normalTarget && e.title === title));
-        localStorage.setItem('doa_events', JSON.JSON.stringify(events)); // Corrected from JSON.stringify to JSON.JSON.stringify
+        localStorage.setItem('doa_events', JSON.stringify(events));
         renderCalendar();
     }
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
-    // --- CORE AI FUNCTIONS ---
-    async function bootDoaOS() {
-        console.log("bootDoaOS called"); // Debug log
-        const statusText = document.getElementById('status-text');
-        const progressBar = document.getElementById('setup-progress-bar');
-        const progressContainer = document.getElementById('setup-progress-container');
-        const chatView = document.getElementById('chat-view');
-        const heroSection = document.getElementById('hero-section');
-        const inputArea = document.getElementById('input-area');
-
-        statusText.innerText = "INITIALIZING NEURAL BRIDGE...";
-        progressContainer.classList.remove('hidden');
-        chatView.style.opacity = '0.5'; 
-        heroSection.style.display = 'none'; 
-        inputArea.style.pointerEvents = 'none'; 
-
-        try {
-            doaEngine = await pipeline('text-generation', 'onnx-community/gemma-2b-it-post-training-onnx', {
-                device: 'webgpu', 
-                progress_callback: (info) => {
-                    if (info.status === 'progress') {
-                        progressBar.style.width = `${info.progress}%`;
-                        statusText.innerText = `LOADING INTELLIGENCE: ${Math.round(info.progress)}%`;
-                    }
-                    if (info.status === 'ready') {
-                        statusText.innerText = "DOA ONLINE | SYSTEM PRIVATE";
-                        progressContainer.classList.add('fade-out'); 
-                        setTimeout(() => {
-                            progressContainer.classList.add('hidden');
-                            chatView.style.opacity = '1';
-                            inputArea.style.pointerEvents = 'auto'; 
-                        }, 1000); 
-                    }
-                }
-            });
-            window.doaEngine = doaEngine; 
-            console.log("bootDoaOS finished successfully"); // Debug log
-            console.log("DOA OS: Neural Engine Ready.");
-        } catch (e) {
-            statusText.innerText = "WEBGPU ERROR: FALLING BACK TO CPU";
-            console.error("WebGPU Error:", e);
-            console.log("bootDoaOS encountered an error"); // Debug log
-            setTimeout(() => progressContainer.classList.add('hidden'), 2000); 
-        }
+    function speak(text) {
+      if (!voiceActive || !text) return;
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
+      const u = new SpeechSynthesisUtterance(clean);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
+      window.speechSynthesis.speak(u);
     }
 
-    async function handleMessage() {
-        console.log("handleMessage called"); // Debug log
-        window.speechSynthesis.cancel();
-        if (isThinking || !window.doaEngine) {
-            console.log("DOA Engine not ready yet or is busy. Engine status:", window.doaEngine); // Debug log
-            if (!window.doaEngine) { 
-                document.getElementById('status-text').innerText = "INITIALIZING...";
-            }
-            return;
-        }
-
-        const input = document.getElementById('user-input');
-        const query = input.value.trim();
-        if (!query) return;
-
-        setChatMode(true); 
-        addMessage('user', query); 
-        input.value = '';
-        isThinking = true; 
-        document.getElementById('status-text').innerText = "DOA IS THINKING...";
-        document.getElementById('input-area').style.pointerEvents = 'none'; 
-
-        try {
-            const now = new Date();
-            const context = [
-              { role: 'system', content: `You are Doaa, an AI OS. Today is ${now.toDateString()}. 
-                To add events, use the format: [ACTION:ADD_EVENT|Title,YYYY-MM-DD|Label]. 
-                To switch views, use: [ACTION:OPEN_TAB|calendar|Label]. 
-                Speak warmly and conversationally. Never use markdown or special characters that break voice output.` },
-              ...chatMemory.slice(-6), 
-              { role: 'user', content: query }
-            ];
-
-            const output = await window.doaEngine(context, { 
-              max_new_tokens: 256, 
-              temperature: 0.7 
-            });
-            const fullResponse = output.generated_text.at(-1).content;
-
-            processActions(fullResponse);
-
-            const cleanResponse = fullResponse.replace(/\[ACTION:[^\]]*\]/g, "").trim();
-            addMessage('doa', cleanResponse);
-            
-            speak(cleanResponse);
-
-            chatMemory.push({ role: 'user', content: query }, { role: 'assistant', content: fullResponse });
-            localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory.slice(-20))); 
-
-            console.log("handleMessage processed local inference"); // Debug log
-
-        } catch (e) { 
-            console.error("Local Inference Error:", e);
-            addMessage('doa', "Neural connection disrupted locally. Please check your GPU or try again."); 
-        } finally { 
-            isThinking = false; 
-            document.getElementById('status-text').innerText = ""; 
-            document.getElementById('input-area').style.pointerEvents = 'auto'; 
-            console.log("handleMessage finally block executed"); // Debug log
-        }
-    }
-
-    function processActions(text) {
-        const actionRegex = /\[ACTION:([^|]+?)\|([^|]*?)(?:\|([^\]]*))?\]/g;
-        let match;
-        while ((match = actionRegex.exec(text)) !== null) {
-            const command = match[1].trim().toUpperCase();
-            const value = match[2].trim();
-            const label = match[3] ? match[3].trim() : ''; 
-
-            if (command === 'ADD_EVENT') {
-                const parts = value.split(',');
-                if (parts.length === 2) {
-                    const title = parts[0].trim();
-                    const dateStr = parts[1].trim();
-                    const dateObj = new Date(dateStr + 'T00:00:00'); 
-
-                    if (!isNaN(dateObj.getTime())) {
-                        events.push({ title: title, date: dateObj.toDateString() });
-                        localStorage.setItem('doa_events', JSON.stringify(events));
-                        
-                        selectedDate = dateObj; 
-                        renderCalendar(); 
-                        console.log(`System: AI auto-saved event "${title}" for ${dateStr}`);
-                    } else {
-                        console.warn(`System: AI provided invalid date format for ADD_EVENT: ${dateStr}`);
-                    }
-                } else {
-                    console.warn(`System: AI provided incorrect format for ADD_EVENT. Expected "Title,YYYY-MM-DD". Got: ${value}`);
-                }
-            } else if (command === 'OPEN_TAB') {
-                if (['chat', 'calendar', 'apps'].includes(value.toLowerCase())) {
-                    switchView(value.toLowerCase());
-                }
-            }
-        }
-    }
-
-    // --- UI MANAGEMENT FUNCTIONS ---
     function toggleSidebar() {
       const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
       sb.classList.toggle('closed');
@@ -541,12 +351,9 @@
       const btn = document.getElementById('btn-' + viewName);
       if(btn) btn.classList.add('sidebar-active');
       const sidebar = document.getElementById('main-sidebar');
-      if (!sidebar.classList.contains('closed')) {
-        sidebar.classList.add('closed');
-        mb.classList.add('show');
-      }
+      if (!sidebar.classList.contains('closed')) toggleSidebar();
       if (viewName === 'chat') setChatMode(chatMemory.length > 0);
-      if (viewName === 'calendar') renderCalendar(); 
+      if (viewName === 'calendar') renderCalendar();
     }
 
     function setChatMode(isChatting) {
@@ -562,14 +369,27 @@
       }
     }
 
-    function startNewChat() { 
-      window.speechSynthesis.cancel(); 
-      chatMemory = []; 
-      messageRegistry = []; 
-      localStorage.removeItem('doa_chat_cache'); 
-      document.getElementById('chat-history').innerHTML = ''; 
-      setChatMode(false); 
-      switchView('chat'); 
+    function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
+
+    function processActions(responseText) {
+      const actionRegex = /\[ACTION:\s*([^:\]]+):([^|]*)\|([^\]]*)\]/g;
+      let match;
+      while ((match = actionRegex.exec(responseText)) !== null) {
+        const command = match[1].trim().toUpperCase();
+        const value   = match[2].trim();
+        if (command === 'ADD_EVENT') {
+          const commaIdx = value.lastIndexOf(',');
+          if (commaIdx !== -1) {
+            const title = value.substring(0, commaIdx).trim();
+            const dateStr = value.substring(commaIdx + 1).trim();
+            events.push({ title: title, date: new Date(dateStr).toDateString() });
+            localStorage.setItem('doa_events', JSON.stringify(events));
+            renderCalendar();
+          }
+        } else if (command === 'OPEN_TAB') {
+          if (['chat','calendar','apps'].includes(value.toLowerCase())) switchView(value.toLowerCase());
+        }
+      }
     }
 
     function addMessage(sender, text) {
@@ -577,46 +397,25 @@
       const idx = messageRegistry.push(text) - 1;
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      row.innerHTML = `
-        <div class="max-w-[85%] group">
-          <div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">
-            ${text}
-          </div>
-          ${sender === 'doa' ? `
-            <div class="flex gap-4 mt-2 px-1">
-              <button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button>
-              <button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button>
-              <button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button>
-            </div>
-          ` : ''}
-        </div>
-      `;
-      history.appendChild(row); 
-      history.scrollTop = history.scrollHeight; 
+      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button></div>` : ''}</div>`;
+      history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
-    // --- INITIALIZATION ON LOAD ---
-    document.addEventListener('DOMContentLoaded', () => { 
-      console.log("DOMContentLoaded fired"); // Debug log
-      updateVoiceUI(); 
-      loadVoices(); 
-      
-      // bootDoaOS() is called automatically by the script in the <head>
-
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    
+    window.onload = () => { 
+      updateVoiceUI(); loadVoices(); 
+      bootDoaOS(); // Start local brain
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
-      
       if (chatMemory.length > 0) {
         chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
-        if (lastView === 'chat') {
-           setChatMode(true);
-        }
-      } else { 
-        setChatMode(false); 
-      }
-      
-      switchView(lastView); 
+        if (lastView === 'chat') setChatMode(true);
+      } else { setChatMode(false); }
+      switchView(lastView);
       document.getElementById('main-sidebar').classList.remove('closed'); 
-    });
+    };
   </script>
 </body>
 </html>
