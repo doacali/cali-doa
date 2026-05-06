@@ -439,37 +439,50 @@
       isThinking = true; 
       document.getElementById('status-text').innerText = "Doa is thinking...";
       try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
+        // --- IMPORTANT: Include current date/time in the request to the worker ---
+        const currentDate = new Date();
+        const requestBody = JSON.stringify({ 
+            text: rawText, 
+            history: chatMemory.slice(-10),
+            localTime: currentDate.toLocaleTimeString(),
+            localDate: currentDate.toLocaleDateString(),
+            // We're relying on the worker to get the current year for calculations
+        });
+
+        const res = await fetch(CLOUDFLARE_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: requestBody 
+        });
+        
         const data = await res.json();
         let responseText = data.response;
+        const calendarEvent = data.calendarEvent; // Get the calendar event object from the worker response
+
+        // --- Process the AI's response and check for calendar actions ---
+        addMessage('doa', responseText); // Display the AI's response (which now includes confirmations from the worker)
         
-        // Check for calendar action token
-        if (responseText.includes('[ACTION: ADD_TO_CALENDAR]')) {
-            const parsedData = parseCalendarRequest(responseText);
-            if (parsedData && parsedData.title) {
-                saveEvent(parsedData.title, parsedData.date);
-                // Optionally, inform the user in chat that the event was added
-                responseText = responseText.replace(/\[ACTION: ADD_TO_CALENDAR\]/g, "").trim();
-                responseText += `\n[Calendar event "${parsedData.title}" added for ${parsedData.date.toLocaleDateString('default', {month: 'short', day: 'numeric'})}.]`;
-                speak(`Okay, I've added "${parsedData.title}" to your calendar for ${parsedData.date.toLocaleDateString('default', {month: 'long', day: 'numeric'})}.`);
-                // Add event to memory with the modified response
-                chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
+        if (calendarEvent) {
+            // The worker has confirmed adding an event by returning a calendarEvent object.
+            // Now, let's add it to our local 'events' array and update the calendar view.
+            const eventDate = new Date(calendarEvent.date); // Parse the date string from the worker
+            
+            // Ensure the date is valid before proceeding
+            if (!isNaN(eventDate.getTime())) {
+                saveEvent(calendarEvent.title, eventDate); // Use your existing saveEvent function
+                renderCalendar(); // Re-render to show the new event
             } else {
-                // If parsing failed but action token was present, report error
-                responseText = responseText.replace(/\[ACTION: ADD_TO_CALENDAR\]/g, "").trim();
-                responseText += "\n[Error: Could not parse calendar event details. Please specify date and time clearly.]";
-                speak("I tried to add it to your calendar, but I couldn't understand the date or time. Please try again.");
-                chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
+                console.error("Invalid date format received from worker for calendar event:", calendarEvent.date);
+                // Optionally, add a message to the chat indicating the parsing failure on the frontend
+                addMessage('doa', "[Error: Could not parse calendar event details. Please specify date and time clearly.]");
             }
-            renderCalendar(); // Refresh calendar view if it's open
-        } else {
-            // Normal chat response
-            addMessage('doa', responseText.replace(/\[ACTION:.*?\]/g, ""));
-            chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
-            speak(responseText);
         }
         
+        // Update chat memory with the AI's response
+        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
+        
+        speak(responseText); // Speak the AI's full response
 
       } catch (e) { 
         addMessage('doa', "OS Connection disrupted. Please try again."); 
