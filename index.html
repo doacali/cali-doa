@@ -146,23 +146,19 @@
   <script>
     /* 
        --- THE LOCAL BRAIN UNIT ---
-       This logic processes text locally instead of using a fetch call.
     */
     const LocalDoaBrain = {
         process: function(input) {
             const text = input.toLowerCase();
             const now = new Date();
 
-            // 1. Calendar Event Detection (e.g., "Add event Meeting for 2026-05-15")
             if (text.includes("add event") || text.includes("schedule")) {
                 const title = input.replace(/add event|schedule/gi, "").split("for")[0].trim();
                 let dateStr = input.match(/\d{4}-\d{2}-\d{2}/); 
-                if (!dateStr) dateStr = now.toISOString().split('T')[0]; // Default to today
-                
+                if (!dateStr) dateStr = now.toISOString().split('T')[0];
                 return `Understood. I have scheduled "${title}" for ${dateStr}. [ACTION: ADD_EVENT:${title},${dateStr}|View Calendar]`;
             }
 
-            // 2. Navigation Commands
             if (text.includes("show calendar") || text.includes("open calendar")) {
                 return `Switching to your workspace. [ACTION: OPEN_TAB:calendar|Switch Now]`;
             }
@@ -170,16 +166,13 @@
                 return `Opening the App Factory. [ACTION: OPEN_TAB:apps|Switch Now]`;
             }
 
-            // 3. Time & Knowledge
             if (text.includes("time")) return `The current local system time is ${now.toLocaleTimeString()}.`;
             if (text.includes("date")) return `Today is ${now.toDateString()}.`;
             
-            // 4. Greetings
             if (text.includes("hello") || text.includes("hi ") || text.includes("hey")) {
-                return "Hello. I am the Doa Local Engine. How can I assist with your workflow today?";
+                return "Hello. I am Doa. How can I assist with your workflow today?";
             }
 
-            // 5. Fallback
             return "I am currently running in Local Mode. I can manage your calendar, open apps, or provide system information. Try asking 'Add event Meeting tomorrow' or 'Show calendar'.";
         }
     };
@@ -302,10 +295,16 @@
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
+    /* SPEECH ENGINE WITH PHONETIC OVERRIDE */
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      const clean = text.replace(/\[ACTION:.*?\]/g, "").trim();
+      
+      // Clean tags and specifically override "Doa" pronunciation to "Doaa"
+      const clean = text.replace(/\[ACTION:.*?\]/g, "")
+                        .replace(/\bDoa\b/gi, "Doaa") 
+                        .trim();
+                        
       const u = new SpeechSynthesisUtterance(clean);
       if (selectedVoice) u.voice = selectedVoice;
       u.pitch = 1.2; u.rate = 1.0;
@@ -380,7 +379,6 @@
       isThinking = true; 
       document.getElementById('status-text').innerText = "DOA IS PROCESSING...";
 
-      // LOCAL BRAIN DELAY SIMULATION
       setTimeout(() => {
         const responseText = LocalDoaBrain.process(rawText);
         processActions(responseText);
@@ -407,7 +405,7 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice initialized."); }
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); }
     function updateVoiceUI() { 
         const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); 
         if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
