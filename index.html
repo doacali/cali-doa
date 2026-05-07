@@ -1,13 +1,14 @@
---- START OF UPDATED MASTER CODE ---
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Doa | AI Operating System</title>
+  <!-- 1. Basic Document Structure & Metadata -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
+    /* 9. Attributes & Basic Styling */
     body { font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; width: 100vw; overflow: hidden; margin: 0; background: #ffffff; color: #111827; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     
@@ -35,28 +36,28 @@
     #menu-btn { position: absolute; top: 20px; left: 20px; z-index: 50; transition: 0.2s; opacity: 0; pointer-events: none; }
     #menu-btn.show { opacity: 1; pointer-events: auto; }
 
-    /* Calendar Grid */
+    /* Calendar Styling */
     .win-calendar-card { width: 380px; background: #ffffff; border: 1px solid #f3f4f6; border-radius: 40px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.03); }
     .cal-day { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600; color: #374151; position: relative; }
     .cal-day:hover { background: #f3f4f6; }
     .cal-day.past-date { opacity: 0.3; color: #9ca3af; }
-    .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; }
+    .cal-day.today { background: #00E676 !important; color: #000 !important; font-weight: 800; opacity: 1 !important; }
     .cal-day.selected { border: 2px solid #00E676; }
-    
-    /* Panels */
+    .day-speak { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: #00E676; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; color: black; opacity: 0.8; }
+
+    /* Pane Layouts */
     .left-os-panel { width: 340px; border-right: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
     .right-os-panel { width: 360px; border-left: 1px solid #f9fafb; background: #ffffff; padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
 
-    /* New Demo Styles for HTML capabilities */
-    .demo-card { border: 1px solid #f3f4f6; border-radius: 24px; padding: 24px; background: white; transition: 0.3s; }
-    .demo-card:hover { border-color: #00E676; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { text-align: left; padding: 12px; border-bottom: 1px solid #f3f4f6; color: #9ca3af; text-transform: uppercase; font-size: 10px; }
-    td { padding: 12px; border-bottom: 1px solid #f9fafb; }
+    /* 6. Data Tables Styling */
+    .os-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    .os-table th { text-align: left; padding: 10px; border-bottom: 2px solid #f3f4f6; color: #9ca3af; text-transform: uppercase; font-size: 10px; }
+    .os-table td { padding: 10px; border-bottom: 1px solid #f9fafb; }
   </style>
 </head>
 <body class="bg-white">
 
+  <!-- 8. Structural & Semantic Containers -->
   <div class="flex h-screen w-screen overflow-hidden relative">
     
     <!-- Sidebar -->
@@ -86,7 +87,7 @@
         <button class="text-black bg-[#00E676] px-5 py-2 rounded-xl font-bold ml-4 hover:shadow-lg active:scale-95 transition-all">Sign Up</button>
       </header>
 
-      <!-- CHAT VIEW -->
+      <!-- VIEW: CHAT -->
       <div id="chat-view" class="view-container flex-1 w-full flex flex-col items-center px-10 overflow-hidden">
         <div id="chat-shell" class="w-full max-w-2xl flex flex-col h-full justify-center">
           <div id="chat-history" class="hidden hide-scrollbar py-6"></div>
@@ -97,6 +98,10 @@
             <div id="input-area" class="w-full bg-white pb-10">
                 <div class="flex justify-between items-center mb-3 px-4">
                   <p id="status-text" class="text-[9px] font-black text-gray-300 uppercase tracking-widest"></p>
+                  <div class="flex items-center gap-3">
+                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Voice</span>
+                    <div id="voice-switch" onclick="toggleVoice()" class="w-8 h-4 bg-gray-100 rounded-full relative cursor-pointer"><div id="voice-knob" class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-all"></div></div>
+                  </div>
                 </div>
                 <div class="bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[32px] p-3 flex items-center mx-2">
                   <textarea id="user-input" rows="1" class="flex-1 px-5 outline-none text-sm resize-none hide-scrollbar py-2" placeholder="Ask Doa anything..."></textarea>
@@ -107,21 +112,30 @@
         </div>
       </div>
 
-      <!-- CALENDAR VIEW -->
+      <!-- VIEW: CALENDAR -->
       <div id="calendar-view" class="view-container hidden flex-1 flex flex-row overflow-hidden h-full">
         <section class="left-os-panel">
             <h2 class="text-2xl font-black uppercase tracking-tighter mb-1" id="month-name-label">Month</h2>
             <p class="text-[10px] font-bold text-gray-400 uppercase mb-8 tracking-widest">Upcoming highlights</p>
             <div id="month-summary-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2"></div>
         </section>
+
         <div class="flex-1 flex flex-col items-center justify-center pb-20">
             <div class="win-calendar-card">
                 <div class="flex justify-between items-center mb-8">
                     <h1 class="text-xl font-black uppercase tracking-tighter" id="cal-main-title">May 2026</h1>
+                    <div class="flex gap-4">
+                        <button onclick="changeMonth(-1)" class="text-gray-300 hover:text-[#00E676] font-bold">↑</button>
+                        <button onclick="changeMonth(1)" class="text-gray-300 hover:text-[#00E676] font-bold">↓</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-black text-gray-300 uppercase mb-4">
+                    <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
                 </div>
                 <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
             </div>
         </div>
+
         <aside class="right-os-panel">
             <h2 id="selected-date-header" class="text-2xl font-black uppercase tracking-tighter mb-6">Today</h2>
             <div id="day-events-list" class="flex-1 space-y-6 overflow-y-auto os-scrollbar pr-2 mb-6"></div>
@@ -132,72 +146,56 @@
         </aside>
       </div>
 
-      <!-- APP FACTORY VIEW (Showcasing all 9 HTML elements) -->
+      <!-- VIEW: APP FACTORY (9 HTML Features) -->
       <div id="apps-view" class="view-container hidden flex-1 p-10 overflow-y-auto">
-        <header class="mb-10">
-          <h1 class="text-4xl font-black tracking-tighter mb-2">📱 App Factory</h1>
-          <p class="text-gray-400 text-sm">A demonstration of Doa's native HTML capability rendering.</p>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          <!-- 2. Text Formatting -->
-          <article class="demo-card">
-            <h2 class="text-xs font-black text-[#00E676] uppercase mb-4">1. Text & Formatting</h2>
-            <h3 class="text-lg font-bold">This is an H3</h3>
-            <p class="text-sm text-gray-600 mt-2">This is a paragraph highlighting <strong>Strong Bold</strong> and <em>Emphasized Italics</em>. <br> Used a line break here.</p>
-          </article>
-
-          <!-- 3. Lists -->
-          <article class="demo-card">
-            <h2 class="text-xs font-black text-[#00E676] uppercase mb-4">2. Organized Lists</h2>
-            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-4">
-              <li>Unordered Item One</li>
-              <li>Unordered Item Two</li>
+        <h1 class="text-4xl font-black mb-8">📱 App Factory</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <!-- 2. Formatting & 3. Lists -->
+          <article class="p-8 border border-gray-100 rounded-[32px]">
+            <h2 class="text-lg font-black uppercase mb-4">Content Controls</h2>
+            <p class="text-sm mb-4">This OS supports <strong>bold</strong>, <em>italics</em>, and <br> forced line breaks.</p>
+            <h3 class="text-xs font-black uppercase text-gray-400 mb-2">Unordered List</h3>
+            <ul class="list-disc list-inside text-sm space-y-1 mb-4">
+                <li>Feature A</li><li>Feature B</li>
             </ul>
-            <ol class="list-decimal list-inside text-sm text-gray-600 space-y-1">
-              <li>Ordered Priority One</li>
-              <li>Ordered Priority Two</li>
+            <h3 class="text-xs font-black uppercase text-gray-400 mb-2">Ordered List</h3>
+            <ol class="list-decimal list-inside text-sm space-y-1">
+                <li>First Step</li><li>Second Step</li>
             </ol>
           </article>
 
           <!-- 4. Links & 5. Media -->
-          <article class="demo-card">
-            <h2 class="text-xs font-black text-[#00E676] uppercase mb-4">3. Media & Navigation</h2>
-            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80" alt="Abstract Art" class="rounded-xl mb-4 w-full h-24 object-cover">
-            <a href="https://google.com" target="_blank" class="text-sm font-bold text-black border-b-2 border-[#00E676] hover:text-[#00E676] transition-all">External Link ↗</a>
+          <article class="p-8 border border-gray-100 rounded-[32px]">
+            <h2 class="text-lg font-black uppercase mb-4">Media Assets</h2>
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400" alt="Demo" class="w-full h-32 object-cover rounded-2xl mb-4">
+            <a href="https://google.com" target="_blank" class="text-[#00E676] font-bold underline">External Navigation Link ↗</a>
           </article>
 
           <!-- 6. Tables -->
-          <article class="demo-card lg:col-span-2">
-            <h2 class="text-xs font-black text-[#00E676] uppercase mb-4">4. Data Tables</h2>
-            <table>
-              <thead>
-                <tr><th>Process</th><th>Status</th><th>Priority</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>Neural Engine</td><td><span class="text-green-500">Active</span></td><td>High</td></tr>
-                <tr><td>Context Sync</td><td><span class="text-green-500">Active</span></td><td>Medium</td></tr>
-                <tr><td>Voice Logic</td><td><span class="text-gray-400">Standby</span></td><td>Low</td></tr>
-              </tbody>
+          <article class="p-8 border border-gray-100 rounded-[32px] md:col-span-2">
+            <h2 class="text-lg font-black uppercase mb-4">System Data (Tables)</h2>
+            <table class="os-table">
+                <thead><tr><th>Service</th><th>Status</th><th>Uptime</th></tr></thead>
+                <tbody>
+                    <tr><td>Neural Engine</td><td>Online</td><td>99.9%</td></tr>
+                    <tr><td>Voice Core</td><td>Standby</td><td>100%</td></tr>
+                </tbody>
             </table>
           </article>
 
           <!-- 7. Interactive Forms -->
-          <article class="demo-card">
-            <h2 class="text-xs font-black text-[#00E676] uppercase mb-4">5. Input Forms</h2>
-            <form class="space-y-3" onsubmit="event.preventDefault()">
-              <input type="text" placeholder="Username" class="w-full p-3 bg-gray-50 rounded-xl text-xs border-none outline-none">
-              <select class="w-full p-3 bg-gray-50 rounded-xl text-xs border-none outline-none">
-                <option>Select OS Mode</option>
-                <option>Dark Mode</option>
-                <option>High Contrast</option>
-              </select>
-              <textarea placeholder="Feedback..." class="w-full p-3 bg-gray-50 rounded-xl text-xs border-none outline-none h-20"></textarea>
-              <button class="w-full bg-black text-white text-[10px] font-black uppercase p-3 rounded-xl">Submit Data</button>
+          <article class="p-8 border border-gray-100 rounded-[32px]">
+            <h2 class="text-lg font-black uppercase mb-4">App Request Form</h2>
+            <form class="space-y-4" onsubmit="event.preventDefault()">
+                <input type="text" placeholder="App Name" class="w-full p-4 bg-gray-50 rounded-2xl outline-none">
+                <select class="w-full p-4 bg-gray-50 rounded-2xl outline-none">
+                    <option>Type: Utility</option><option>Type: Game</option>
+                </select>
+                <textarea placeholder="Description" class="w-full p-4 bg-gray-50 rounded-2xl outline-none h-24"></textarea>
+                <button class="w-full bg-black text-white p-4 rounded-2xl font-black uppercase">Submit to Factory</button>
             </form>
           </article>
-
         </div>
       </div>
     </main>
@@ -205,35 +203,94 @@
 
   <script>
     const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
+    let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
+    let messageRegistry = []; 
     let events = JSON.parse(localStorage.getItem('doa_events')) || [];
-    let isThinking = false;
+    let isThinking = false, selectedVoice = null;
     let viewDate = new Date(), selectedDate = new Date();
 
+    function loadVoices() {
+      const v = window.speechSynthesis.getVoices();
+      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
+      for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
+
     function renderCalendar() {
-      const grid = document.getElementById('calendar-grid');
-      const title = document.getElementById('cal-main-title');
+      const grid = document.getElementById('calendar-grid'), title = document.getElementById('cal-main-title'), monthLabel = document.getElementById('month-name-label');
       const today = new Date(); today.setHours(0,0,0,0);
       grid.innerHTML = '';
-      const month = viewDate.getMonth(), year = viewDate.getFullYear();
-      title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-      const firstDay = new Date(year, month, 1).getDay();
-      const totalDays = new Date(year, month + 1, 0).getDate();
-
-      for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
-          grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0';
-      }
-
+      const month = viewDate.getMonth(), year = viewDate.getFullYear(), monthName = viewDate.toLocaleString('default', { month: 'long' });
+      title.innerText = monthName + " " + year; monthLabel.innerText = monthName;
+      const firstDay = getFirstDayOfMonth(year, month), totalDays = new Date(year, month + 1, 0).getDate();
+      for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
       for (let d = 1; d <= totalDays; d++) {
-        const date = new Date(year, month, d);
-        const el = document.createElement('div');
-        el.className = 'cal-day';
-        el.innerText = d;
-        if (date.toDateString() === today.toDateString()) el.classList.add('today');
+        const date = new Date(year, month, d); date.setHours(0,0,0,0);
+        const el = document.createElement('div'); el.className = 'cal-day'; el.innerText = d;
+        if (date < today) el.classList.add('past-date');
+        if (date.getTime() === today.getTime()) el.classList.add('today');
+        if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
+        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
+        if (dayEvents.length > 0) {
+            const speaker = document.createElement('div'); speaker.className = 'day-speak'; speaker.innerHTML = '🔊';
+            speaker.onclick = (e) => { e.stopPropagation(); speak(`On ${date.toDateString()}, you have ${dayEvents.map(ev => ev.title).join(', ')}`); };
+            el.appendChild(speaker);
+        }
         el.onclick = () => { selectedDate = date; renderCalendar(); };
         grid.appendChild(el);
       }
+      updateRightPanel(selectedDate); updateLeftPanel();
+    }
+
+    function updateLeftPanel() {
+        const list = document.getElementById('month-summary-list'); list.innerHTML = '';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const monthUpcoming = events.filter(e => { const d = new Date(e.date); return d.getMonth() === viewDate.getMonth() && d >= today; }).sort((a,b) => new Date(a.date) - new Date(b.date));
+        if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-xs text-gray-300 italic">No highlights.</p>`;
+        else monthUpcoming.forEach(e => {
+            const d = new Date(e.date), div = document.createElement('div');
+            div.className = "flex items-start gap-4 cursor-pointer hover:opacity-70";
+            div.onclick = () => { selectedDate = d; renderCalendar(); };
+            div.innerHTML = `<div class="flex flex-col min-w-[35px]"><span class="text-[10px] font-black text-[#00E676] uppercase">${d.toLocaleString('default',{month:'short'})}</span><span class="text-sm font-black">${d.getDate()}</span></div><p class="text-[13px] font-bold text-gray-800">${e.title}</p>`;
+            list.appendChild(div);
+        });
+    }
+
+    function updateRightPanel(date) {
+        const list = document.getElementById('day-events-list'), header = document.getElementById('selected-date-header');
+        list.innerHTML = ''; header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+        const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
+        if (dayEvents.length === 0) list.innerHTML = `<p class="text-xs text-gray-300 italic">No schedules.</p>`;
+        else dayEvents.forEach(e => {
+            const div = document.createElement('div'); div.className = "flex items-center justify-between group";
+            div.innerHTML = `<div class="flex items-center gap-3"><div class="w-1 h-6 bg-[#00E676] rounded-full"></div><p class="text-[13px] font-bold">${e.title}</p></div><button onclick="deleteEvent('${e.date}','${e.title}')" class="opacity-0 group-hover:opacity-100 text-red-400">✕</button>`;
+            list.appendChild(div);
+        });
+    }
+
+    function quickAddEvent() {
+        const input = document.getElementById('quick-add-input'); if (!input.value.trim()) return;
+        events.push({ title: input.value.trim(), date: selectedDate.toDateString() });
+        localStorage.setItem('doa_events', JSON.stringify(events)); input.value = ''; renderCalendar();
+    }
+
+    function deleteEvent(dateStr, title) {
+        events = events.filter(e => !(new Date(e.date).toDateString() === new Date(dateStr).toDateString() && e.title === title));
+        localStorage.setItem('doa_events', JSON.stringify(events)); renderCalendar();
+    }
+
+    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
+
+    function speak(text) {
+      if (!voiceActive || !text) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text.replace(/\[ACTION:.*?\]/g, "").trim());
+      if (selectedVoice) u.voice = selectedVoice;
+      u.pitch = 1.35; u.rate = 0.95; window.speechSynthesis.speak(u);
     }
 
     function toggleSidebar() {
@@ -243,42 +300,57 @@
     }
 
     function switchView(viewName) {
+      localStorage.setItem('doa_active_view', viewName);
       document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
       document.getElementById(viewName + '-view').classList.remove('hidden');
       document.getElementById('btn-' + viewName).classList.add('sidebar-active');
       if (viewName === 'calendar') renderCalendar();
+      if (viewName === 'chat') setChatMode(chatMemory.length > 0);
     }
 
-    async function handleMessage() {
-      if (isThinking) return;
-      const input = document.getElementById('user-input'), rawText = input.value.trim();
-      if (!rawText) return;
-      setChatMode(true); addMessage('user', rawText); input.value = '';
-      isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
-      try {
-        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
-        const data = await res.json();
-        addMessage('doa', data.response);
-        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
-        localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
-      } catch (e) { addMessage('doa', "Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
+    function setChatMode(isChatting) {
+      const hero = document.getElementById('hero-section'), history = document.getElementById('chat-history'), shell = document.getElementById('chat-shell'), centerGroup = document.getElementById('center-group');
+      if (isChatting) {
+        hero.style.display = 'none'; history.classList.remove('hidden'); history.style.display = 'flex';
+        shell.classList.remove('justify-center'); shell.classList.add('justify-end');
+        centerGroup.classList.remove('flex-col');
+      } else {
+        hero.style.display = 'block'; history.classList.add('hidden');
+        shell.classList.remove('justify-end'); shell.classList.add('justify-center');
+        centerGroup.classList.add('flex-col');
+      }
     }
 
     function addMessage(sender, text) {
       const history = document.getElementById('chat-history');
+      const idx = messageRegistry.push(text) - 1;
       const row = document.createElement('div');
-      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full mb-6`;
-      row.innerHTML = `<div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm max-w-[85%]">${text}</div>`;
+      row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
+      row.innerHTML = `<div class="max-w-[85%]"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100'} p-4 rounded-3xl text-sm whitespace-pre-wrap">${text}</div></div>`;
       history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
-    function setChatMode(isChatting) {
-      const hero = document.getElementById('hero-section'), history = document.getElementById('chat-history'), shell = document.getElementById('chat-shell');
-      if (isChatting) { hero.classList.add('hidden'); history.classList.remove('hidden'); shell.classList.remove('justify-center'); }
+    async function handleMessage() {
+      const input = document.getElementById('user-input'), rawText = input.value.trim();
+      if (!rawText || isThinking) return;
+      setChatMode(true); addMessage('user', rawText); input.value = ''; isThinking = true;
+      try {
+        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10) }) });
+        const data = await res.json();
+        const clean = data.response.replace(/\[ACTION:[^\]]*\]/g, "").trim();
+        addMessage('doa', clean);
+        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
+        localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
+        speak(clean);
+      } catch (e) { addMessage('doa', "Connection disrupted."); } finally { isThinking = false; }
     }
 
-    window.onload = () => { switchView('chat'); renderCalendar(); };
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; }
+    
+    document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
+    window.onload = () => { updateVoiceUI(); loadVoices(); switchView(localStorage.getItem('doa_active_view') || 'chat'); renderCalendar(); };
   </script>
 </body>
 </html>
