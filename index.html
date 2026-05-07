@@ -68,7 +68,7 @@
         <button onclick="switchView('calendar')" id="btn-calendar" class="sidebar-item">📅 Calendar</button>
         <button onclick="switchView('apps')" id="btn-apps" class="sidebar-item">📱 App Factory</button>
       </nav>
-      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.8 - Local Brain</span></div>
+      <div class="p-6 text-center border-t border-gray-50"><span class="text-[10px] text-gray-200 font-bold uppercase">OS Engine v3.6 - Local Brain</span></div>
     </aside>
 
     <button id="menu-btn" onclick="toggleSidebar()" class="bg-white border border-gray-100 shadow-md p-3 rounded-2xl flex items-center gap-3 hover:bg-gray-50 active:scale-95 transition-all">
@@ -144,41 +144,41 @@
   </div>
 
   <script>
-    /* --- LOCAL BRAIN UNIT (Universal Language Support) --- */
+    /* 
+       --- THE LOCAL BRAIN UNIT ---
+    */
     const LocalDoaBrain = {
         process: function(input) {
             const text = input.toLowerCase();
             const now = new Date();
 
-            // Language Switching Commands
-            if (text.includes("speak in") || text.includes("talk in")) {
-                if (text.includes("spanish")) return "[SET_LANG:es-ES] Hola. Hablaré en español para ti.";
-                if (text.includes("french")) return "[SET_LANG:fr-FR] Bonjour. Je parlerai désormais français.";
-                if (text.includes("japanese")) return "[SET_LANG:ja-JP] こんにちは。これからは日本語で話します。";
-                if (text.includes("german")) return "[SET_LANG:de-DE] Hallo. Ich werde jetzt Deutsch sprechen.";
-                if (text.includes("chinese")) return "[SET_LANG:zh-CN] 您好，我现在会说中文。";
-                if (text.includes("english")) return "[SET_LANG:en-US] Back to English mode.";
-            }
-
-            // Calendar & App Navigation Logic
             if (text.includes("add event") || text.includes("schedule")) {
                 const title = input.replace(/add event|schedule/gi, "").split("for")[0].trim();
-                let dateStr = input.match(/\d{4}-\d{2}-\d{2}/) || now.toISOString().split('T')[0];
-                return `Understood. I have scheduled "${title}" for ${dateStr}. [ACTION: ADD_EVENT:${title},${dateStr}|View]`;
+                let dateStr = input.match(/\d{4}-\d{2}-\d{2}/); 
+                if (!dateStr) dateStr = now.toISOString().split('T')[0];
+                return `Understood. I have scheduled "${title}" for ${dateStr}. [ACTION: ADD_EVENT:${title},${dateStr}|View Calendar]`;
             }
-            if (text.includes("show calendar") || text.includes("open calendar")) return "Switching to Calendar. [ACTION: OPEN_TAB:calendar|Go]";
-            if (text.includes("open apps") || text.includes("app factory")) return "Opening the App Factory. [ACTION: OPEN_TAB:apps|Go]";
-            if (text.includes("time")) return `The system time is ${now.toLocaleTimeString()}.`;
-            if (text.includes("date")) return `Today is ${now.toDateString()}.`;
-            if (text.includes("hello") || text.includes("hi ") || text.includes("hey")) return "Hello. I am Doa. How can I help you today?";
 
-            return "I am Doa. I can manage your calendar or speak any language locally. Try 'Speak in Spanish' or 'Open calendar'.";
+            if (text.includes("show calendar") || text.includes("open calendar")) {
+                return `Switching to your workspace. [ACTION: OPEN_TAB:calendar|Switch Now]`;
+            }
+            if (text.includes("open apps") || text.includes("app factory")) {
+                return `Opening the App Factory. [ACTION: OPEN_TAB:apps|Switch Now]`;
+            }
+
+            if (text.includes("time")) return `The current local system time is ${now.toLocaleTimeString()}.`;
+            if (text.includes("date")) return `Today is ${now.toDateString()}.`;
+            
+            if (text.includes("hello") || text.includes("hi ") || text.includes("hey")) {
+                return "Hello. I am Doa. How can I assist with your workflow today?";
+            }
+
+            return "I am currently running in Local Mode. I can manage your calendar, open apps, or provide system information. Try asking 'Add event Meeting tomorrow' or 'Show calendar'.";
         }
     };
 
-    /* --- OS CORE --- */
+    /* --- OS ENGINE CORE --- */
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
-    let currentLang = localStorage.getItem('doa_lang') || 'en-US';
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
     let messageRegistry = []; 
     let events = JSON.parse(localStorage.getItem('doa_events')) || [];
@@ -187,66 +187,99 @@
 
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
-      // Try to find a voice that matches our currentLang setting
-      selectedVoice = v.find(x => x.lang === currentLang) || 
-                      v.find(x => x.lang.startsWith(currentLang.split('-')[0])) || 
-                      v[0];
+      const n = ["Samantha", "Karen", "Victoria", "Ava", "Microsoft Zira"];
+      for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
 
-    function speak(text) {
-      if (!voiceActive || !text) return;
-      window.speechSynthesis.cancel();
-      
-      // Clean tags and Phonetic Override: Doa -> Doaa
-      const clean = text.replace(/\[ACTION:.*?\]/g, "")
-                        .replace(/\[SET_LANG:.*?\]/g, "")
-                        .replace(/\bDoa\b/gi, "Doaa") 
-                        .trim();
-                        
-      const u = new SpeechSynthesisUtterance(clean);
-      u.lang = currentLang;
-      loadVoices(); // Re-check voice before speaking
-      if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.2; u.rate = 1.0;
-      window.speechSynthesis.speak(u);
+    /* --- MULTILANGUAGE SPEECH ENGINE --- */
+    function detectLang(text) {
+      const patterns = [
+        { lang: 'ar-SA', regex: /[\u0600-\u06FF]/ },
+        { lang: 'zh-CN', regex: /[\u4E00-\u9FFF]/ },
+        { lang: 'ja-JP', regex: /[\u3040-\u30FF]/ },
+        { lang: 'ko-KR', regex: /[\uAC00-\uD7AF]/ },
+        { lang: 'ru-RU', regex: /[\u0400-\u04FF]/ },
+        { lang: 'hi-IN', regex: /[\u0900-\u097F]/ },
+        { lang: 'fr-FR', regex: /\b(bonjour|merci|oui|non|est|les|des|une|qui|que|votre|nous|vous)\b/i },
+        { lang: 'es-ES', regex: /\b(hola|gracias|sí|si|no|el|la|los|las|por|favor|que|como|esta)\b/i },
+        { lang: 'de-DE', regex: /\b(hallo|danke|bitte|ja|nein|ich|sie|und|der|die|das|ist)\b/i },
+        { lang: 'pt-BR', regex: /\b(olá|ola|obrigado|sim|não|nao|por|favor|como|está|esta|você|voce)\b/i },
+        { lang: 'it-IT', regex: /\b(ciao|grazie|sì|si|no|per|favore|come|stai|questo)\b/i },
+      ];
+      for (const p of patterns) { if (p.regex.test(text)) return p.lang; }
+      return 'en-US';
     }
 
+    function getBestVoice(lang) {
+      const voices = window.speechSynthesis.getVoices();
+      const langBase = lang.split('-')[0];
+      return voices.find(v => v.lang === lang)
+          || voices.find(v => v.lang.startsWith(langBase))
+          || null;
+    }
+
+    function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
+
     function renderCalendar() {
-      const grid = document.getElementById('calendar-grid'), title = document.getElementById('cal-main-title'), monthLabel = document.getElementById('month-name-label');
+      const grid = document.getElementById('calendar-grid');
+      const title = document.getElementById('cal-main-title');
+      const monthLabel = document.getElementById('month-name-label');
       const today = new Date(); today.setHours(0,0,0,0);
+      
       grid.innerHTML = '';
       const month = viewDate.getMonth(), year = viewDate.getFullYear();
-      title.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-      monthLabel.innerText = viewDate.toLocaleString('default', { month: 'long' });
+      const monthName = viewDate.toLocaleString('default', { month: 'long' });
+      title.innerText = monthName + " " + year;
+      monthLabel.innerText = monthName;
 
-      const firstDay = new Date(year, month, 1).getDay();
-      const offset = firstDay === 0 ? 6 : firstDay - 1;
-      for (let i = 0; i < offset; i++) grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
+      const firstDay = getFirstDayOfMonth(year, month);
+      const totalDays = new Date(year, month + 1, 0).getDate();
 
-      for (let d = 1; d <= new Date(year, month + 1, 0).getDate(); d++) {
+      for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
+
+      for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d);
-        const el = document.createElement('div'); el.className = 'cal-day'; el.innerText = d;
+        date.setHours(0,0,0,0);
+        const el = document.createElement('div');
+        el.className = 'cal-day';
+        el.innerText = d;
+
+        if (date < today) el.classList.add('past-date');
         if (date.getTime() === today.getTime()) el.classList.add('today');
         if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
         
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
         if (dayEvents.length > 0) {
-            const spk = document.createElement('div'); spk.className = 'day-speak'; spk.innerHTML = '🔊';
-            spk.onclick = (e) => { e.stopPropagation(); speak(`On ${date.toDateString()}, you have ${dayEvents.length} events: ${dayEvents.map(ev => ev.title).join(', ')}`); };
-            el.appendChild(spk);
+            const speaker = document.createElement('div');
+            speaker.className = 'day-speak';
+            speaker.innerHTML = '🔊';
+            speaker.onclick = (e) => {
+                e.stopPropagation();
+                speak(`On ${date.toDateString()}, you have ${dayEvents.length} events: ${dayEvents.map(ev => ev.title).join(', ')}`);
+            };
+            el.appendChild(speaker);
         }
+
         el.onclick = () => { selectedDate = date; renderCalendar(); };
         grid.appendChild(el);
       }
-      updateRightPanel(selectedDate); updateLeftPanel();
+      updateRightPanel(selectedDate);
+      updateLeftPanel();
     }
 
     function updateLeftPanel() {
-        const list = document.getElementById('month-summary-list'); list.innerHTML = '';
-        const upcoming = events.filter(e => new Date(e.date).getMonth() === viewDate.getMonth() && new Date(e.date) >= new Date().setHours(0,0,0,0));
-        if (upcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
-        else upcoming.forEach(e => {
+        const list = document.getElementById('month-summary-list');
+        list.innerHTML = '';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const monthUpcoming = events.filter(e => {
+            const d = new Date(e.date);
+            return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear() && d >= today;
+        }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        if (monthUpcoming.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No highlights.</p>`;
+        else monthUpcoming.forEach(e => {
             const d = new Date(e.date);
             const div = document.createElement('div');
             div.className = "flex items-start gap-4 animate-fadeIn cursor-pointer hover:opacity-70 transition-opacity";
@@ -257,30 +290,55 @@
     }
 
     function updateRightPanel(date) {
-        const list = document.getElementById('day-events-list'); const header = document.getElementById('selected-date-header');
-        list.innerHTML = ''; header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+        const list = document.getElementById('day-events-list');
+        const header = document.getElementById('selected-date-header');
+        list.innerHTML = '';
+        header.innerText = date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
+        
         if (dayEvents.length === 0) list.innerHTML = `<p class="text-[12px] text-gray-300 italic py-4">No schedules.</p>`;
         else dayEvents.forEach(e => {
-            const div = document.createElement('div'); div.className = "flex items-start gap-4 animate-fadeIn group";
-            div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1 flex items-center justify-between"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">✕</button></div>`;
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-4 animate-fadeIn group";
+            div.innerHTML = `<div class="w-1 h-8 bg-[#00E676] rounded-full mt-1"></div><div class="flex-1 flex items-center justify-between"><p class="text-[13px] font-bold text-gray-800 leading-tight">${e.title}</p><div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="speak('${e.title}')" class="text-[#00E676] text-xs">🔊</button><button onclick="deleteEvent('${e.date}','${e.title}')" class="text-gray-200 hover:text-red-400">✕</button></div></div>`;
             list.appendChild(div);
         });
     }
 
     function quickAddEvent() {
-        const input = document.getElementById('quick-add-input'); if (!input.value.trim()) return;
+        const input = document.getElementById('quick-add-input');
+        if (!input.value.trim()) return;
         events.push({ title: input.value.trim(), date: selectedDate.toDateString() });
         localStorage.setItem('doa_events', JSON.stringify(events));
-        input.value = ''; renderCalendar();
+        input.value = '';
+        renderCalendar();
     }
 
     function deleteEvent(dateStr, title) {
         events = events.filter(e => !(new Date(e.date).toDateString() === new Date(dateStr).toDateString() && e.title === title));
-        localStorage.setItem('doa_events', JSON.stringify(events)); renderCalendar();
+        localStorage.setItem('doa_events', JSON.stringify(events));
+        renderCalendar();
     }
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
+
+    /* SPEECH ENGINE WITH PHONETIC OVERRIDE + MULTILANGUAGE */
+    function speak(text) {
+      if (!voiceActive || !text) return;
+      window.speechSynthesis.cancel();
+      
+      // Clean tags and specifically override "Doa" pronunciation to "Doaa"
+      const clean = text.replace(/\[ACTION:.*?\]/g, "")
+                        .replace(/\bDoa\b/gi, "Doaa") 
+                        .trim();
+
+      const detectedLang = detectLang(clean);
+      const u = new SpeechSynthesisUtterance(clean);
+      u.lang = detectedLang;
+      u.voice = getBestVoice(detectedLang) || selectedVoice;
+      u.pitch = 1.2; u.rate = 1.0;
+      window.speechSynthesis.speak(u);
+    }
 
     function toggleSidebar() {
       const sb = document.getElementById('main-sidebar'), mb = document.getElementById('menu-btn');
@@ -318,41 +376,51 @@
     function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
 
     function processActions(responseText) {
-      // SET LANGUAGE FLAG
-      const langMatch = responseText.match(/\[SET_LANG:(.*?)\]/);
-      if (langMatch) {
-          currentLang = langMatch[1];
-          localStorage.setItem('doa_lang', currentLang);
-          loadVoices();
-      }
-
       const actionRegex = /\[ACTION:\s*([^:\]]+):([^|]*)\|([^\]]*)\]/g;
       let match;
       while ((match = actionRegex.exec(responseText)) !== null) {
-        const cmd = match[1].trim().toUpperCase(), val = match[2].trim();
-        if (cmd === 'ADD_EVENT') {
-          const parts = val.split(',');
-          events.push({ title: parts[0], date: new Date(parts[1]).toDateString() });
-          localStorage.setItem('doa_events', JSON.stringify(events));
-          renderCalendar();
-        } else if (cmd === 'OPEN_TAB') switchView(val.toLowerCase());
+        const command = match[1].trim().toUpperCase();
+        const value   = match[2].trim();
+
+        if (command === 'ADD_EVENT') {
+          const commaIdx = value.lastIndexOf(',');
+          if (commaIdx !== -1) {
+            const title = value.substring(0, commaIdx).trim();
+            const dateStr = value.substring(commaIdx + 1).trim();
+            events.push({ title: title, date: new Date(dateStr).toDateString() });
+            localStorage.setItem('doa_events', JSON.stringify(events));
+            renderCalendar();
+          }
+        } else if (command === 'OPEN_TAB') {
+          if (['chat','calendar','apps'].includes(value.toLowerCase())) switchView(value.toLowerCase());
+        }
       }
     }
 
     async function handleMessage() {
       const input = document.getElementById('user-input'), rawText = input.value.trim();
       if (!rawText || isThinking) return;
-      setChatMode(true); addMessage('user', rawText); input.value = '';
-      isThinking = true; document.getElementById('status-text').innerText = "DOA IS PROCESSING...";
       
+      setChatMode(true); 
+      addMessage('user', rawText); 
+      input.value = '';
+      
+      isThinking = true; 
+      document.getElementById('status-text').innerText = "DOA IS PROCESSING...";
+
       setTimeout(() => {
         const responseText = LocalDoaBrain.process(rawText);
         processActions(responseText);
-        const clean = responseText.replace(/\[ACTION:[^\]]*\]/g, "").replace(/\[SET_LANG:[^\]]*\]/g, "").trim();
-        addMessage('doa', clean);
+        
+        const cleanResponse = responseText.replace(/\[ACTION:[^\]]*\]/g, "").trim();
+        addMessage('doa', cleanResponse);
+        
         chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
-        speak(clean); isThinking = false; document.getElementById('status-text').innerText = "Local Engine Ready";
+        
+        speak(cleanResponse);
+        isThinking = false;
+        document.getElementById('status-text').innerText = "Local Engine Ready";
       }, 500);
     }
 
@@ -362,21 +430,25 @@
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
       row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button></div>` : ''}</div>`;
-      history.appendChild(row); history.scrollTop = history.scrollHeight;
+      history.appendChild(row); 
+      history.scrollTop = history.scrollHeight;
     }
 
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice initialized."); }
-    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
-    
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); }
+    function updateVoiceUI() { 
+        const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); 
+        if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
+    }
+
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     
     window.onload = () => { 
       updateVoiceUI(); loadVoices(); 
       const lastView = localStorage.getItem('doa_active_view') || 'chat';
       if (chatMemory.length > 0) {
-        chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "").replace(/\[SET_LANG:.*?\]/g, "")));
+        chatMemory.forEach(msg => addMessage(msg.role === 'user' ? 'user' : 'doa', msg.content.replace(/\[ACTION:.*?\]/g, "")));
         if (lastView === 'chat') setChatMode(true);
-      }
+      } else { setChatMode(false); }
       switchView(lastView);
       document.getElementById('main-sidebar').classList.remove('closed'); 
     };
