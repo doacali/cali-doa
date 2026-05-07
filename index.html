@@ -311,30 +311,32 @@
     }
 
     async function callDoaBrain(query) {
-  // Construct the prompt manually to ensure maximum compatibility
-  const prompt = `You are DOA, an AI Operating System. Current date: ${new Date().toLocaleDateString()}. Respond concisely. User query: ${query}`;
+      const systemPrompt = `You are DOA, an AI Operating System. Today: ${new Date().toDateString()}. 
+      IMPORTANT: ALWAYS respond in clean plain text. Never output raw JSON.
+      If adding an event, use this EXACT format: [ACTION: ADD_EVENT:Title,YYYY-MM-DD|Label]
+      Example: "I've added that. [ACTION: ADD_EVENT:Lunch,2026-05-07|Event]"`;
 
-  try {
-    const res = await fetch(`https://text.pollinations.ai/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        messages: [{ role: 'user', content: prompt }],
-        model: 'openai',
-        seed: 42
-      })
-    });
+      const messages = [{ role: 'system', content: systemPrompt }, ...chatMemory.slice(-6), { role: 'user', content: query }];
 
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-    const responseText = await res.text();
-    return responseText.trim();
-    
-  } catch (e) { 
-    console.error("Critical API Failure:", e);
-    return "Connection Error. Please check your browser console (F12) for CORS or Network errors."; 
-  }
-}
+      try {
+        const res = await fetch(`https://text.pollinations.ai/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: messages, model: 'openai', stream: false })
+        });
+        let raw = await res.text();
+        
+        // 1. Try to parse as JSON in case the model wraps its response
+        try {
+            const parsed = JSON.parse(raw);
+            raw = parsed.content || parsed.choices?.[0]?.message?.content || raw;
+        } catch(e) {}
+        
+        // 2. Strip reasoning/thinking tags used by models like DeepSeek R1
+        raw = raw.replace(/<thought>[\s\S]*?<\/thought>/gi, '').replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
+        return raw;
+      } catch (e) { return "Connection Error."; }
+    }
 
     async function handleMessage() {
       window.speechSynthesis.cancel();
