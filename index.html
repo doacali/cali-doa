@@ -150,40 +150,7 @@
   </div>
 
   <script>
-    /* 
-       --- THE LOCAL BRAIN UNIT ---
-    */
-    const LocalDoaBrain = {
-        process: function(input) {
-            const text = input.toLowerCase();
-            const now = new Date();
-
-            if (text.includes("add event") || text.includes("schedule")) {
-                const title = input.replace(/add event|schedule/gi, "").split("for")[0].trim();
-                let dateStr = input.match(/\d{4}-\d{2}-\d{2}/); 
-                if (!dateStr) dateStr = now.toISOString().split('T')[0];
-                return `Understood. I have scheduled "${title}" for ${dateStr}. [ACTION: ADD_EVENT:${title},${dateStr}|View Calendar]`;
-            }
-
-            if (text.includes("show calendar") || text.includes("open calendar")) {
-                return `Switching to your workspace. [ACTION: OPEN_TAB:calendar|Switch Now]`;
-            }
-            if (text.includes("open apps") || text.includes("app factory")) {
-                return `Opening the App Factory. [ACTION: OPEN_TAB:apps|Switch Now]`;
-            }
-
-            if (text.includes("time")) return `The current local system time is ${now.toLocaleTimeString()}.`;
-            if (text.includes("date")) return `Today is ${now.toDateString()}.`;
-            
-            if (text.includes("hello") || text.includes("hi ") || text.includes("hey")) {
-                return "Hello. I am Doa. How can I assist with your workflow today?";
-            }
-
-            return "I am currently running in Local Mode. I can manage your calendar, open apps, or provide system information. Try asking 'Add event Meeting tomorrow' or 'Show calendar'.";
-        }
-    };
-
-    /* --- OS ENGINE CORE --- */
+    const CLOUDFLARE_URL = 'https://doa-brain-proxy.111222lov3.workers.dev';
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache')) || []; 
     let messageRegistry = []; 
@@ -193,7 +160,7 @@
 
     function loadVoices() {
       const v = window.speechSynthesis.getVoices();
-      const n = ["Samantha", "Karen", "Victoria", "Ava", "Microsoft Zira"];
+      const n = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Ava", "Susan", "Microsoft Zira", "Microsoft Aria", "Google US English Female"];
       for (const i of n) { const m = v.find(x => x.name.includes(i)); if (m) { selectedVoice = m; break; } }
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -216,7 +183,9 @@
       const firstDay = getFirstDayOfMonth(year, month);
       const totalDays = new Date(year, month + 1, 0).getDate();
 
-      for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
+      for (let i = 0; i < firstDay; i++) {
+          grid.appendChild(document.createElement('div')).className = 'cal-day opacity-0 pointer-events-none';
+      }
 
       for (let d = 1; d <= totalDays; d++) {
         const date = new Date(year, month, d);
@@ -229,6 +198,7 @@
         if (date.getTime() === today.getTime()) el.classList.add('today');
         if (date.getTime() === new Date(selectedDate).setHours(0,0,0,0)) el.classList.add('selected');
         
+        // ─── INFO SPEAKER ICON ───
         const dayEvents = events.filter(e => new Date(e.date).toDateString() === date.toDateString());
         if (dayEvents.length > 0) {
             const speaker = document.createElement('div');
@@ -236,7 +206,8 @@
             speaker.innerHTML = '🔊';
             speaker.onclick = (e) => {
                 e.stopPropagation();
-                speak(`On ${date.toDateString()}, you have ${dayEvents.length} events: ${dayEvents.map(ev => ev.title).join(', ')}`);
+                const text = `On ${date.toLocaleString('default', {month:'long', day:'numeric'})}, you have: ${dayEvents.map(ev => ev.title).join(', ')}`;
+                speak(text);
             };
             el.appendChild(speaker);
         }
@@ -287,6 +258,7 @@
     function quickAddEvent() {
         const input = document.getElementById('quick-add-input');
         if (!input.value.trim()) return;
+        // Store date as toDateString() for consistent matching across all event sources
         events.push({ title: input.value.trim(), date: selectedDate.toDateString() });
         localStorage.setItem('doa_events', JSON.stringify(events));
         input.value = '';
@@ -294,26 +266,22 @@
     }
 
     function deleteEvent(dateStr, title) {
-        events = events.filter(e => !(new Date(e.date).toDateString() === new Date(dateStr).toDateString() && e.title === title));
+        const normalTarget = new Date(dateStr).toDateString();
+        events = events.filter(e => !(new Date(e.date).toDateString() === normalTarget && e.title === title));
         localStorage.setItem('doa_events', JSON.stringify(events));
         renderCalendar();
     }
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
-    /* SPEECH ENGINE WITH PHONETIC OVERRIDE */
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
-      
-      // Clean tags and specifically override "Doa" pronunciation to "Doaa"
-      const clean = text.replace(/\[ACTION:.*?\]/g, "")
-                        .replace(/\bDoa\b/gi, "Doaa") 
-                        .trim();
-                        
+      const clean = text.replace(/\[ACTION:.*?\]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\bDoa\b/gi, "Doaa").replace(/[*#`_~]/g, "").trim();
       const u = new SpeechSynthesisUtterance(clean);
       if (selectedVoice) u.voice = selectedVoice;
-      u.pitch = 1.2; u.rate = 1.0;
+      u.pitch = 1.35; u.rate = 0.95; u.volume = 1.0;
+      u.onstart = () => { const int = setInterval(() => { if (!window.speechSynthesis.speaking) clearInterval(int); else { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } }, 10000); };
       window.speechSynthesis.speak(u);
     }
 
@@ -342,32 +310,40 @@
       if (isChatting) {
         hero.style.display = 'none'; history.classList.remove('hidden'); history.style.display = 'flex';
         shell.classList.remove('justify-center'); shell.classList.add('justify-end');
-        centerGroup.classList.remove('flex-col');
+        centerGroup.classList.remove('flex-col'); shell.style.paddingBottom = '0';
       } else {
         hero.style.display = 'block'; history.classList.add('hidden');
         shell.classList.remove('justify-end'); shell.classList.add('justify-center');
-        centerGroup.classList.add('flex-col');
+        centerGroup.classList.add('flex-col'); shell.style.paddingBottom = '15vh';
       }
     }
 
     function startNewChat() { window.speechSynthesis.cancel(); chatMemory = []; messageRegistry = []; localStorage.removeItem('doa_chat_cache'); document.getElementById('chat-history').innerHTML = ''; setChatMode(false); switchView('chat'); }
 
     function processActions(responseText) {
+      // Match all [ACTION: COMMAND:VALUE|Label] tags
       const actionRegex = /\[ACTION:\s*([^:\]]+):([^|]*)\|([^\]]*)\]/g;
       let match;
       while ((match = actionRegex.exec(responseText)) !== null) {
         const command = match[1].trim().toUpperCase();
         const value   = match[2].trim();
+        const label   = match[3].trim();
 
         if (command === 'ADD_EVENT') {
+          // value format: "EventTitle,YYYY-MM-DD"
           const commaIdx = value.lastIndexOf(',');
           if (commaIdx !== -1) {
-            const title = value.substring(0, commaIdx).trim();
-            const dateStr = value.substring(commaIdx + 1).trim();
-            events.push({ title: title, date: new Date(dateStr).toDateString() });
-            localStorage.setItem('doa_events', JSON.stringify(events));
-            renderCalendar();
+            const title    = value.substring(0, commaIdx).trim();
+            const dateStr  = value.substring(commaIdx + 1).trim();
+            const dateObj  = new Date(dateStr + 'T00:00:00');
+            if (!isNaN(dateObj.getTime())) {
+              events.push({ title: title, date: dateObj.toDateString() });
+              localStorage.setItem('doa_events', JSON.stringify(events));
+              renderCalendar();
+            }
           }
+        } else if (command === 'OPEN_URL') {
+          // handled inline via displayed button
         } else if (command === 'OPEN_TAB') {
           if (['chat','calendar','apps'].includes(value.toLowerCase())) switchView(value.toLowerCase());
         }
@@ -375,30 +351,24 @@
     }
 
     async function handleMessage() {
+      window.speechSynthesis.cancel();
+      if (isThinking) return;
       const input = document.getElementById('user-input'), rawText = input.value.trim();
-      if (!rawText || isThinking) return;
-      
-      setChatMode(true); 
-      addMessage('user', rawText); 
-      input.value = '';
-      
-      isThinking = true; 
-      document.getElementById('status-text').innerText = "DOA IS PROCESSING...";
-
-      setTimeout(() => {
-        const responseText = LocalDoaBrain.process(rawText);
-        processActions(responseText);
-        
-        const cleanResponse = responseText.replace(/\[ACTION:[^\]]*\]/g, "").trim();
+      if (!rawText) return;
+      setChatMode(true); addMessage('user', rawText); input.value = '';
+      isThinking = true; document.getElementById('status-text').innerText = "Doa is thinking...";
+      try {
+        const res = await fetch(CLOUDFLARE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: rawText, history: chatMemory.slice(-10), localTime: new Date().toLocaleTimeString(), localDate: new Date().toLocaleDateString() }) });
+        const data = await res.json();
+        // 1. Process action tags FIRST (so ADD_EVENT etc. actually fire)
+        processActions(data.response);
+        // 2. Then strip tags for display
+        const cleanResponse = data.response.replace(/\[ACTION:[^\]]*\]/g, "").trim();
         addMessage('doa', cleanResponse);
-        
-        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: responseText });
+        chatMemory.push({ role: 'user', content: rawText }, { role: 'assistant', content: data.response });
         localStorage.setItem('doa_chat_cache', JSON.stringify(chatMemory));
-        
         speak(cleanResponse);
-        isThinking = false;
-        document.getElementById('status-text').innerText = "Local Engine Ready";
-      }, 500);
+      } catch (e) { addMessage('doa', "OS Connection disrupted."); } finally { isThinking = false; document.getElementById('status-text').innerText = ""; }
     }
 
     function addMessage(sender, text) {
@@ -406,17 +376,12 @@
       const idx = messageRegistry.push(text) - 1;
       const row = document.createElement('div');
       row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} w-full chat-bubble mb-6 px-2`;
-      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button></div>` : ''}</div>`;
-      history.appendChild(row); 
-      history.scrollTop = history.scrollHeight;
+      row.innerHTML = `<div class="max-w-[85%] group"><div class="${sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'} p-4 rounded-3xl text-sm whitespace-pre-wrap shadow-sm relative">${text}</div>${sender === 'doa' ? `<div class="flex gap-4 mt-2 px-1"><button class="bubble-action-btn" onclick="speak(messageRegistry[${idx}])">🔊 Speak</button><button class="bubble-action-btn" onclick="navigator.clipboard.writeText(messageRegistry[${idx}])">📋 Copy</button><button class="bubble-action-btn red" onclick="window.speechSynthesis.cancel()">🛑 Stop</button></div>` : ''}</div>`;
+      history.appendChild(row); history.scrollTop = history.scrollHeight;
     }
 
-    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); }
-    function updateVoiceUI() { 
-        const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); 
-        if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } 
-    }
-
+    function toggleVoice() { voiceActive = !voiceActive; localStorage.setItem('voice_active', voiceActive); updateVoiceUI(); if (voiceActive) speak("Voice active."); else window.speechSynthesis.cancel(); }
+    function updateVoiceUI() { const knob = document.getElementById('voice-knob'), bg = document.getElementById('voice-switch'); if(knob && bg) { knob.style.left = voiceActive ? "18px" : "2px"; bg.style.backgroundColor = voiceActive ? "#00E676" : "#f3f4f6"; } }
     document.getElementById('user-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleMessage(); } });
     
     window.onload = () => { 
