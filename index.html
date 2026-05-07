@@ -155,10 +155,14 @@
   </div>
 
  <script>
-    // --- 1. CONFIGURATION & PERSONALITY (SYSTEM PROMPT) ---
+    // --- 1. CONFIGURATION & STRICT SYSTEM PROMPT ---
     const getSystemPrompt = () => ({
         role: "system",
-        content: `You are Doa, a minimalist AI OS. Today: ${new Date().toDateString()}. Be concise. For scheduling, use EXACTLY: [ACTION: ADD_EVENT:Name,YYYY-MM-DD|Reason]`
+        content: `You are Doa, a precise AI Operating System. Today is ${new Date().toDateString()}.
+RULES:
+1. If the user wants to add an event BUT gives NO DATE, ask: "What date?" Do NOT guess or invent a date.
+2. If the user gives an event AND a date, reply using EXACTLY this format: [ACTION: ADD_EVENT:Name,YYYY-MM-DD|Event]
+3. Never refuse a scheduling request. Be extremely brief.`
     });
 
     let voiceActive = JSON.parse(localStorage.getItem('voice_active')) || false;
@@ -170,6 +174,23 @@
     // Engine State
     let localAIEngine = null;
     let isLocalReady = false;
+
+    // Global Status Manager (Fixes the UI overwriting bug)
+    let currentSystemStatus = "Initializing OS...";
+    let currentSystemColor = "#9ca3af";
+
+    function updateSystemStatus(text, color = "#9ca3af") {
+        currentSystemStatus = text;
+        currentSystemColor = color;
+        // Only update the UI if Doa isn't currently typing a message
+        if (!isThinking) {
+            const statusEl = document.getElementById('status-text');
+            if (statusEl) {
+                statusEl.innerText = text;
+                statusEl.style.color = color;
+            }
+        }
+    }
 
     // Memory Initialization: Ensure the System Prompt is always Index [0]
     let chatMemory = JSON.parse(localStorage.getItem('doa_chat_cache'));
@@ -184,29 +205,25 @@
     // --- 2. BOOT LOCAL ENGINE (BACKGROUND) ---
     async function bootUnlimitedAgent() {
         try {
+            updateSystemStatus("Requesting WebGPU...");
             // Import WebLLM correctly
             const webllm = await import("https://esm.run/@mlc-ai/web-llm");
-            localAIEngine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
+            
+            // FIX: Using q4f32_1 variant. This bypasses the shader-f16 requirement that causes Windows/Edge to fail!
+            localAIEngine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f32_1-MLC", {
                 initProgressCallback: (report) => {
                     const percent = Math.round(report.progress * 100);
-                    const statusEl = document.getElementById('status-text');
-                    if(statusEl) {
-                        statusEl.innerText = `Syncing Brain: ${percent}%`;
-                        if (report.progress === 1) {
-                            isLocalReady = true;
-                            statusEl.innerText = "Doa: Unlimited Mode Active";
-                            statusEl.style.color = "#00E676";
-                        }
+                    if (report.progress === 1) {
+                        isLocalReady = true;
+                        updateSystemStatus("Doa: Unlimited Mode Active", "#00E676");
+                    } else {
+                        updateSystemStatus(`Syncing Brain: ${percent}%`, "#9ca3af");
                     }
                 }
             });
         } catch (e) {
-            console.log("WebGPU not supported. Using Cloud Mode.", e);
-            const statusEl = document.getElementById('status-text');
-            if (statusEl) {
-                statusEl.innerText = "Cloud Mode Active";
-                statusEl.style.color = "#9ca3af";
-            }
+            console.error("WebGPU Initialization Failed:", e);
+            updateSystemStatus("Cloud Mode Active", "#9ca3af");
         }
     }
 
@@ -218,14 +235,11 @@
         messageRegistry =[];
         document.getElementById('chat-history').innerHTML = '';
         setChatMode(false);
-        const statusText = document.getElementById('status-text');
         
         if (isLocalReady) {
-            statusText.innerText = "Doa: Fresh State Active";
-            statusText.style.color = "#00E676";
+            updateSystemStatus("Doa: Fresh State Active", "#00E676");
         } else {
-            statusText.innerText = "Memory Wiped. Cloud Mode Active.";
-            statusText.style.color = "#9ca3af";
+            updateSystemStatus("Memory Wiped. Cloud Mode Active.", "#9ca3af");
         }
     }
 
@@ -254,8 +268,6 @@
       
       isThinking = true; 
       const statusEl = document.getElementById('status-text');
-      const prevStatus = statusEl.innerText;
-      const prevColor = statusEl.style.color;
       statusEl.innerText = "DOA IS ANALYZING...";
       statusEl.style.color = "#9ca3af";
 
@@ -270,7 +282,7 @@
             // --- METHOD A: LOCAL GPU (UNLIMITED & FAST) ---
             const reply = await localAIEngine.chat.completions.create({ 
                 messages: chatMemory,
-                temperature: 0.7 
+                temperature: 0.15 // FIX: Low temperature to prevent hallucinations
             });
             responseText = reply.choices[0].message.content;
         } else {
@@ -304,8 +316,9 @@
           addMessage('doa', "OS Error. Could not connect to brain."); 
       } finally { 
           isThinking = false; 
-          statusEl.innerText = prevStatus;
-          statusEl.style.color = prevColor;
+          // FIX: Restore the globally managed status, not the overridden one
+          statusEl.innerText = currentSystemStatus;
+          statusEl.style.color = currentSystemColor;
       }
     }
 
