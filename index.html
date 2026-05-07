@@ -193,33 +193,6 @@
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
 
-    /* --- MULTILANGUAGE SPEECH ENGINE --- */
-    function detectLang(text) {
-      const patterns = [
-        { lang: 'ar-SA', regex: /[\u0600-\u06FF]/ },
-        { lang: 'zh-CN', regex: /[\u4E00-\u9FFF]/ },
-        { lang: 'ja-JP', regex: /[\u3040-\u30FF]/ },
-        { lang: 'ko-KR', regex: /[\uAC00-\uD7AF]/ },
-        { lang: 'ru-RU', regex: /[\u0400-\u04FF]/ },
-        { lang: 'hi-IN', regex: /[\u0900-\u097F]/ },
-        { lang: 'fr-FR', regex: /\b(bonjour|merci|oui|non|est|les|des|une|qui|que|votre|nous|vous)\b/i },
-        { lang: 'es-ES', regex: /\b(hola|gracias|sí|si|no|el|la|los|las|por|favor|que|como|esta)\b/i },
-        { lang: 'de-DE', regex: /\b(hallo|danke|bitte|ja|nein|ich|sie|und|der|die|das|ist)\b/i },
-        { lang: 'pt-BR', regex: /\b(olá|ola|obrigado|sim|não|nao|por|favor|como|está|esta|você|voce)\b/i },
-        { lang: 'it-IT', regex: /\b(ciao|grazie|sì|si|no|per|favore|come|stai|questo)\b/i },
-      ];
-      for (const p of patterns) { if (p.regex.test(text)) return p.lang; }
-      return 'en-US';
-    }
-
-    function getBestVoice(lang) {
-      const voices = window.speechSynthesis.getVoices();
-      const langBase = lang.split('-')[0];
-      return voices.find(v => v.lang === lang)
-          || voices.find(v => v.lang.startsWith(langBase))
-          || null;
-    }
-
     function getFirstDayOfMonth(year, month) { let d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
 
     function renderCalendar() {
@@ -322,7 +295,7 @@
 
     function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
-    /* SPEECH ENGINE WITH PHONETIC OVERRIDE + MULTILANGUAGE */
+    /* SPEECH ENGINE WITH PHONETIC OVERRIDE */
     function speak(text) {
       if (!voiceActive || !text) return;
       window.speechSynthesis.cancel();
@@ -331,11 +304,9 @@
       const clean = text.replace(/\[ACTION:.*?\]/g, "")
                         .replace(/\bDoa\b/gi, "Doaa") 
                         .trim();
-
-      const detectedLang = detectLang(clean);
+                        
       const u = new SpeechSynthesisUtterance(clean);
-      u.lang = detectedLang;
-      u.voice = getBestVoice(detectedLang) || selectedVoice;
+      if (selectedVoice) u.voice = selectedVoice;
       u.pitch = 1.2; u.rate = 1.0;
       window.speechSynthesis.speak(u);
     }
